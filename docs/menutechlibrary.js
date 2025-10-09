@@ -196,26 +196,43 @@ customElements.define("menutech-particles", MenutechParticles);
 class MenutechView3D extends HTMLElement {
   constructor() {
     super();
-    this.container = document.createElement('div');
-    this.container.style.width = '100%';
-    this.container.style.height = '500px';
-    this.container.style.backgroundSize = 'cover';
-    this.container.style.backgroundPosition = 'center';
-    this.container.style.backgroundRepeat = 'no-repeat';
+
+    // Crear el contenedor principal
+    this.container = document.createElement("div");
+    this.container.classList.add("menutech-view3d-container");
+    this.container.style.position = "relative";
+    this.container.style.width = this.getAttribute("width") || "100%";
+    this.container.style.height = this.getAttribute("height") || "500px";
+    this.container.style.overflow = "hidden";
     this.appendChild(this.container);
+
+    // Crear el fondo del póster
+    this.poster = document.createElement("div");
+    this.poster.classList.add("menutech-view3d-poster");
+    this.poster.style.position = "absolute";
+    this.poster.style.top = "0";
+    this.poster.style.left = "0";
+    this.poster.style.width = "100%";
+    this.poster.style.height = "100%";
+    this.poster.style.backgroundSize = "cover";
+    this.poster.style.backgroundPosition = "center";
+    this.poster.style.transition = "opacity 0.5s ease";
+    this.container.appendChild(this.poster);
   }
 
   connectedCallback() {
-    const gltfUrl = this.getAttribute('gltf');
-    const posterUrl = this.getAttribute('poster');
+    const gltfUrl = this.getAttribute("gltf");
+    const posterUrl = this.getAttribute("poster");
 
-    // Mostrar el póster inicial
-    if (posterUrl) this.container.style.backgroundImage = `url('${posterUrl}')`;
+    // Mostrar póster si se definió
+    if (posterUrl) {
+      this.poster.style.backgroundImage = `url('${posterUrl}')`;
+    }
 
-    // Cargar la librería View3D automáticamente si no existe
+    // Cargar la librería solo si no existe
     if (!window.View3D) {
-      const script = document.createElement('script');
-      script.src = 'https://cdn.jsdelivr.net/npm/@egjs/view3d/dist/view3d.pkgd.min.js';
+      const script = document.createElement("script");
+      script.src = "https://cdn.jsdelivr.net/npm/@egjs/view3d@latest/dist/view3d.pkgd.min.js";
       script.onload = () => this.initView3D(gltfUrl);
       document.head.appendChild(script);
     } else {
@@ -224,28 +241,33 @@ class MenutechView3D extends HTMLElement {
   }
 
   initView3D(gltfUrl) {
-    // Esperar un poco para asegurar que el contenedor está listo
-    setTimeout(() => {
-      this.view3D = new View3D(this.container, {
-        src: gltfUrl,
-        autoplay: true,
-        autoRotate: true,
-        cameraControls: true,
-      });
+    if (!gltfUrl) {
+      console.error("❌ menutech-view3d: Falta el atributo gltf");
+      return;
+    }
 
-      // Ajustar la posición de cámara similar a tu model-viewer
+    // Crear instancia de View3D
+    this.view3D = new View3D(this.container, {
+      src: gltfUrl,
+      autoplay: true,
+      autoRotate: true,
+      cameraControls: true,
+      environment: "neutral",
+    });
+
+    // Ajustar cámara al estilo de <model-viewer>
+    this.view3D.on("ready", () => {
       this.view3D.camera.position.set(0, 1, 3);
       this.view3D.camera.lookAt(0, 0, 0);
-
-      // Quitar el póster cuando el modelo cargue
-      this.view3D.on('ready', () => {
-        this.container.style.backgroundImage = 'none';
-      });
-    }, 300);
+      this.poster.style.opacity = "0"; // oculta el póster suavemente
+      setTimeout(() => (this.poster.style.display = "none"), 600);
+    });
   }
 }
 
-customElements.define('menutech-view3d', MenutechView3D);
+customElements.define("menutech-view3d", MenutechView3D);
+
+
 
 
 
