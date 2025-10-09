@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agave taqueria - Order Online</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Courgette&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: #02411a;
+      background-attachment: fixed;
+      font-family: 'Playfair Display', serif;
+      color: #fff;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 1.5rem;
+      text-shadow: 0 3px 6px rgba(0,0,0,0.4);
+    }
+
+    h1 span {
+      font-family: 'Courgette', cursive;
+      color: #ffcc00;
+      display: block;
+      margin-top: 0.5rem;
+    }
+
+    .btn-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: center;
+    }
+
+    .btn {
+      background-color: #ffcc00;
+      color: #222;
+      border: none;
+      padding: 1rem 2rem;
+      font-size: 1.1rem;
+      font-weight: bold;
+      border-radius: 6px;
+      cursor: pointer;
+      min-width: 200px;
+      transition: all 0.25s ease;
+    }
+
+    .btn:hover {
+      background-color: #ffd633;
+      transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 2rem;
+      }
+      .btn {
+        width: 80%;
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Order Online <span>by Agave Taquería</span></h1>
+  <div class="btn-container">
+    <button class="btn" onclick="window.location.href='https://www.menu-technology.com/api/fb/z5669'">See MENU & Order Now!</button>
+    <button class="btn" onclick="window.location.href='https://www.doordash.com/store/agave-taqueria-anacortes-24764188/?pickup=true&utm_campaign=gpa'">Doordash</button>
+  </div>
+</body>
+</html>
+
