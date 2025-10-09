@@ -11,7 +11,6 @@
  * 1️⃣ MENUTECH GRADIENT
  ******************************/
 class MenutechGradient extends HTMLElement {
-  // Definir qué atributos serán observados para cambios dinámicos
   static get observedAttributes() {
     return ["colors", "speed", "angle", "overlay-opacity", "blur"];
   }
@@ -21,71 +20,59 @@ class MenutechGradient extends HTMLElement {
     this.shadow = this.attachShadow({ mode: "open" });
   }
 
-  // Cuando el elemento se inserta en el DOM
-  connectedCallback() {
-    this.render();
-  }
+  connectedCallback() { this.render(); }
+  attributeChangedCallback() { this.render(); }
 
-  // Cuando alguno de los atributos cambia
-  attributeChangedCallback() {
-    this.render();
-  }
-
-  // Función para renderizar el componente
   render() {
-    // Obtener valores de los atributos o usar valores por defecto
     const colors = this.getAttribute("colors") || "#ff6b6b,#f06595,#845ef7,#339af0,#22b8cf,#51cf66,#fcc419";
-    const speed = this.getAttribute("speed") || "15s";
+    const speed = this.getAttribute("speed") || "30s"; // más lento para menos carga
     const angle = this.getAttribute("angle") || "45deg";
     const overlayOpacity = this.getAttribute("overlay-opacity") || 0.1;
-    const blur = this.getAttribute("blur") || "10px";
+    const blur = this.getAttribute("blur") || "5px"; // blur más bajo
 
-    // Insertar HTML y CSS dentro del shadow DOM
     this.shadow.innerHTML = `
       <style>
         :host {
-          display: block;
-          position: fixed;
-          top:0; left:0;
-          width:100vw;
-          height:100vh;
+          display:block;
+          position:fixed; top:0; left:0;
+          width:100vw; height:100vh;
           overflow:hidden;
-          z-index:-1; /* siempre en el fondo */
+          z-index:-1;
         }
-        .background {
-          position:absolute;
-          top:0; left:0;
-          width:100%;
-          height:100%;
+
+        .background-wrapper {
+          position:absolute; top:0; left:0;
+          width:200%; height:200%; /* doble tamaño para animar */
           background: linear-gradient(${angle}, ${colors});
-          background-size: 400% 400%;
-          animation: gradientShift ${speed} ease infinite;
+          background-size: 200% 200%;
+          will-change: transform;
+          animation: moveGradient ${speed} linear infinite;
         }
+
         .overlay {
-          position:absolute;
-          top:0; left:0;
-          width:100%;
-          height:100%;
+          position:absolute; top:0; left:0;
+          width:100%; height:100%;
           background: rgba(255,255,255,${overlayOpacity});
           backdrop-filter: blur(${blur});
           z-index:0;
         }
-        @keyframes gradientShift {
-          0% { background-position:0% 50%; }
-          50% { background-position:100% 50%; }
-          100% { background-position:0% 50%; }
+
+        @keyframes moveGradient {
+          0% { transform: translate(0%,0%); }
+          50% { transform: translate(-50%,-50%); }
+          100% { transform: translate(0%,0%); }
         }
       </style>
 
-      <div class="background"></div>
+      <div class="background-wrapper"></div>
       <div class="overlay"></div>
       <slot></slot>
     `;
   }
 }
 
-// Registrar la etiqueta
 customElements.define("menutech-gradient", MenutechGradient);
+
 
 
 
@@ -202,6 +189,7 @@ class MenutechParticles extends HTMLElement {
 }
 
 customElements.define("menutech-particles", MenutechParticles);
+
 
 
 
