@@ -192,5 +192,117 @@ customElements.define("menutech-particles", MenutechParticles);
 
 
 
+<!-- menutech-view3d.js -->
+<script>
+class MenutechView3D extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: "open" });
+  }
+
+  connectedCallback() {
+    // Leer atributos
+    const poster = this.getAttribute("poster") || "https://vikingantonio.github.io/aetherkairo/assets/img/caffe22.png";
+    const gltf = this.getAttribute("gltf") || "https://vikingantonio.github.io/aetherkairo/assets/scene.gltf";
+
+    this.shadowRoot.innerHTML = `
+      <style>
+      #view3d {
+        width: 100%;
+        height: 500px;
+        position: relative;
+        background: url(./bgtaza3.png) bottom / cover no-repeat;
+      }
+
+      .v3d-loader {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: rgba(255,255,255,0.1);
+        overflow: hidden;
+      }
+
+      .v3d-loader-progress {
+        width: 0%;
+        height: 100%;
+        background: linear-gradient(90deg, #c49b63, #6b3e1d);
+        transition: width 0.3s;
+      }
+
+      @media (max-width: 992px) {
+        #view3d { height: 900px; }
+      }
+      </style>
+
+      <link rel="stylesheet" href="https://unpkg.com/@egjs/view3d@latest/css/view3d-bundle.min.css">
+      <div id="view3d">
+        <canvas class="view3d-canvas"></canvas>
+        <div class="v3d-loader"><div class="v3d-loader-progress"></div></div>
+      </div>
+      <script src="https://unpkg.com/@egjs/view3d@latest/dist/view3d.pkgd.min.js"><\/script>
+    `;
+
+    const checkLib = setInterval(() => {
+      if (window.View3D) {
+        clearInterval(checkLib);
+        this.initView3D(gltf, poster);
+      }
+    }, 50);
+  }
+
+  initView3D(gltf, poster) {
+    const container = this.shadowRoot.querySelector("#view3d");
+
+    const view3D = new View3D(container, { 
+      src: gltf,
+      poster: poster,
+      autoInit: true,
+    });
+
+    // Loader visual
+    view3D.on("loadStart", () => {
+      this.shadowRoot.querySelector(".v3d-loader-progress").style.width = "0%";
+    });
+    view3D.on("progress", e => {
+      this.shadowRoot.querySelector(".v3d-loader-progress").style.width = (e.loaded * 100) + "%";
+    });
+    view3D.on("load", () => {
+      this.shadowRoot.querySelector(".v3d-loader").style.display = "none";
+    });
+
+    view3D.on("ready", () => {
+      // Escala del modelo
+      view3D.scene.scale.set(3, 3, 3);
+
+      // Cámara (45° horizontal, -30° vertical, radio 1.5)
+      const radius = 1.5;
+      const theta = (45 * Math.PI) / 180;
+      const phi = (-30 * Math.PI) / 180;
+
+      const x = radius * Math.cos(phi) * Math.sin(theta);
+      const y = radius * Math.sin(phi);
+      const z = radius * Math.cos(phi) * Math.cos(theta);
+
+      view3D.camera.position.set(x, y, z);
+      view3D.camera.lookAt(0, 0, 0);
+
+      // Rotación automática
+      view3D.control.autoRotate = true;
+      view3D.control.autoRotateSpeed = 1.0;
+
+      // Iluminación neutra
+      view3D.scene.environmentIntensity = 1.2;
+      view3D.renderer.toneMappingExposure = 1.0;
+    });
+  }
+}
+
+customElements.define("menutech-view3d", MenutechView3D);
+</script>
+
+
+
 
 
