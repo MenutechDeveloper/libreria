@@ -111,17 +111,15 @@ class MenutechParticles extends HTMLElement {
   }
 
   render() {
-    // Obtener valores de atributos o usar valores por defecto
     const count = parseInt(this.getAttribute("count")) || 50;
     const color = this.getAttribute("color") || "#ffffff";
     const minSize = parseFloat(this.getAttribute("min-size")) || 3;
     const maxSize = parseFloat(this.getAttribute("max-size")) || 8;
     const speed = parseFloat(this.getAttribute("speed")) || 1;
     const opacity = parseFloat(this.getAttribute("opacity")) || 1;
-    const direction = this.getAttribute("direction") || "all"; // all, top, bottom, left, right
+    const direction = (this.getAttribute("direction") || "all").toLowerCase();
     const imageSrc = this.getAttribute("image") || null;
 
-    // Crear canvas
     this.shadow.innerHTML = `
       <style>
         :host { position: fixed; top:0; left:0; width:100vw; height:100vh; pointer-events:none; z-index:1000; }
@@ -132,9 +130,7 @@ class MenutechParticles extends HTMLElement {
 
     const canvas = this.shadow.querySelector("canvas");
     const ctx = canvas.getContext("2d");
-    const particles = [];
 
-    // Ajustar canvas al tamaño de la ventana
     const resizeCanvas = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
@@ -142,55 +138,51 @@ class MenutechParticles extends HTMLElement {
     window.addEventListener("resize", resizeCanvas);
     resizeCanvas();
 
-    // Crear partículas aleatorias
+    const particles = [];
+
+    // Crear partículas
     for (let i = 0; i < count; i++) {
-      // Determinar tamaño aleatorio dentro del rango
       const size = minSize + Math.random() * (maxSize - minSize);
 
-      // Determinar velocidad según dirección
-      let vx = (Math.random() - 0.5) * speed;
-      let vy = (Math.random() - 0.5) * speed;
-
-      // Ajustar según dirección
-      switch(direction.toLowerCase()) {
-        case "top": vy = -Math.abs(vy); break;
-        case "bottom": vy = Math.abs(vy); break;
-        case "left": vx = -Math.abs(vx); break;
-        case "right": vx = Math.abs(vx); break;
-        case "all": break; // ya aleatorio
+      let vx = 0, vy = 0;
+      switch (direction) {
+        case "top": vx = 0; vy = -speed * (0.5 + Math.random()); break;
+        case "bottom": vx = 0; vy = speed * (0.5 + Math.random()); break;
+        case "left": vx = -speed * (0.5 + Math.random()); vy = 0; break;
+        case "right": vx = speed * (0.5 + Math.random()); vy = 0; break;
+        case "all": vx = (Math.random()-0.5) * speed; vy = (Math.random()-0.5) * speed; break;
       }
 
       particles.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        vx,
-        vy,
+        vx, vy,
         size,
-        opacity: opacity * (0.5 + Math.random() * 0.5) // ligeras variaciones
+        opacity
       });
     }
 
-    // Cargar imagen si se proporciona
     let particleImage = null;
     if(imageSrc){
       particleImage = new Image();
       particleImage.src = imageSrc;
     }
 
-    // Animación
     const animate = () => {
       ctx.clearRect(0,0,canvas.width,canvas.height);
-      for(let p of particles){
+
+      for (let p of particles) {
         p.x += p.vx;
         p.y += p.vy;
 
-        // Rebotar en los bordes
-        if(p.x < 0 || p.x > canvas.width) p.vx *= -1;
-        if(p.y < 0 || p.y > canvas.height) p.vy *= -1;
+        // Movimiento continuo: reaparecen al salir de la pantalla
+        if(p.x < -p.size) p.x = canvas.width + p.size;
+        if(p.x > canvas.width + p.size) p.x = -p.size;
+        if(p.y < -p.size) p.y = canvas.height + p.size;
+        if(p.y > canvas.height + p.size) p.y = -p.size;
 
-        ctx.globalAlpha = p.opacity; // aplicar opacidad
+        ctx.globalAlpha = p.opacity;
 
-        // Dibujar partícula
         if(particleImage && particleImage.complete){
           ctx.drawImage(particleImage, p.x - p.size/2, p.y - p.size/2, p.size, p.size);
         } else {
@@ -200,7 +192,8 @@ class MenutechParticles extends HTMLElement {
           ctx.fill();
         }
       }
-      ctx.globalAlpha = 1; // reset alpha
+
+      ctx.globalAlpha = 1;
       requestAnimationFrame(animate);
     };
 
@@ -208,7 +201,8 @@ class MenutechParticles extends HTMLElement {
   }
 }
 
-// Registrar la etiqueta
 customElements.define("menutech-particles", MenutechParticles);
+
+
 
 
