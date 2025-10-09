@@ -193,108 +193,66 @@ customElements.define("menutech-particles", MenutechParticles);
 // -----------------------------------------------------------------
 // Modelados 3D
 // -----------------------------------------------------------------
+// ================================
+// CUSTOM LABEL <menutech-view3d>
+// ================================
 class MenutechView3D extends HTMLElement {
   constructor() {
     super();
-    // Crear contenedor
-    this.container = document.createElement("div");
-    this.container.style.width = this.getAttribute("width") || "100%";
-    this.container.style.height = this.getAttribute("height") || "500px";
-    this.container.style.position = "relative";
-    this.container.style.overflow = "hidden";
-    this.container.style.backgroundColor = "#000";
-    this.appendChild(this.container);
-
-    // Crear póster
-    this.poster = document.createElement("div");
-    this.poster.style.position = "absolute";
-    this.poster.style.top = "0";
-    this.poster.style.left = "0";
-    this.poster.style.width = "100%";
-    this.poster.style.height = "100%";
-    this.poster.style.backgroundSize = "cover";
-    this.poster.style.backgroundPosition = "center";
-    this.poster.style.transition = "opacity 0.6s ease";
-    this.container.appendChild(this.poster);
+    this.shadow = this.attachShadow({ mode: "open" });
   }
 
   connectedCallback() {
-    const gltfUrl = this.getAttribute("gltf");
-    const posterUrl = this.getAttribute("poster");
+    // Crear el contenedor
+    const container = document.createElement("div");
+    container.style.width = this.getAttribute("width") || "400px";
+    container.style.height = this.getAttribute("height") || "400px";
+    container.style.borderRadius = "10px";
+    container.style.overflow = "hidden";
+    container.style.background = "transparent";
+    this.shadow.appendChild(container);
 
-    if (posterUrl) {
-      this.poster.style.backgroundImage = `url('${posterUrl}')`;
+    // Agregar el script de View3D si no existe
+    if (!window.View3D) {
+      const script = document.createElement("script");
+      script.src = "https://cdn.jsdelivr.net/npm/@pixotronics/view3d/dist/view3d.min.js";
+      script.onload = () => this.initView3D(container);
+      this.shadow.appendChild(script);
+    } else {
+      this.initView3D(container);
     }
+  }
 
-    if (!gltfUrl) {
-      console.error("❌ menutech-view3d: Falta el atributo gltf");
-      return;
-    }
+  initView3D(container) {
+    const src = this.getAttribute("src");
+    const poster = this.getAttribute("poster");
+    const autoRotate = this.hasAttribute("autorotate");
 
-    // Esperar a que el elemento esté visible en el DOM
-    requestAnimationFrame(() => {
-      this.ensureView3DLoaded(() => {
-        this.initView3D(gltfUrl);
-      });
+    // Creamos la instancia de View3D
+    const viewer = new View3D(container, {
+      src: src,
+      poster: poster,
+      backgroundColor: "transparent",
+      camera: { orbit: [0, 75, 100] },
+      autoPlay: true
     });
-  }
 
-  ensureView3DLoaded(callback) {
-    if (window.View3D) {
-      callback();
-      return;
-    }
-
-    const existingScript = document.querySelector('script[data-menutech-view3d]');
-    if (existingScript) {
-      existingScript.addEventListener("load", callback);
-      return;
-    }
-
-    const script = document.createElement("script");
-    script.src = "https://cdn.jsdelivr.net/npm/@egjs/view3d@latest/dist/view3d.pkgd.min.js";
-    script.dataset.menutechView3d = "true";
-    script.onload = callback;
-    document.head.appendChild(script);
-  }
-
-  initView3D(gltfUrl) {
-    console.log("✅ Iniciando View3D con:", gltfUrl);
-
-    try {
-      this.view3D = new View3D(this.container, {
-        src: gltfUrl,
-        autoplay: true,
-        autoRotate: true,
-        cameraControls: true,
-        environment: "neutral",
-      });
-
-      this.view3D.on("ready", () => {
-        console.log("🎯 Modelo 3D cargado correctamente");
-        this.view3D.camera.position.set(0, 1, 3);
-        this.view3D.camera.lookAt(0, 0, 0);
-        this.view3D.scene.scale.set(3, 3, 3);
-        this.poster.style.opacity = "0";
-        setTimeout(() => (this.poster.style.display = "none"), 800);
-      });
-
-      this.view3D.on("error", e => {
-        console.error("❌ Error al cargar modelo:", e);
-        this.poster.style.background = "#222";
-        this.poster.textContent = "⚠️ Error al cargar modelo";
-        this.poster.style.color = "#fff";
-        this.poster.style.display = "flex";
-        this.poster.style.alignItems = "center";
-        this.poster.style.justifyContent = "center";
-      });
-    } catch (err) {
-      console.error("❌ Excepción al iniciar View3D:", err);
+    // Si tiene autorotate, activamos rotación lenta
+    if (autoRotate) {
+      let angle = 0;
+      function rotate() {
+        angle += 0.3;
+        viewer.camera.orbitControl.setOrbit(angle, 75, 100);
+        requestAnimationFrame(rotate);
+      }
+      rotate();
     }
   }
 }
 
 customElements.define("menutech-view3d", MenutechView3D);
+
+
 
 
 
