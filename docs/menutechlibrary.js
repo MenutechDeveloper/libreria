@@ -196,88 +196,106 @@ customElements.define("menutech-particles", MenutechParticles);
 class MenutechView3D extends HTMLElement {
   constructor() {
     super();
-    // Crear contenedor principal
+    // Crear contenedor
     this.container = document.createElement("div");
     this.container.style.width = this.getAttribute("width") || "100%";
     this.container.style.height = this.getAttribute("height") || "500px";
     this.container.style.position = "relative";
     this.container.style.overflow = "hidden";
-    this.container.style.backgroundColor = "#000"; // fondo base
+    this.container.style.backgroundColor = "#000";
     this.appendChild(this.container);
 
-    // Póster
+    // Crear póster
     this.poster = document.createElement("div");
     this.poster.style.position = "absolute";
-    this.poster.style.top = 0;
-    this.poster.style.left = 0;
+    this.poster.style.top = "0";
+    this.poster.style.left = "0";
     this.poster.style.width = "100%";
     this.poster.style.height = "100%";
     this.poster.style.backgroundSize = "cover";
     this.poster.style.backgroundPosition = "center";
     this.poster.style.transition = "opacity 0.6s ease";
     this.container.appendChild(this.poster);
-
-    // Mostrar el póster si está definido
-    const posterUrl = this.getAttribute("poster");
-    if (posterUrl) {
-      this.poster.style.backgroundImage = `url('${posterUrl}')`;
-    }
   }
 
   connectedCallback() {
     const gltfUrl = this.getAttribute("gltf");
+    const posterUrl = this.getAttribute("poster");
+
+    if (posterUrl) {
+      this.poster.style.backgroundImage = `url('${posterUrl}')`;
+    }
 
     if (!gltfUrl) {
-      console.error("⚠️ menutech-view3d: Falta atributo gltf");
+      console.error("❌ menutech-view3d: Falta el atributo gltf");
       return;
     }
 
-    // Esperar a que el DOM esté listo
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", () => this.loadView3D(gltfUrl));
-    } else {
-      this.loadView3D(gltfUrl);
-    }
+    // Esperar a que el elemento esté visible en el DOM
+    requestAnimationFrame(() => {
+      this.ensureView3DLoaded(() => {
+        this.initView3D(gltfUrl);
+      });
+    });
   }
 
-  loadView3D(gltfUrl) {
-    // Cargar la librería si no existe
-    if (!window.View3D) {
-      const script = document.createElement("script");
-      script.src = "https://cdn.jsdelivr.net/npm/@egjs/view3d@latest/dist/view3d.pkgd.min.js";
-      script.onload = () => this.initView3D(gltfUrl);
-      document.head.appendChild(script);
-    } else {
-      this.initView3D(gltfUrl);
+  ensureView3DLoaded(callback) {
+    if (window.View3D) {
+      callback();
+      return;
     }
+
+    const existingScript = document.querySelector('script[data-menutech-view3d]');
+    if (existingScript) {
+      existingScript.addEventListener("load", callback);
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://cdn.jsdelivr.net/npm/@egjs/view3d@latest/dist/view3d.pkgd.min.js";
+    script.dataset.menutechView3d = "true";
+    script.onload = callback;
+    document.head.appendChild(script);
   }
 
   initView3D(gltfUrl) {
-    // Esperar un poco para asegurar que el canvas puede montarse
-    setTimeout(() => {
-      try {
-        this.view3D = new View3D(this.container, {
-          src: gltfUrl,
-          autoplay: true,
-          autoRotate: true,
-          cameraControls: true,
-          environment: "neutral",
-        });
+    console.log("✅ Iniciando View3D con:", gltfUrl);
 
-        this.view3D.on("ready", () => {
-          this.view3D.camera.position.set(0, 1, 3);
-          this.view3D.camera.lookAt(0, 0, 0);
-          this.poster.style.opacity = "0";
-          setTimeout(() => (this.poster.style.display = "none"), 700);
-        });
-      } catch (err) {
-        console.error("❌ Error iniciando View3D:", err);
-      }
-    }, 500);
+    try {
+      this.view3D = new View3D(this.container, {
+        src: gltfUrl,
+        autoplay: true,
+        autoRotate: true,
+        cameraControls: true,
+        environment: "neutral",
+      });
+
+      this.view3D.on("ready", () => {
+        console.log("🎯 Modelo 3D cargado correctamente");
+        this.view3D.camera.position.set(0, 1, 3);
+        this.view3D.camera.lookAt(0, 0, 0);
+        this.view3D.scene.scale.set(3, 3, 3);
+        this.poster.style.opacity = "0";
+        setTimeout(() => (this.poster.style.display = "none"), 800);
+      });
+
+      this.view3D.on("error", e => {
+        console.error("❌ Error al cargar modelo:", e);
+        this.poster.style.background = "#222";
+        this.poster.textContent = "⚠️ Error al cargar modelo";
+        this.poster.style.color = "#fff";
+        this.poster.style.display = "flex";
+        this.poster.style.alignItems = "center";
+        this.poster.style.justifyContent = "center";
+      });
+    } catch (err) {
+      console.error("❌ Excepción al iniciar View3D:", err);
+    }
   }
 }
 
 customElements.define("menutech-view3d", MenutechView3D);
+
 
 
 
