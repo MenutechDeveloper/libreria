@@ -190,67 +190,123 @@ class MenutechParticles extends HTMLElement {
 
 customElements.define("menutech-particles", MenutechParticles);
 
-// -----------------------------------------------------------------
+// ==================================================================
 // Modelados 3D
-// -----------------------------------------------------------------
-// ================================
-// CUSTOM LABEL <menutech-view3d>
-// ================================
+// ==================================================================
 class MenutechView3D extends HTMLElement {
   constructor() {
     super();
     this.shadow = this.attachShadow({ mode: "open" });
+
+    // Contenedor visible
+    this.wrapper = document.createElement("div");
+    this.wrapper.style.width = this.getAttribute("width") || "100%";
+    this.wrapper.style.height = this.getAttribute("height") || "500px";
+    this.wrapper.style.position = "relative";
+    this.wrapper.style.overflow = "hidden";
+    this.shadow.appendChild(this.wrapper);
+
+    // Póster overlay
+    this.posterDiv = document.createElement("div");
+    this.posterDiv.style.position = "absolute";
+    this.posterDiv.style.top = "0";
+    this.posterDiv.style.left = "0";
+    this.posterDiv.style.width = "100%";
+    this.posterDiv.style.height = "100%";
+    this.posterDiv.style.backgroundSize = "cover";
+    this.posterDiv.style.backgroundPosition = "center";
+    this.posterDiv.style.transition = "opacity 0.6s ease";
+    this.wrapper.appendChild(this.posterDiv);
   }
 
   connectedCallback() {
-    // Crear el contenedor
-    const container = document.createElement("div");
-    container.style.width = this.getAttribute("width") || "400px";
-    container.style.height = this.getAttribute("height") || "400px";
-    container.style.borderRadius = "10px";
-    container.style.overflow = "hidden";
-    container.style.background = "transparent";
-    this.shadow.appendChild(container);
-
-    // Agregar el script de View3D si no existe
-    if (!window.View3D) {
-      const script = document.createElement("script");
-      script.src = "https://cdn.jsdelivr.net/npm/@pixotronics/view3d/dist/view3d.min.js";
-      script.onload = () => this.initView3D(container);
-      this.shadow.appendChild(script);
-    } else {
-      this.initView3D(container);
+    const posterUrl = this.getAttribute("poster");
+    if (posterUrl) {
+      this.posterDiv.style.backgroundImage = `url('${posterUrl}')`;
     }
+
+    const src = this.getAttribute("src") || this.getAttribute("gltf");
+    if (!src) {
+      console.error("menutech-view3d: necesitas atributo src o gltf");
+      return;
+    }
+
+    // Insertar CSS de view3d (sí, debemos hacerlo)
+    this.injectCSS();
+
+    // Iniciar carga de la librería + visor
+    this.loadLibraryAndInit(src);
   }
 
-  initView3D(container) {
-    const src = this.getAttribute("src");
-    const poster = this.getAttribute("poster");
-    const autoRotate = this.hasAttribute("autorotate");
+  injectCSS() {
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = "https://unpkg.com/@egjs/view3d@latest/css/view3d-bundle.min.css";
+    this.shadow.appendChild(link);
+  }
 
-    // Creamos la instancia de View3D
-    const viewer = new View3D(container, {
-      src: src,
-      poster: poster,
-      backgroundColor: "transparent",
-      camera: { orbit: [0, 75, 100] },
-      autoPlay: true
-    });
-
-    // Si tiene autorotate, activamos rotación lenta
-    if (autoRotate) {
-      let angle = 0;
-      function rotate() {
-        angle += 0.3;
-        viewer.camera.orbitControl.setOrbit(angle, 75, 100);
-        requestAnimationFrame(rotate);
-      }
-      rotate();
+  loadLibraryAndInit(src) {
+    if (window.View3D) {
+      this.initViewer(src);
+      return;
     }
+
+    // Verificar si ya hay un script inyectado
+    const existing = document.querySelector('script[data-menutech-view3d]');
+    if (existing) {
+      existing.addEventListener("load", () => this.initViewer(src));
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://unpkg.com/@egjs/view3d@latest/dist/view3d.pkgd.min.js";
+    script.setAttribute("data-menutech-view3d", "true");
+    script.onload = () => {
+      console.log("View3D librería cargada");
+      this.initViewer(src);
+    };
+    script.onerror = () => {
+      console.error("No se pudo cargar la librería View3D");
+    };
+    document.head.appendChild(script);
+  }
+
+  initViewer(src) {
+    console.log("Inicializando View3D con", src);
+
+    // Debemos esperar un tick para asegurar que el wrapper esté listo
+    requestAnimationFrame(() => {
+      try {
+        this.view3d = new View3D(this.wrapper, {
+          src: src,
+          poster: null,  // podemos pasar null porque manejamos el póster manualmente
+          autoInit: true,
+          autoResize: true,
+          environment: "neutral",
+        });
+
+        this.view3d.on("ready", () => {
+          console.log("Modelo listo");
+          // ajustar cámara simple
+          this.view3d.camera.yaw = 45;
+          this.view3d.camera.pitch = -30;
+          // esconder póster
+          this.posterDiv.style.opacity = "0";
+          setTimeout(() => (this.posterDiv.style.display = "none"), 700);
+        });
+
+        this.view3d.on("error", (e) => {
+          console.error("Error cargando modelo 3D:", e);
+        });
+      } catch (e) {
+        console.error("Excepción en initViewer:", e);
+      }
+    });
   }
 }
 
 customElements.define("menutech-view3d", MenutechView3D);
+
 
 
 
