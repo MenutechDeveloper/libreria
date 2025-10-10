@@ -311,6 +311,7 @@ customElements.define("menutech-view3d", MenutechView3D);
 // =========================================================
 // Menutech form
 // =========================================================
+
 class MenutechForm extends HTMLElement {
   constructor() {
     super();
@@ -322,7 +323,9 @@ class MenutechForm extends HTMLElement {
     const inputColor = this.getAttribute('input-color') || '#000';
     const placeholderColor = this.getAttribute('placeholder-color') || '#000';
     const maxWidth = this.getAttribute('max-width') || '800px';
-    const scriptURL = this.getAttribute('script-url') || '';
+
+    // URL del Apps Script fijo
+    const scriptURL = "https://script.google.com/macros/s/AKfycbzkS-PWHOxgcpOPl_V179BTF8egKI8_yvJC6TaYVy2b1A1wbeHsaaVnHAqkJFU3rc9P9g/exec";
 
     this.shadowRoot.innerHTML = `
       <style>
@@ -411,13 +414,13 @@ class MenutechForm extends HTMLElement {
       <form id="contactForm">
         <label for="nombre">Nombre</label>
         <input type="text" name="nombre" placeholder="Tu nombre" required>
-        
+
         <label for="email">Correo</label>
         <input type="email" name="email" placeholder="Tu correo" required>
-        
+
         <label for="mensaje">Mensaje</label>
         <textarea name="mensaje" placeholder="Escribe tu mensaje" required></textarea>
-        
+
         <button type="submit">Enviar</button>
       </form>
 
@@ -438,7 +441,7 @@ class MenutechForm extends HTMLElement {
       popup.classList.add("show");
 
       const data = new FormData(form);
-      data.append("dominio", window.location.hostname);
+      data.append("dominio", window.location.hostname); // detecta el dominio real de la web donde se llame
 
       fetch(scriptURL, { method: "POST", body: data })
         .then(resp => resp.json())
@@ -461,6 +464,7 @@ class MenutechForm extends HTMLElement {
 }
 
 customElements.define('menutech-form', MenutechForm);
+
 
 
 
