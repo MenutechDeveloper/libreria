@@ -329,7 +329,7 @@ class MenutechForm extends HTMLElement {
     const buttonTextColor = this.getAttribute('button-text-color') || '#000';
 
     // URL del Apps Script fijo
-    const scriptURL = "https://script.google.com/macros/s/TU_SCRIPT_ID/exec"; // 👈 reemplaza con tu script real
+    const scriptURL = "https://script.google.com/macros/s/AKfycbzkS-PWHOxgcpOPl_V179BTF8egKI8_yvJC6TaYVy2b1A1wbeHsaaVnHAqkJFU3rc9P9g/exec";
 
     this.shadowRoot.innerHTML = `
       <style>
@@ -469,6 +469,7 @@ class MenutechForm extends HTMLElement {
 }
 
 customElements.define('menutech-form', MenutechForm);
+
 
 
 
