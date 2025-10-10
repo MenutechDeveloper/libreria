@@ -312,6 +312,8 @@ customElements.define("menutech-view3d", MenutechView3D);
 // Menutech form
 // =========================================================
 
+// menutechlibrary.js
+
 class MenutechForm extends HTMLElement {
   constructor() {
     super();
@@ -323,9 +325,11 @@ class MenutechForm extends HTMLElement {
     const inputColor = this.getAttribute('input-color') || '#000';
     const placeholderColor = this.getAttribute('placeholder-color') || '#000';
     const maxWidth = this.getAttribute('max-width') || '800px';
+    const buttonColor = this.getAttribute('button-color') || '#f7d6d6';
+    const buttonTextColor = this.getAttribute('button-text-color') || '#000';
 
     // URL del Apps Script fijo
-    const scriptURL = "https://script.google.com/macros/s/AKfycbzkS-PWHOxgcpOPl_V179BTF8egKI8_yvJC6TaYVy2b1A1wbeHsaaVnHAqkJFU3rc9P9g/exec";
+    const scriptURL = "https://script.google.com/macros/s/TU_SCRIPT_ID/exec"; // 👈 reemplaza con tu script real
 
     this.shadowRoot.innerHTML = `
       <style>
@@ -368,7 +372,8 @@ class MenutechForm extends HTMLElement {
           padding: 10px 16px;
           border-radius: 8px;
           border: none;
-          background: #f7d6d6;
+          background: ${buttonColor};
+          color: ${buttonTextColor};
           cursor: pointer;
           font-weight: bold;
           transition: transform 0.2s ease;
@@ -441,7 +446,7 @@ class MenutechForm extends HTMLElement {
       popup.classList.add("show");
 
       const data = new FormData(form);
-      data.append("dominio", window.location.hostname); // detecta el dominio real de la web donde se llame
+      data.append("dominio", window.location.hostname);
 
       fetch(scriptURL, { method: "POST", body: data })
         .then(resp => resp.json())
@@ -464,6 +469,8 @@ class MenutechForm extends HTMLElement {
 }
 
 customElements.define('menutech-form', MenutechForm);
+
+
 
 
 
