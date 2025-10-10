@@ -308,6 +308,161 @@ class MenutechView3D extends HTMLElement {
 customElements.define("menutech-view3d", MenutechView3D);
 
 
+// =========================================================
+// Menutech form
+// =========================================================
+class MenutechForm extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+
+    // Propiedades editables desde el HTML
+    const bgColor = this.getAttribute('bg-color') || '#fff';
+    const labelColor = this.getAttribute('label-color') || '#000';
+    const inputColor = this.getAttribute('input-color') || '#000';
+    const placeholderColor = this.getAttribute('placeholder-color') || '#000';
+    const maxWidth = this.getAttribute('max-width') || '800px';
+    const scriptURL = this.getAttribute('script-url') || '';
+
+    this.shadowRoot.innerHTML = `
+      <style>
+        :host {
+          display: block;
+          font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+          box-sizing: border-box;
+          padding: 20px;
+        }
+        form {
+          background: ${bgColor};
+          max-width: ${maxWidth};
+          margin: 0 auto;
+          padding: 28px 36px;
+          border-radius: 12px;
+          box-shadow: 0 12px 28px rgba(0,0,0,0.12);
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+        label {
+          color: ${labelColor};
+          font-weight: bold;
+          margin-bottom: 4px;
+        }
+        input, textarea {
+          font-family: inherit;
+          padding: 10px 12px;
+          border-radius: 8px;
+          border: 1px solid rgba(0,0,0,0.12);
+          color: ${inputColor};
+          background: #fff;
+          outline: none;
+        }
+        input::placeholder, textarea::placeholder {
+          color: ${placeholderColor};
+        }
+        button {
+          align-self: flex-start;
+          padding: 10px 16px;
+          border-radius: 8px;
+          border: none;
+          background: #f7d6d6;
+          cursor: pointer;
+          font-weight: bold;
+          transition: transform 0.2s ease;
+        }
+        button:hover {
+          transform: translateY(-2px);
+        }
+        #popup {
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%) scale(0);
+          background: #fff9e8;
+          padding: 28px 36px;
+          border-radius: 12px;
+          box-shadow: 0 12px 28px rgba(0,0,0,0.18);
+          text-align: center;
+          font-size: 1.1rem;
+          color: #333;
+          z-index: 9999;
+          opacity: 0;
+          transition: transform 0.4s ease, opacity 0.4s ease;
+        }
+        #popup.show {
+          transform: translate(-50%, -50%) scale(1);
+          opacity: 1;
+        }
+        .spinner {
+          margin: 12px auto;
+          width: 36px;
+          height: 36px;
+          border: 4px dashed #444;
+          border-top: 4px solid #f7d6d6;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+          0% { transform: rotate(0deg);}
+          100% { transform: rotate(360deg);}
+        }
+      </style>
+
+      <form id="contactForm">
+        <label for="nombre">Nombre</label>
+        <input type="text" name="nombre" placeholder="Tu nombre" required>
+        
+        <label for="email">Correo</label>
+        <input type="email" name="email" placeholder="Tu correo" required>
+        
+        <label for="mensaje">Mensaje</label>
+        <textarea name="mensaje" placeholder="Escribe tu mensaje" required></textarea>
+        
+        <button type="submit">Enviar</button>
+      </form>
+
+      <div id="popup">
+        <div class="spinner"></div>
+        <div id="popupText">Enviando mensaje...</div>
+      </div>
+    `;
+
+    // Eventos
+    const form = this.shadowRoot.getElementById('contactForm');
+    const popup = this.shadowRoot.getElementById('popup');
+    const popupText = this.shadowRoot.getElementById('popupText');
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      popupText.textContent = "Enviando mensaje...";
+      popup.classList.add("show");
+
+      const data = new FormData(form);
+      data.append("dominio", window.location.hostname);
+
+      fetch(scriptURL, { method: "POST", body: data })
+        .then(resp => resp.json())
+        .then(res => {
+          if (res.result === "success") {
+            popupText.textContent = "✅ Mensaje enviado con éxito!";
+            form.reset();
+          } else {
+            popupText.textContent = "⚠️ Error al enviar. Intenta de nuevo.";
+          }
+          setTimeout(() => popup.classList.remove("show"), 2500);
+        })
+        .catch(err => {
+          console.error(err);
+          popupText.textContent = "❌ Error al conectar con el servidor.";
+          setTimeout(() => popup.classList.remove("show"), 2500);
+        });
+    });
+  }
+}
+
+customElements.define('menutech-form', MenutechForm);
+
+
 
 
 
