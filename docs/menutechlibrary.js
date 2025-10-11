@@ -544,136 +544,28 @@ customElements.define('menutech-neomorphism', MenutechNeomorphism);
 // carrusel
 // ==========================================================================
 
-// menutech-carrusel.js
-import 'https://unpkg.com/swiper/swiper-bundle.min.js';
-
 class MenuTechCarrusel extends HTMLElement {
   constructor() {
     super();
-    // Crear Shadow DOM
-    const shadow = this.attachShadow({ mode: 'open' });
+  }
 
-    // === HTML ===
-    shadow.innerHTML = `
-      <!-- jQuery -->
-      <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-      <!-- Swiper CSS -->
+  connectedCallback() {
+    // === HTML del carrusel y popup ===
+    this.innerHTML = `
       <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">
-
       <style>
-        .menus {
-          background: #fff;
-          font-size: 14px;
-          color: #000;
-          margin: 0;
-          padding: 0;
-        }
+        .menus { background: #fff; font-size:14px; color:#000; margin:0; padding:0; }
+        .swiper-container { width:100%; padding-top:50px; padding-bottom:50px; }
+        .swiper-slide { background-position:center; background-size:cover; width:300px; height:400px; }
+        .menus img { width:100%; cursor:pointer; }
 
-        .swiper-container {
-          width: 100%;
-          padding-top: 50px;
-          padding-bottom: 50px;
-        }
+        .popup { display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background-color: rgba(0,0,0,0.7); justify-content:center; align-items:center; overflow:hidden; }
+        .popup-content { background:#fff; width:80%; max-width:800px; height:70%; border-radius:10px; overflow:hidden; position:relative; display:flex; justify-content:center; align-items:center; flex-direction:column; zoom:120%; }
+        .popup-content iframe { width:100%; max-width:700px; height:100%; border:none; margin:auto; display:block; margin-top:50px; margin-right:20px; }
+        .close { position:absolute; top:8px; right:15px; font-size:30px; font-weight:bold; color:#333; cursor:pointer; z-index:10; }
 
-        .swiper-slide {
-          background-position: center;
-          background-size: cover;
-          width: 300px;
-          height: 400px;
-        }
-
-        .menus img {
-          width: 100%;
-          cursor: pointer;
-        }
-
-        /* === POPUP === */
-        .popup {
-          display: none;
-          position: fixed;
-          z-index: 1000;
-          left: 0;
-          top: 0;
-          width: 100%;
-          height: 100%;
-          background-color: rgba(0,0,0,0.7);
-          justify-content: center;
-          align-items: center;
-          overflow: hidden;
-        }
-
-        .popup-content {
-          background: #fff;
-          width: 80%;
-          max-width: 800px;
-          height: 70%;
-          border-radius: 10px;
-          overflow: hidden;
-          position: relative;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          flex-direction: column;
-          zoom: 120%;
-        }
-
-        .popup-content iframe {
-          width: 100%;
-          max-width: 700px;
-          height: 100%;
-          border: none;
-          margin: auto;
-          display: block;
-          margin-top: 50px;
-          margin-right: 20px;
-        }
-
-        .close {
-          position: absolute;
-          top: 8px;
-          right: 15px;
-          font-size: 30px;
-          font-weight: bold;
-          color: #333;
-          cursor: pointer;
-          z-index: 10;
-        }
-
-        @media (max-width: 768px) {
-          html, body { overflow-x: hidden; }
-          .popup-content {
-            width: 100%;
-            height: 90%;
-            margin: 2px;
-            max-width: none;
-            border-radius: 5px; 
-          }
-          .popup-content iframe {
-            width: 90%;
-            max-width: 800px;
-            height: 80%;
-            margin-top: 30px;
-          }
-        }
-
-        @media (max-width: 1366px){
-          .popup-content {
-            width: 90%;
-            height: 95%;
-            margin: 2px auto;
-            max-width: none;
-            border-radius: 5px; 
-            overflow: hidden;
-            position: relative;
-          }
-          .popup-content iframe {
-            display: block;
-            width: 100%;
-            height: 100%;
-            border: none;
-            margin: 0 auto;
-          }
-        }
+        @media (max-width:768px){ html,body{overflow-x:hidden} .popup-content{width:100%;height:90%;margin:2px;max-width:none;border-radius:5px} .popup-content iframe{width:90%;height:80%;margin-top:30px} }
+        @media (max-width:1366px){ .popup-content{width:90%;height:95%;margin:2px auto;max-width:none;border-radius:5px;overflow:hidden;position:relative} .popup-content iframe{width:100%;height:100%;margin:0 auto} }
       </style>
 
       <div class="menus">
@@ -692,66 +584,70 @@ class MenuTechCarrusel extends HTMLElement {
         </div>
       </div>
     `;
-  }
 
-  connectedCallback() {
-    const shadow = this.shadowRoot;
+    // === Inicializar Swiper después de que el slot tenga elementos ===
+    const slot = this.querySelector('slot');
 
-    // === Inicializar Swiper ===
-    const swiper = new Swiper(shadow.querySelector('.swiper-container'), {
-      effect: 'coverflow',
-      grabCursor: true,
-      centeredSlides: true,
-      loop: true,
-      slidesPerView: 'auto',
-      autoplay: {
-        delay: 2500,
-        disableOnInteraction: false,
-      },
-      coverflowEffect: {
-        rotate: 50,
-        stretch: 0,
-        depth: 100,
-        modifier: 1,
-        slideShadows: true,
-      },
-      pagination: {
-        el: shadow.querySelector('.swiper-pagination'),
-      },
-    });
+    // Usamos un pequeño delay o un MutationObserver para esperar que los slides se distribuyan
+    const initSwiper = () => {
+      const swiper = new Swiper(this.querySelector('.swiper-container'), {
+        effect: 'coverflow',
+        grabCursor: true,
+        centeredSlides: true,
+        loop: true,
+        slidesPerView: 'auto',
+        autoplay: { delay: 2500, disableOnInteraction: false },
+        coverflowEffect: { rotate: 50, stretch: 0, depth: 100, modifier: 1, slideShadows: true },
+        pagination: { el: this.querySelector('.swiper-pagination') },
+      });
+    };
 
-    // === POPUP ===
-    const images = shadow.querySelectorAll('img');
-    const popup = shadow.getElementById('popup');
-    const popupFrame = shadow.getElementById('popupFrame');
-    const closeBtn = shadow.querySelector('.close');
-
-    images.forEach(img => {
-      img.addEventListener('click', () => {
-        const url = img.getAttribute('data-url');
-        if(url){
-          popupFrame.src = url;
-          popup.style.display = 'flex';
+    // Si ya hay elementos en el slot, inicializa
+    if (slot.assignedElements().length) {
+      initSwiper();
+    } else {
+      // Si el usuario va a agregar slides dinámicamente, observamos cambios
+      const observer = new MutationObserver(() => {
+        if (slot.assignedElements().length) {
+          initSwiper();
+          observer.disconnect();
         }
       });
-    });
+      observer.observe(slot, { childList: true });
+    }
 
-    closeBtn.addEventListener('click', () => {
-      popup.style.display = 'none';
-      popupFrame.src = "";
-    });
+    // === POPUP ===
+    const popup = this.querySelector('#popup');
+    const popupFrame = this.querySelector('#popupFrame');
+    const closeBtn = this.querySelector('.close');
 
-    popup.addEventListener('click', e => {
-      if(e.target === popup){
-        popup.style.display = 'none';
-        popupFrame.src = "";
+    const handleClick = (img) => {
+      const url = img.getAttribute('data-url');
+      if(url){
+        popupFrame.src = url;
+        popup.style.display = 'flex';
       }
-    });
+    };
+
+    // Evento para todos los slides actuales y futuros
+    const attachPopupEvents = () => {
+      this.querySelectorAll('.swiper-slide img').forEach(img => {
+        img.addEventListener('click', () => handleClick(img));
+      });
+    };
+
+    attachPopupEvents();
+
+    // Para slides agregados después
+    slot.addEventListener('slotchange', attachPopupEvents);
+
+    closeBtn.addEventListener('click', () => { popup.style.display = 'none'; popupFrame.src = ""; });
+    popup.addEventListener('click', e => { if(e.target === popup){ popup.style.display = 'none'; popupFrame.src = ""; } });
   }
 }
 
-// Registrar custom element
 customElements.define('menutech-carrusel', MenuTechCarrusel);
+
 
 
 
