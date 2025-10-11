@@ -544,6 +544,9 @@ customElements.define('menutech-neomorphism', MenutechNeomorphism);
 // carrusel
 // ==========================================================================
 
+// menutech-carrusel.js
+import 'https://unpkg.com/swiper/swiper-bundle.min.js';
+
 class MenuTechCarrusel extends HTMLElement {
   constructor() {
     super();
@@ -552,7 +555,11 @@ class MenuTechCarrusel extends HTMLElement {
 
     // === HTML ===
     shadow.innerHTML = `
+      <!-- jQuery -->
+      <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+      <!-- Swiper CSS -->
       <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">
+
       <style>
         .menus {
           background: #fff;
@@ -633,10 +640,7 @@ class MenuTechCarrusel extends HTMLElement {
         }
 
         @media (max-width: 768px) {
-          html, body {
-            overflow-x: hidden;
-          }
-
+          html, body { overflow-x: hidden; }
           .popup-content {
             width: 100%;
             height: 90%;
@@ -644,7 +648,6 @@ class MenuTechCarrusel extends HTMLElement {
             max-width: none;
             border-radius: 5px; 
           }
-
           .popup-content iframe {
             width: 90%;
             max-width: 800px;
@@ -663,7 +666,6 @@ class MenuTechCarrusel extends HTMLElement {
             overflow: hidden;
             position: relative;
           }
-
           .popup-content iframe {
             display: block;
             width: 100%;
@@ -750,6 +752,7 @@ class MenuTechCarrusel extends HTMLElement {
 
 // Registrar custom element
 customElements.define('menutech-carrusel', MenuTechCarrusel);
+
 
 
 
