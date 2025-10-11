@@ -544,7 +544,6 @@ customElements.define('menutech-neomorphism', MenutechNeomorphism);
 // carrusel
 // ==========================================================================
 
-// menutech-carrusel.js
 class MenuTechCarrusel extends HTMLElement {
   constructor() {
     super();
@@ -572,11 +571,7 @@ class MenuTechCarrusel extends HTMLElement {
       <div class="menus">
         <div class="swiper-container">
           <div class="swiper-wrapper">
-            <!-- Menús de ejemplo incluidos -->
-            <div class="swiper-slide"><img src="https://vikingantonio.github.io/cabanamenu/assets/img/CABA%C3%91A%2001_P%C3%A1gina_1.jpg" data-url="https://vikingantonio.github.io/cabanamenu/"></div>
-            <div class="swiper-slide"><img src="https://vikingantonio.github.io/cabanamenu/assets/img/Menu El Pueblo Mex Rest_Página_1.jpg" data-url="https://vikingantonio.github.io/cabanamenu/elpueblo"></div>
-            <div class="swiper-slide"><img src="https://vikingantonio.github.io/cabanamenu/assets/img/Menu fisico Arandas 3 mexicans_Página_1.jpg" data-url="https://vikingantonio.github.io/cabanamenu/arandas"></div>
-            <div class="swiper-slide"><img src="https://vikingantonio.github.io/bddCards/assets/img/a1.png" data-url="https://vikingantonio.github.io/cabanamenu/angels"></div>
+            <!-- Aquí se pondrán los slides -->
           </div>
           <div class="swiper-pagination"></div>
         </div>
@@ -589,6 +584,25 @@ class MenuTechCarrusel extends HTMLElement {
         </div>
       </div>
     `;
+
+    const wrapper = this.querySelector('.swiper-wrapper');
+
+    // === Si el usuario no añadió slides, cargamos los de ejemplo ===
+    if (!this.querySelectorAll('.swiper-slide').length) {
+      const ejemploSlides = [
+        { src: 'https://vikingantonio.github.io/cabanamenu/assets/img/CABA%C3%91A%2001_P%C3%A1gina_1.jpg', url: 'https://vikingantonio.github.io/cabanamenu/' },
+        { src: 'https://vikingantonio.github.io/cabanamenu/assets/img/Menu El Pueblo Mex Rest_Página_1.jpg', url: 'https://vikingantonio.github.io/cabanamenu/elpueblo' },
+        { src: 'https://vikingantonio.github.io/cabanamenu/assets/img/Menu fisico Arandas 3 mexicans_Página_1.jpg', url: 'https://vikingantonio.github.io/cabanamenu/arandas' },
+        { src: 'https://vikingantonio.github.io/bddCards/assets/img/a1.png', url: 'https://vikingantonio.github.io/cabanamenu/angels' }
+      ];
+
+      ejemploSlides.forEach(slide => {
+        const div = document.createElement('div');
+        div.classList.add('swiper-slide');
+        div.innerHTML = `<img src="${slide.src}" data-url="${slide.url}">`;
+        wrapper.appendChild(div);
+      });
+    }
 
     // === Inicializar Swiper ===
     const swiperContainer = this.querySelector('.swiper-container');
@@ -616,10 +630,9 @@ class MenuTechCarrusel extends HTMLElement {
       }
     };
 
-    // Función para asignar evento click a todos los slides actuales y futuros
     const assignPopupEvents = () => {
       this.querySelectorAll('.swiper-slide img').forEach(img => {
-        img.removeEventListener('click', img._popupClick); // limpiar si ya estaba
+        img.removeEventListener('click', img._popupClick);
         img._popupClick = () => handleClick(img);
         img.addEventListener('click', img._popupClick);
       });
@@ -629,7 +642,7 @@ class MenuTechCarrusel extends HTMLElement {
 
     // Observer para slides agregados dinámicamente
     const observer = new MutationObserver(() => assignPopupEvents());
-    observer.observe(this.querySelector('.swiper-wrapper'), { childList: true });
+    observer.observe(wrapper, { childList: true });
 
     closeBtn.addEventListener('click', () => { popup.style.display = 'none'; popupFrame.src = ""; });
     popup.addEventListener('click', e => { if(e.target === popup){ popup.style.display = 'none'; popupFrame.src = ""; } });
@@ -637,6 +650,7 @@ class MenuTechCarrusel extends HTMLElement {
 }
 
 customElements.define('menutech-carrusel', MenuTechCarrusel);
+
 
 
 
