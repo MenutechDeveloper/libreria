@@ -470,6 +470,76 @@ class MenutechForm extends HTMLElement {
 
 customElements.define('menutech-form', MenutechForm);
 
+// ==============================================================================
+// Efecto Neomorfismo
+// ==============================================================================
+
+class MenutechNeomorphism extends HTMLElement {
+  static get observedAttributes() {
+    return ['color', 'radius', 'distance', 'blur', 'inset'];
+  }
+
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+
+    this.wrapper = document.createElement('div');
+    this.wrapper.classList.add('neo');
+    this.wrapper.innerHTML = `<slot></slot>`;
+
+    const style = document.createElement('style');
+    style.textContent = `
+      :host {
+        display: inline-block;
+        padding: 1rem;
+      }
+
+      .neo {
+        background: var(--neo-color, #e0e0e0);
+        border-radius: var(--neo-radius, 20px);
+        box-shadow:
+          var(--neo-distance, 9px) var(--neo-distance, 9px) var(--neo-blur, 16px) #bebebe,
+          calc(var(--neo-distance, 9px) * -1) calc(var(--neo-distance, 9px) * -1) var(--neo-blur, 16px) #ffffff;
+        transition: all 0.25s ease;
+      }
+
+      .neo.inset {
+        box-shadow:
+          inset var(--neo-distance, 9px) var(--neo-distance, 9px) var(--neo-blur, 16px) #bebebe,
+          inset calc(var(--neo-distance, 9px) * -1) calc(var(--neo-distance, 9px) * -1) var(--neo-blur, 16px) #ffffff;
+      }
+    `;
+
+    this.shadowRoot.append(style, this.wrapper);
+  }
+
+  connectedCallback() {
+    this.#updateStyle();
+  }
+
+  attributeChangedCallback() {
+    this.#updateStyle();
+  }
+
+  #updateStyle() {
+    const color = this.getAttribute('color') || '#e0e0e0';
+    const radius = this.getAttribute('radius') || '20px';
+    const distance = this.getAttribute('distance') || '9px';
+    const blur = this.getAttribute('blur') || '16px';
+    const inset = this.hasAttribute('inset');
+
+    this.wrapper.style.setProperty('--neo-color', color);
+    this.wrapper.style.setProperty('--neo-radius', radius);
+    this.wrapper.style.setProperty('--neo-distance', distance);
+    this.wrapper.style.setProperty('--neo-blur', blur);
+
+    if (inset) this.wrapper.classList.add('inset');
+    else this.wrapper.classList.remove('inset');
+  }
+}
+
+customElements.define('menutech-neomorphism', MenutechNeomorphism);
+
 
 
 
