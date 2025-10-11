@@ -550,52 +550,57 @@ class MenuTechCarrusel extends HTMLElement {
   }
 
   connectedCallback() {
-    // === HTML y CSS ===
-    this.innerHTML = `
-      <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">
-      <style>
-        .menus { background:#fff; font-size:14px; color:#000; margin:0; padding:0; }
-        .swiper-container { width:100%; padding-top:50px; padding-bottom:50px; }
-        .swiper-slide { background-position:center; background-size:cover; width:300px; height:400px; display:flex; justify-content:center; align-items:center; }
-        .menus img { width:100%; cursor:pointer; display:block; }
-
-        .popup { display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background-color: rgba(0,0,0,0.7); justify-content:center; align-items:center; overflow:hidden; }
-        .popup-content { background:#fff; width:80%; max-width:800px; height:70%; border-radius:10px; overflow:hidden; position:relative; display:flex; justify-content:center; align-items:center; flex-direction:column; }
-        .popup-content iframe { width:100%; max-width:700px; height:100%; border:none; margin:auto; display:block; }
-        .close { position:absolute; top:8px; right:15px; font-size:30px; font-weight:bold; color:#333; cursor:pointer; z-index:10; }
-
-        @media (max-width:768px){ html,body{overflow-x:hidden} .popup-content{width:100%;height:90%;margin:2px;max-width:none;border-radius:5px} .popup-content iframe{width:90%;height:80%;margin-top:30px} }
-        @media (max-width:1366px){ .popup-content{width:90%;height:95%;margin:2px auto;max-width:none;border-radius:5px;overflow:hidden;position:relative} .popup-content iframe{width:100%;height:100%;margin:0 auto} }
-      </style>
-
-      <div class="menus">
+    // === Solo agregamos la estructura mínima si no existe ===
+    if (!this.querySelector('.menus')) {
+      const container = document.createElement('div');
+      container.classList.add('menus');
+      container.innerHTML = `
         <div class="swiper-container">
-          <div class="swiper-wrapper">
-            <!-- Aquí se pondrán los slides -->
-          </div>
+          <div class="swiper-wrapper"></div>
           <div class="swiper-pagination"></div>
         </div>
-      </div>
+      `;
+      this.appendChild(container);
+    }
 
-      <div id="popup" class="popup">
+    if (!this.querySelector('#popup')) {
+      const popup = document.createElement('div');
+      popup.id = 'popup';
+      popup.classList.add('popup');
+      popup.innerHTML = `
         <div class="popup-content">
           <span class="close">&times;</span>
           <iframe id="popupFrame" src="" frameborder="0"></iframe>
         </div>
-      </div>
-    `;
+      `;
+      this.appendChild(popup);
+    }
+
+    // === CSS ===
+    if (!document.getElementById('menutech-carrusel-style')) {
+      const style = document.createElement('style');
+      style.id = 'menutech-carrusel-style';
+      style.textContent = `
+        .swiper-slide { background-position:center; background-size:cover; width:300px; height:400px; display:flex; justify-content:center; align-items:center; }
+        .menus img { width:100%; cursor:pointer; display:block; }
+        .popup { display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background-color: rgba(0,0,0,0.7); justify-content:center; align-items:center; overflow:hidden; }
+        .popup-content { background:#fff; width:80%; max-width:800px; height:70%; border-radius:10px; overflow:hidden; position:relative; display:flex; justify-content:center; align-items:center; flex-direction:column; }
+        .popup-content iframe { width:100%; max-width:700px; height:100%; border:none; margin:auto; display:block; }
+        .close { position:absolute; top:8px; right:15px; font-size:30px; font-weight:bold; color:#333; cursor:pointer; z-index:10; }
+      `;
+      document.head.appendChild(style);
+    }
 
     const wrapper = this.querySelector('.swiper-wrapper');
 
-    // === Si el usuario no añadió slides, cargamos los de ejemplo ===
-    if (!this.querySelectorAll('.swiper-slide').length) {
+    // === Si no hay slides agregados por el usuario, usamos los de ejemplo ===
+    if (!wrapper.querySelectorAll('.swiper-slide').length) {
       const ejemploSlides = [
         { src: 'https://vikingantonio.github.io/cabanamenu/assets/img/CABA%C3%91A%2001_P%C3%A1gina_1.jpg', url: 'https://vikingantonio.github.io/cabanamenu/' },
         { src: 'https://vikingantonio.github.io/cabanamenu/assets/img/Menu El Pueblo Mex Rest_Página_1.jpg', url: 'https://vikingantonio.github.io/cabanamenu/elpueblo' },
         { src: 'https://vikingantonio.github.io/cabanamenu/assets/img/Menu fisico Arandas 3 mexicans_Página_1.jpg', url: 'https://vikingantonio.github.io/cabanamenu/arandas' },
         { src: 'https://vikingantonio.github.io/bddCards/assets/img/a1.png', url: 'https://vikingantonio.github.io/cabanamenu/angels' }
       ];
-
       ejemploSlides.forEach(slide => {
         const div = document.createElement('div');
         div.classList.add('swiper-slide');
@@ -605,8 +610,7 @@ class MenuTechCarrusel extends HTMLElement {
     }
 
     // === Inicializar Swiper ===
-    const swiperContainer = this.querySelector('.swiper-container');
-    const swiper = new Swiper(swiperContainer, {
+    const swiper = new Swiper(this.querySelector('.swiper-container'), {
       effect: 'coverflow',
       grabCursor: true,
       centeredSlides: true,
@@ -640,7 +644,6 @@ class MenuTechCarrusel extends HTMLElement {
 
     assignPopupEvents();
 
-    // Observer para slides agregados dinámicamente
     const observer = new MutationObserver(() => assignPopupEvents());
     observer.observe(wrapper, { childList: true });
 
@@ -650,6 +653,7 @@ class MenuTechCarrusel extends HTMLElement {
 }
 
 customElements.define('menutech-carrusel', MenuTechCarrusel);
+
 
 
 
