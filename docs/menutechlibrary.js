@@ -544,24 +544,25 @@ customElements.define('menutech-neomorphism', MenutechNeomorphism);
 // carrusel
 // ==========================================================================
 
+// menutech-carrusel.js
 class MenuTechCarrusel extends HTMLElement {
   constructor() {
     super();
   }
 
   connectedCallback() {
-    // === HTML del carrusel y popup ===
+    // === HTML y CSS ===
     this.innerHTML = `
       <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">
       <style>
-        .menus { background: #fff; font-size:14px; color:#000; margin:0; padding:0; }
+        .menus { background:#fff; font-size:14px; color:#000; margin:0; padding:0; }
         .swiper-container { width:100%; padding-top:50px; padding-bottom:50px; }
-        .swiper-slide { background-position:center; background-size:cover; width:300px; height:400px; }
-        .menus img { width:100%; cursor:pointer; }
+        .swiper-slide { background-position:center; background-size:cover; width:300px; height:400px; display:flex; justify-content:center; align-items:center; }
+        .menus img { width:100%; cursor:pointer; display:block; }
 
         .popup { display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background-color: rgba(0,0,0,0.7); justify-content:center; align-items:center; overflow:hidden; }
-        .popup-content { background:#fff; width:80%; max-width:800px; height:70%; border-radius:10px; overflow:hidden; position:relative; display:flex; justify-content:center; align-items:center; flex-direction:column; zoom:120%; }
-        .popup-content iframe { width:100%; max-width:700px; height:100%; border:none; margin:auto; display:block; margin-top:50px; margin-right:20px; }
+        .popup-content { background:#fff; width:80%; max-width:800px; height:70%; border-radius:10px; overflow:hidden; position:relative; display:flex; justify-content:center; align-items:center; flex-direction:column; }
+        .popup-content iframe { width:100%; max-width:700px; height:100%; border:none; margin:auto; display:block; }
         .close { position:absolute; top:8px; right:15px; font-size:30px; font-weight:bold; color:#333; cursor:pointer; z-index:10; }
 
         @media (max-width:768px){ html,body{overflow-x:hidden} .popup-content{width:100%;height:90%;margin:2px;max-width:none;border-radius:5px} .popup-content iframe{width:90%;height:80%;margin-top:30px} }
@@ -571,7 +572,11 @@ class MenuTechCarrusel extends HTMLElement {
       <div class="menus">
         <div class="swiper-container">
           <div class="swiper-wrapper">
-            <slot></slot>
+            <!-- Menús de ejemplo incluidos -->
+            <div class="swiper-slide"><img src="https://vikingantonio.github.io/cabanamenu/assets/img/CABA%C3%91A%2001_P%C3%A1gina_1.jpg" data-url="https://vikingantonio.github.io/cabanamenu/"></div>
+            <div class="swiper-slide"><img src="https://vikingantonio.github.io/cabanamenu/assets/img/Menu El Pueblo Mex Rest_Página_1.jpg" data-url="https://vikingantonio.github.io/cabanamenu/elpueblo"></div>
+            <div class="swiper-slide"><img src="https://vikingantonio.github.io/cabanamenu/assets/img/Menu fisico Arandas 3 mexicans_Página_1.jpg" data-url="https://vikingantonio.github.io/cabanamenu/arandas"></div>
+            <div class="swiper-slide"><img src="https://vikingantonio.github.io/bddCards/assets/img/a1.png" data-url="https://vikingantonio.github.io/cabanamenu/angels"></div>
           </div>
           <div class="swiper-pagination"></div>
         </div>
@@ -585,38 +590,20 @@ class MenuTechCarrusel extends HTMLElement {
       </div>
     `;
 
-    // === Inicializar Swiper después de que el slot tenga elementos ===
-    const slot = this.querySelector('slot');
+    // === Inicializar Swiper ===
+    const swiperContainer = this.querySelector('.swiper-container');
+    const swiper = new Swiper(swiperContainer, {
+      effect: 'coverflow',
+      grabCursor: true,
+      centeredSlides: true,
+      loop: true,
+      slidesPerView: 'auto',
+      autoplay: { delay: 2500, disableOnInteraction: false },
+      coverflowEffect: { rotate:50, stretch:0, depth:100, modifier:1, slideShadows:true },
+      pagination: { el: this.querySelector('.swiper-pagination') },
+    });
 
-    // Usamos un pequeño delay o un MutationObserver para esperar que los slides se distribuyan
-    const initSwiper = () => {
-      const swiper = new Swiper(this.querySelector('.swiper-container'), {
-        effect: 'coverflow',
-        grabCursor: true,
-        centeredSlides: true,
-        loop: true,
-        slidesPerView: 'auto',
-        autoplay: { delay: 2500, disableOnInteraction: false },
-        coverflowEffect: { rotate: 50, stretch: 0, depth: 100, modifier: 1, slideShadows: true },
-        pagination: { el: this.querySelector('.swiper-pagination') },
-      });
-    };
-
-    // Si ya hay elementos en el slot, inicializa
-    if (slot.assignedElements().length) {
-      initSwiper();
-    } else {
-      // Si el usuario va a agregar slides dinámicamente, observamos cambios
-      const observer = new MutationObserver(() => {
-        if (slot.assignedElements().length) {
-          initSwiper();
-          observer.disconnect();
-        }
-      });
-      observer.observe(slot, { childList: true });
-    }
-
-    // === POPUP ===
+    // === Popup ===
     const popup = this.querySelector('#popup');
     const popupFrame = this.querySelector('#popupFrame');
     const closeBtn = this.querySelector('.close');
@@ -629,17 +616,20 @@ class MenuTechCarrusel extends HTMLElement {
       }
     };
 
-    // Evento para todos los slides actuales y futuros
-    const attachPopupEvents = () => {
+    // Función para asignar evento click a todos los slides actuales y futuros
+    const assignPopupEvents = () => {
       this.querySelectorAll('.swiper-slide img').forEach(img => {
-        img.addEventListener('click', () => handleClick(img));
+        img.removeEventListener('click', img._popupClick); // limpiar si ya estaba
+        img._popupClick = () => handleClick(img);
+        img.addEventListener('click', img._popupClick);
       });
     };
 
-    attachPopupEvents();
+    assignPopupEvents();
 
-    // Para slides agregados después
-    slot.addEventListener('slotchange', attachPopupEvents);
+    // Observer para slides agregados dinámicamente
+    const observer = new MutationObserver(() => assignPopupEvents());
+    observer.observe(this.querySelector('.swiper-wrapper'), { childList: true });
 
     closeBtn.addEventListener('click', () => { popup.style.display = 'none'; popupFrame.src = ""; });
     popup.addEventListener('click', e => { if(e.target === popup){ popup.style.display = 'none'; popupFrame.src = ""; } });
@@ -647,6 +637,8 @@ class MenuTechCarrusel extends HTMLElement {
 }
 
 customElements.define('menutech-carrusel', MenuTechCarrusel);
+
+
 
 
 
