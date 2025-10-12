@@ -549,22 +549,11 @@ class MenuTechCarrusel extends HTMLElement {
     super();
   }
 
-  async connectedCallback() {
-    // === Asegurar Swiper ===
-    await this.ensureSwiper();
-
-    // === Obtener atributos personalizados ===
-    const slideWidth = this.getAttribute('slide-width') || '300px';
-    const slideHeight = this.getAttribute('slide-height') || '400px';
-    const centered = this.hasAttribute('center') ? 'center' : 'left'; // centrado opcional
-
-    // === Estructura base ===
+  connectedCallback() {
+    // === Crear estructura si no existe ===
     if (!this.querySelector('.menus')) {
       const container = document.createElement('div');
       container.classList.add('menus');
-      container.style.display = 'flex';
-      container.style.justifyContent = centered === 'center' ? 'center' : 'flex-start';
-      container.style.alignItems = 'center';
       container.innerHTML = `
         <div class="swiper-container">
           <div class="swiper-wrapper"></div>
@@ -587,7 +576,7 @@ class MenuTechCarrusel extends HTMLElement {
       this.appendChild(popup);
     }
 
-    // === CSS global ===
+    // === Inyectar CSS ===
     if (!document.getElementById('menutech-carrusel-style')) {
       const style = document.createElement('style');
       style.id = 'menutech-carrusel-style';
@@ -599,10 +588,18 @@ class MenuTechCarrusel extends HTMLElement {
           width: 100%;
           height: auto;
           box-sizing: border-box;
+          padding: 40px 0;
         }
         .swiper-container {
+          width: 100%;
+          max-width: 1000px;
+          overflow: hidden;
           display: flex;
           justify-content: center;
+          align-items: center;
+        }
+        .swiper-wrapper {
+          display: flex;
           align-items: center;
         }
         .swiper-slide {
@@ -611,11 +608,10 @@ class MenuTechCarrusel extends HTMLElement {
           display: flex;
           justify-content: center;
           align-items: center;
+          transition: transform 0.5s ease;
         }
         .menus img {
           width: 100%;
-          height: 100%;
-          object-fit: cover;
           cursor: pointer;
           display: block;
           border-radius: 10px;
@@ -628,7 +624,7 @@ class MenuTechCarrusel extends HTMLElement {
           top: 0;
           width: 100%;
           height: 100%;
-          background-color: rgba(0, 0, 0, 0.7);
+          background-color: rgba(0,0,0,0.7);
           justify-content: center;
           align-items: center;
           overflow: hidden;
@@ -668,51 +664,79 @@ class MenuTechCarrusel extends HTMLElement {
       document.head.appendChild(style);
     }
 
-    // === Obtener contenedor del swiper ===
+    // === Inyectar Swiper si no existe ===
+    const loadSwiper = () => new Promise((resolve) => {
+      if (window.Swiper) return resolve();
+
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = 'https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css';
+      document.head.appendChild(link);
+
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js';
+      script.onload = () => resolve();
+      document.head.appendChild(script);
+    });
+
+    // === Configurar slides ===
     const wrapper = this.querySelector('.swiper-wrapper');
-    wrapper.innerHTML = "";
+    const imagesAttr = this.getAttribute('images');
+    const width = this.getAttribute('slide-width') || '300px';
+    const height = this.getAttribute('slide-height') || '400px';
 
-    // === Cargar imágenes personalizadas o por defecto ===
-    const userImages = this.querySelectorAll('img[data-url], img[src]');
-    if (userImages.length > 0) {
-      userImages.forEach(img => {
-        const src = img.getAttribute('src');
-        const url = img.getAttribute('data-url') || null;
-        const div = document.createElement('div');
-        div.classList.add('swiper-slide');
-        div.style.width = slideWidth;
-        div.style.height = slideHeight;
-        div.innerHTML = `<img src="${src}" ${url ? `data-url="${url}"` : ""}>`;
-        wrapper.appendChild(div);
+    const userSlides = imagesAttr
+      ? imagesAttr.split(',').map(src => ({ src: src.trim() }))
+      : Array.from({ length: 6 }, (_, i) => ({
+          src: `https://placehold.co/500x500?text=Imagen+${i + 1}`,
+        }));
+
+    wrapper.innerHTML = '';
+    userSlides.forEach(slide => {
+      const div = document.createElement('div');
+      div.classList.add('swiper-slide');
+      div.style.width = width;
+      div.style.height = height;
+      div.innerHTML = `<img src="${slide.src}" data-url="${slide.url || ''}">`;
+      wrapper.appendChild(div);
+    });
+
+    // === Inicializar Swiper después de cargar ===
+    loadSwiper().then(() => {
+      const container = this.querySelector('.swiper-container');
+      const imgs = container.querySelectorAll('img');
+      const allLoaded = Promise.all(
+        Array.from(imgs).map(img => {
+          if (img.complete) return Promise.resolve();
+          return new Promise(resolve => (img.onload = resolve));
+        })
+      );
+
+      allLoaded.then(() => {
+        const swiper = new Swiper(container, {
+          effect: 'coverflow',
+          grabCursor: true,
+          centeredSlides: true,
+          loop: true,
+          autoplay: { delay: 2500, disableOnInteraction: false },
+          coverflowEffect: {
+            rotate: 40,
+            stretch: 0,
+            depth: 150,
+            modifier: 1.5,
+            slideShadows: true,
+          },
+          pagination: {
+            el: this.querySelector('.swiper-pagination'),
+            clickable: true,
+          },
+          breakpoints: {
+            0: { slidesPerView: 1 },
+            600: { slidesPerView: 2 },
+            900: { slidesPerView: 3 },
+          },
+        });
       });
-      userImages.forEach(img => img.remove());
-    } else {
-      for (let i = 1; i <= 6; i++) {
-        const div = document.createElement('div');
-        div.classList.add('swiper-slide');
-        div.style.width = slideWidth;
-        div.style.height = slideHeight;
-        div.innerHTML = `<img src="https://placehold.co/500x500?text=Imagen+${i}">`;
-        wrapper.appendChild(div);
-      }
-    }
-
-    // === Inicializar Swiper ===
-    const swiper = new Swiper(this.querySelector('.swiper-container'), {
-      effect: 'coverflow',
-      grabCursor: true,
-      centeredSlides: true,
-      loop: true,
-      slidesPerView: 'auto',
-      autoplay: { delay: 2500, disableOnInteraction: false },
-      coverflowEffect: {
-        rotate: 50,
-        stretch: 0,
-        depth: 100,
-        modifier: 1,
-        slideShadows: true
-      },
-      pagination: { el: this.querySelector('.swiper-pagination') },
     });
 
     // === Popup ===
@@ -729,7 +753,7 @@ class MenuTechCarrusel extends HTMLElement {
     };
 
     const assignPopupEvents = () => {
-      this.querySelectorAll('.swiper-slide img').forEach(img => {
+      this.querySelectorAll('.swiper-slide img').forEach((img) => {
         img.removeEventListener('click', img._popupClick);
         img._popupClick = () => handleClick(img);
         img.addEventListener('click', img._popupClick);
@@ -742,43 +766,14 @@ class MenuTechCarrusel extends HTMLElement {
 
     closeBtn.addEventListener('click', () => {
       popup.style.display = 'none';
-      popupFrame.src = "";
+      popupFrame.src = '';
     });
-    popup.addEventListener('click', e => {
+    popup.addEventListener('click', (e) => {
       if (e.target === popup) {
         popup.style.display = 'none';
-        popupFrame.src = "";
+        popupFrame.src = '';
       }
     });
-  }
-
-  // === Cargar Swiper dinámicamente ===
-  async ensureSwiper() {
-    const loadScript = (src) => new Promise((resolve, reject) => {
-      if (document.querySelector(`script[src="${src}"]`)) {
-        resolve();
-        return;
-      }
-      const script = document.createElement("script");
-      script.src = src;
-      script.onload = resolve;
-      script.onerror = reject;
-      document.head.appendChild(script);
-    });
-
-    const loadCSS = (href) => {
-      if (!document.querySelector(`link[href="${href}"]`)) {
-        const link = document.createElement("link");
-        link.rel = "stylesheet";
-        link.href = href;
-        document.head.appendChild(link);
-      }
-    };
-
-    if (typeof Swiper === "undefined") {
-      loadCSS("https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css");
-      await loadScript("https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js");
-    }
   }
 }
 
@@ -917,6 +912,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
