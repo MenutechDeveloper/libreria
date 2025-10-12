@@ -549,7 +549,10 @@ class MenuTechCarrusel extends HTMLElement {
     super();
   }
 
-  connectedCallback() {
+  async connectedCallback() {
+    // === Aseguramos que Swiper esté cargado ===
+    await this.ensureSwiper();
+
     // === Solo agregamos la estructura mínima si no existe ===
     if (!this.querySelector('.menus')) {
       const container = document.createElement('div');
@@ -581,12 +584,64 @@ class MenuTechCarrusel extends HTMLElement {
       const style = document.createElement('style');
       style.id = 'menutech-carrusel-style';
       style.textContent = `
-        .swiper-slide { background-position:center; background-size:cover; width:300px; height:400px; display:flex; justify-content:center; align-items:center; }
-        .menus img { width:100%; cursor:pointer; display:block; }
-        .popup { display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background-color: rgba(0,0,0,0.7); justify-content:center; align-items:center; overflow:hidden; }
-        .popup-content { background:#fff; width:80%; max-width:800px; height:70%; border-radius:10px; overflow:hidden; position:relative; display:flex; justify-content:center; align-items:center; flex-direction:column; }
-        .popup-content iframe { width:100%; max-width:700px; height:100%; border:none; margin:auto; display:block; }
-        .close { position:absolute; top:8px; right:15px; font-size:30px; font-weight:bold; color:#333; cursor:pointer; z-index:10; }
+        .swiper-slide {
+          background-position: center;
+          background-size: cover;
+          width: 300px;
+          height: 400px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+        .menus img {
+          width: 100%;
+          cursor: pointer;
+          display: block;
+        }
+        .popup {
+          display: none;
+          position: fixed;
+          z-index: 1000;
+          left: 0;
+          top: 0;
+          width: 100%;
+          height: 100%;
+          background-color: rgba(0, 0, 0, 0.7);
+          justify-content: center;
+          align-items: center;
+          overflow: hidden;
+        }
+        .popup-content {
+          background: #fff;
+          width: 80%;
+          max-width: 800px;
+          height: 70%;
+          border-radius: 10px;
+          overflow: hidden;
+          position: relative;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          flex-direction: column;
+        }
+        .popup-content iframe {
+          width: 100%;
+          max-width: 700px;
+          height: 100%;
+          border: none;
+          margin: auto;
+          display: block;
+        }
+        .close {
+          position: absolute;
+          top: 8px;
+          right: 15px;
+          font-size: 30px;
+          font-weight: bold;
+          color: #333;
+          cursor: pointer;
+          z-index: 10;
+        }
       `;
       document.head.appendChild(style);
     }
@@ -617,7 +672,7 @@ class MenuTechCarrusel extends HTMLElement {
       loop: true,
       slidesPerView: 'auto',
       autoplay: { delay: 2500, disableOnInteraction: false },
-      coverflowEffect: { rotate:50, stretch:0, depth:100, modifier:1, slideShadows:true },
+      coverflowEffect: { rotate: 50, stretch: 0, depth: 100, modifier: 1, slideShadows: true },
       pagination: { el: this.querySelector('.swiper-pagination') },
     });
 
@@ -628,7 +683,7 @@ class MenuTechCarrusel extends HTMLElement {
 
     const handleClick = (img) => {
       const url = img.getAttribute('data-url');
-      if(url){
+      if (url) {
         popupFrame.src = url;
         popup.style.display = 'flex';
       }
@@ -647,12 +702,52 @@ class MenuTechCarrusel extends HTMLElement {
     const observer = new MutationObserver(() => assignPopupEvents());
     observer.observe(wrapper, { childList: true });
 
-    closeBtn.addEventListener('click', () => { popup.style.display = 'none'; popupFrame.src = ""; });
-    popup.addEventListener('click', e => { if(e.target === popup){ popup.style.display = 'none'; popupFrame.src = ""; } });
+    closeBtn.addEventListener('click', () => {
+      popup.style.display = 'none';
+      popupFrame.src = "";
+    });
+
+    popup.addEventListener('click', e => {
+      if (e.target === popup) {
+        popup.style.display = 'none';
+        popupFrame.src = "";
+      }
+    });
+  }
+
+  // === MÉTODO para asegurar que Swiper esté disponible ===
+  async ensureSwiper() {
+    const loadScript = (src) => new Promise((resolve, reject) => {
+      if (document.querySelector(`script[src="${src}"]`)) {
+        resolve();
+        return;
+      }
+      const script = document.createElement("script");
+      script.src = src;
+      script.onload = resolve;
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+
+    const loadCSS = (href) => {
+      if (!document.querySelector(`link[href="${href}"]`)) {
+        const link = document.createElement("link");
+        link.rel = "stylesheet";
+        link.href = href;
+        document.head.appendChild(link);
+      }
+    };
+
+    // Carga solo si no existe
+    if (typeof Swiper === "undefined") {
+      loadCSS("https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css");
+      await loadScript("https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js");
+    }
   }
 }
 
 customElements.define('menutech-carrusel', MenuTechCarrusel);
+
 
 // ==========================================================================================================================
 // Navbar
@@ -784,6 +879,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
