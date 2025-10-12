@@ -550,13 +550,21 @@ class MenuTechCarrusel extends HTMLElement {
   }
 
   async connectedCallback() {
-    // === Aseguramos que Swiper esté cargado ===
+    // === Asegurar Swiper ===
     await this.ensureSwiper();
+
+    // === Obtener atributos personalizados ===
+    const slideWidth = this.getAttribute('slide-width') || '300px';
+    const slideHeight = this.getAttribute('slide-height') || '400px';
+    const centered = this.hasAttribute('center') ? 'center' : 'left'; // centrado opcional
 
     // === Estructura base ===
     if (!this.querySelector('.menus')) {
       const container = document.createElement('div');
       container.classList.add('menus');
+      container.style.display = 'flex';
+      container.style.justifyContent = centered === 'center' ? 'center' : 'flex-start';
+      container.style.alignItems = 'center';
       container.innerHTML = `
         <div class="swiper-container">
           <div class="swiper-wrapper"></div>
@@ -579,22 +587,35 @@ class MenuTechCarrusel extends HTMLElement {
       this.appendChild(popup);
     }
 
-    // === CSS ===
+    // === CSS global ===
     if (!document.getElementById('menutech-carrusel-style')) {
       const style = document.createElement('style');
       style.id = 'menutech-carrusel-style';
       style.textContent = `
+        menutech-carrusel {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          width: 100%;
+          height: auto;
+          box-sizing: border-box;
+        }
+        .swiper-container {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
         .swiper-slide {
           background-position: center;
           background-size: cover;
-          width: 300px;
-          height: 400px;
           display: flex;
           justify-content: center;
           align-items: center;
         }
         .menus img {
           width: 100%;
+          height: 100%;
+          object-fit: cover;
           cursor: pointer;
           display: block;
           border-radius: 10px;
@@ -647,11 +668,11 @@ class MenuTechCarrusel extends HTMLElement {
       document.head.appendChild(style);
     }
 
-    // === Obtenemos el contenedor del swiper ===
+    // === Obtener contenedor del swiper ===
     const wrapper = this.querySelector('.swiper-wrapper');
-    wrapper.innerHTML = ""; // limpiar contenido previo
+    wrapper.innerHTML = "";
 
-    // === Si el usuario agregó imágenes personalizadas ===
+    // === Cargar imágenes personalizadas o por defecto ===
     const userImages = this.querySelectorAll('img[data-url], img[src]');
     if (userImages.length > 0) {
       userImages.forEach(img => {
@@ -659,16 +680,18 @@ class MenuTechCarrusel extends HTMLElement {
         const url = img.getAttribute('data-url') || null;
         const div = document.createElement('div');
         div.classList.add('swiper-slide');
+        div.style.width = slideWidth;
+        div.style.height = slideHeight;
         div.innerHTML = `<img src="${src}" ${url ? `data-url="${url}"` : ""}>`;
         wrapper.appendChild(div);
       });
-      // Borramos las imágenes originales del HTML del usuario (para no duplicarlas)
       userImages.forEach(img => img.remove());
     } else {
-      // === Si no hay imágenes personalizadas, mostramos 6 por defecto ===
       for (let i = 1; i <= 6; i++) {
         const div = document.createElement('div');
         div.classList.add('swiper-slide');
+        div.style.width = slideWidth;
+        div.style.height = slideHeight;
         div.innerHTML = `<img src="https://placehold.co/500x500?text=Imagen+${i}">`;
         wrapper.appendChild(div);
       }
@@ -729,7 +752,7 @@ class MenuTechCarrusel extends HTMLElement {
     });
   }
 
-  // === Método para asegurar que Swiper esté disponible ===
+  // === Cargar Swiper dinámicamente ===
   async ensureSwiper() {
     const loadScript = (src) => new Promise((resolve, reject) => {
       if (document.querySelector(`script[src="${src}"]`)) {
@@ -760,6 +783,7 @@ class MenuTechCarrusel extends HTMLElement {
 }
 
 customElements.define('menutech-carrusel', MenuTechCarrusel);
+
 
 
 
@@ -893,6 +917,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
