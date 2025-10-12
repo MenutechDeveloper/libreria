@@ -654,6 +654,143 @@ class MenuTechCarrusel extends HTMLElement {
 
 customElements.define('menutech-carrusel', MenuTechCarrusel);
 
+// ==========================================================================================================================
+// Navbar
+// ==========================================================================================================================
+
+<script>
+class MenutechNavbar extends HTMLElement {
+  constructor() {
+    super();
+    const shadow = this.attachShadow({ mode: "open" });
+
+    // Atributos configurables
+    const color = this.getAttribute("color") || "#e0e0e0";
+    const opacity = this.getAttribute("opacity") || "0.7";
+
+    // Enlaces, iconos y textos separados por coma
+    const links = (this.getAttribute("links") || "index.html,index.html#services,index.html#gallery,index.html#contact").split(",");
+    const icons = (this.getAttribute("icons") || "ri-home-5-line,ri-tools-line,ri-image-2-line,ri-mail-line").split(",");
+    const texts = (this.getAttribute("texts") || "Home,Services,Gallery,Contact").split(",");
+
+    // HTML interno
+    shadow.innerHTML = `
+      <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet">
+      <style>
+        :host {
+          font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+        }
+
+        .neo-navbar {
+          position: fixed;
+          bottom: 30px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 760px;
+          padding: 14px 30px;
+          background: rgba(${this.hexToRgb(color)}, ${opacity});
+          border-radius: 35px;
+          box-shadow:
+            8px 8px 16px rgba(0,0,0,0.15),
+            -8px -8px 16px rgba(255,255,255,0.9);
+          display: flex;
+          justify-content: space-around;
+          align-items: center;
+          backdrop-filter: blur(10px);
+          transition: all 0.3s ease;
+          z-index: 100;
+        }
+
+        a {
+          text-decoration: none;
+          color: #444;
+          font-size: 0.9rem;
+          font-weight: 500;
+          padding: 10px 18px;
+          border-radius: 18px;
+          background: rgba(${this.hexToRgb(color)}, 0.4);
+          box-shadow:
+            inset 2px 2px 4px rgba(255,255,255,0.6),
+            inset -2px -2px 4px rgba(190,190,190,0.5);
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          transition: all 0.25s ease;
+        }
+
+        a i {
+          font-size: 1.3rem;
+          opacity: 0.75;
+          transition: all 0.25s ease;
+        }
+
+        a:hover {
+          color: #007aff;
+          box-shadow:
+            inset 3px 3px 6px rgba(190,190,190,0.65),
+            inset -3px -3px 6px rgba(255,255,255,0.7);
+          transform: translateY(-2px);
+        }
+
+        a:hover i {
+          color: #007aff;
+          opacity: 1;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+          .neo-navbar {
+            width: 90%;
+            padding: 10px 20px;
+            border-radius: 25px;
+          }
+
+          a {
+            padding: 10px;
+            border-radius: 15px;
+            font-size: 0; /* oculta texto */
+            background: rgba(${this.hexToRgb(color)}, 0.35);
+          }
+
+          a i {
+            font-size: 1.5rem;
+            opacity: 0.85;
+          }
+
+          a:hover {
+            transform: translateY(-3px);
+          }
+        }
+      </style>
+
+      <nav class="neo-navbar">
+        ${links.map((href, i) => `
+          <a href="${href.trim()}">
+            <i class="${icons[i] ? icons[i].trim() : 'ri-question-line'}"></i>
+            <span>${texts[i] ? texts[i].trim() : ''}</span>
+          </a>
+        `).join('')}
+      </nav>
+    `;
+  }
+
+  // Convertidor de HEX a RGB para el color del fondo
+  hexToRgb(hex) {
+    hex = hex.replace(/^#/, "");
+    if (hex.length === 3) {
+      hex = hex.split("").map(x => x + x).join("");
+    }
+    const num = parseInt(hex, 16);
+    const r = (num >> 16) & 255;
+    const g = (num >> 8) & 255;
+    const b = num & 255;
+    return `${r},${g},${b}`;
+  }
+}
+
+customElements.define("menutech-navbar", MenutechNavbar);
+</script>
+
 
 
 
