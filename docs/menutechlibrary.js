@@ -658,22 +658,19 @@ customElements.define('menutech-carrusel', MenuTechCarrusel);
 // Navbar
 // ==========================================================================================================================
 
-<script>
 class MenutechNavbar extends HTMLElement {
   constructor() {
     super();
     const shadow = this.attachShadow({ mode: "open" });
 
-    // Atributos configurables
+    // === CONFIGURACIONES POR DEFECTO ===
     const color = this.getAttribute("color") || "#e0e0e0";
     const opacity = this.getAttribute("opacity") || "0.7";
-
-    // Enlaces, iconos y textos separados por coma
     const links = (this.getAttribute("links") || "index.html,index.html#services,index.html#gallery,index.html#contact").split(",");
     const icons = (this.getAttribute("icons") || "ri-home-5-line,ri-tools-line,ri-image-2-line,ri-mail-line").split(",");
     const texts = (this.getAttribute("texts") || "Home,Services,Gallery,Contact").split(",");
 
-    // HTML interno
+    // === HTML DEL NAVBAR ===
     shadow.innerHTML = `
       <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet">
       <style>
@@ -698,7 +695,7 @@ class MenutechNavbar extends HTMLElement {
           align-items: center;
           backdrop-filter: blur(10px);
           transition: all 0.3s ease;
-          z-index: 100;
+          z-index: 1000;
         }
 
         a {
@@ -748,7 +745,7 @@ class MenutechNavbar extends HTMLElement {
           a {
             padding: 10px;
             border-radius: 15px;
-            font-size: 0; /* oculta texto */
+            font-size: 0; /* oculta el texto */
             background: rgba(${this.hexToRgb(color)}, 0.35);
           }
 
@@ -774,12 +771,10 @@ class MenutechNavbar extends HTMLElement {
     `;
   }
 
-  // Convertidor de HEX a RGB para el color del fondo
+  // Convierte color HEX a RGB
   hexToRgb(hex) {
     hex = hex.replace(/^#/, "");
-    if (hex.length === 3) {
-      hex = hex.split("").map(x => x + x).join("");
-    }
+    if (hex.length === 3) hex = hex.split("").map(x => x + x).join("");
     const num = parseInt(hex, 16);
     const r = (num >> 16) & 255;
     const g = (num >> 8) & 255;
@@ -789,7 +784,6 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
-</script>
 
 
 
