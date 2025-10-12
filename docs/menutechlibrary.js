@@ -553,7 +553,7 @@ class MenuTechCarrusel extends HTMLElement {
     // === Aseguramos que Swiper esté cargado ===
     await this.ensureSwiper();
 
-    // === Solo agregamos la estructura mínima si no existe ===
+    // === Estructura base ===
     if (!this.querySelector('.menus')) {
       const container = document.createElement('div');
       container.classList.add('menus');
@@ -597,6 +597,7 @@ class MenuTechCarrusel extends HTMLElement {
           width: 100%;
           cursor: pointer;
           display: block;
+          border-radius: 10px;
         }
         .popup {
           display: none;
@@ -646,22 +647,31 @@ class MenuTechCarrusel extends HTMLElement {
       document.head.appendChild(style);
     }
 
+    // === Obtenemos el contenedor del swiper ===
     const wrapper = this.querySelector('.swiper-wrapper');
+    wrapper.innerHTML = ""; // limpiar contenido previo
 
-    // === Si no hay slides agregados por el usuario, usamos los de ejemplo ===
-    if (!wrapper.querySelectorAll('.swiper-slide').length) {
-      const ejemploSlides = [
-        { src: 'https://vikingantonio.github.io/cabanamenu/assets/img/CABA%C3%91A%2001_P%C3%A1gina_1.jpg', url: 'https://vikingantonio.github.io/cabanamenu/' },
-        { src: 'https://vikingantonio.github.io/cabanamenu/assets/img/Menu El Pueblo Mex Rest_Página_1.jpg', url: 'https://vikingantonio.github.io/cabanamenu/elpueblo' },
-        { src: 'https://vikingantonio.github.io/cabanamenu/assets/img/Menu fisico Arandas 3 mexicans_Página_1.jpg', url: 'https://vikingantonio.github.io/cabanamenu/arandas' },
-        { src: 'https://vikingantonio.github.io/bddCards/assets/img/a1.png', url: 'https://vikingantonio.github.io/cabanamenu/angels' }
-      ];
-      ejemploSlides.forEach(slide => {
+    // === Si el usuario agregó imágenes personalizadas ===
+    const userImages = this.querySelectorAll('img[data-url], img[src]');
+    if (userImages.length > 0) {
+      userImages.forEach(img => {
+        const src = img.getAttribute('src');
+        const url = img.getAttribute('data-url') || null;
         const div = document.createElement('div');
         div.classList.add('swiper-slide');
-        div.innerHTML = `<img src="${slide.src}" data-url="${slide.url}">`;
+        div.innerHTML = `<img src="${src}" ${url ? `data-url="${url}"` : ""}>`;
         wrapper.appendChild(div);
       });
+      // Borramos las imágenes originales del HTML del usuario (para no duplicarlas)
+      userImages.forEach(img => img.remove());
+    } else {
+      // === Si no hay imágenes personalizadas, mostramos 6 por defecto ===
+      for (let i = 1; i <= 6; i++) {
+        const div = document.createElement('div');
+        div.classList.add('swiper-slide');
+        div.innerHTML = `<img src="https://placehold.co/500x500?text=Imagen+${i}">`;
+        wrapper.appendChild(div);
+      }
     }
 
     // === Inicializar Swiper ===
@@ -672,7 +682,13 @@ class MenuTechCarrusel extends HTMLElement {
       loop: true,
       slidesPerView: 'auto',
       autoplay: { delay: 2500, disableOnInteraction: false },
-      coverflowEffect: { rotate: 50, stretch: 0, depth: 100, modifier: 1, slideShadows: true },
+      coverflowEffect: {
+        rotate: 50,
+        stretch: 0,
+        depth: 100,
+        modifier: 1,
+        slideShadows: true
+      },
       pagination: { el: this.querySelector('.swiper-pagination') },
     });
 
@@ -698,7 +714,6 @@ class MenuTechCarrusel extends HTMLElement {
     };
 
     assignPopupEvents();
-
     const observer = new MutationObserver(() => assignPopupEvents());
     observer.observe(wrapper, { childList: true });
 
@@ -706,7 +721,6 @@ class MenuTechCarrusel extends HTMLElement {
       popup.style.display = 'none';
       popupFrame.src = "";
     });
-
     popup.addEventListener('click', e => {
       if (e.target === popup) {
         popup.style.display = 'none';
@@ -715,7 +729,7 @@ class MenuTechCarrusel extends HTMLElement {
     });
   }
 
-  // === MÉTODO para asegurar que Swiper esté disponible ===
+  // === Método para asegurar que Swiper esté disponible ===
   async ensureSwiper() {
     const loadScript = (src) => new Promise((resolve, reject) => {
       if (document.querySelector(`script[src="${src}"]`)) {
@@ -738,7 +752,6 @@ class MenuTechCarrusel extends HTMLElement {
       }
     };
 
-    // Carga solo si no existe
     if (typeof Swiper === "undefined") {
       loadCSS("https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css");
       await loadScript("https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js");
@@ -747,6 +760,7 @@ class MenuTechCarrusel extends HTMLElement {
 }
 
 customElements.define('menutech-carrusel', MenuTechCarrusel);
+
 
 
 // ==========================================================================================================================
@@ -879,6 +893,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
