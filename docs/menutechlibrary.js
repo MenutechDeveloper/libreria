@@ -800,15 +800,58 @@ class MenutechNavbar extends HTMLElement {
   constructor() {
     super();
     const shadow = this.attachShadow({ mode: "open" });
+    this.render(shadow);
+  }
 
-    // === CONFIGURACIONES POR DEFECTO ===
+  static get observedAttributes() {
+    return [
+      "color","opacity",
+      "link1","link2","link3","link4","link5",
+      "text1","text2","text3","text4","text5"
+    ];
+  }
+
+  attributeChangedCallback() {
+    this.render(this.shadowRoot);
+  }
+
+  render(shadow) {
     const color = this.getAttribute("color") || "#e0e0e0";
     const opacity = this.getAttribute("opacity") || "0.7";
-    const links = (this.getAttribute("links") || "index.html,index.html#services,index.html#gallery,index.html#contact").split(",");
-    const icons = (this.getAttribute("icons") || "ri-home-5-line,ri-tools-line,ri-image-2-line,ri-mail-line").split(",");
-    const texts = (this.getAttribute("texts") || "Home,Services,Gallery,Contact").split(",");
 
-    // === HTML DEL NAVBAR ===
+    const links = [
+      this.getAttribute("link1") || "index.html",
+      this.getAttribute("link2") || "index.html#services",
+      this.getAttribute("link3") || "index.html#gallery",
+      this.getAttribute("link4") || "index.html#contact",
+      this.getAttribute("link5") || ""
+    ];
+
+    const texts = [
+      this.getAttribute("text1") || "Home",
+      this.getAttribute("text2") || "Services",
+      this.getAttribute("text3") || "Gallery",
+      this.getAttribute("text4") || "Contact",
+      this.getAttribute("text5") || ""
+    ];
+
+    const icons = [
+      "ri-home-5-line",
+      "ri-tools-line",
+      "ri-image-2-line",
+      "ri-mail-line",
+      "ri-question-line"
+    ];
+
+    const previewLinks = texts
+      .map((t, i) => t ? `
+        <a href="${links[i] || "#"}">
+          <i class="${icons[i]}"></i>
+          <span>${t}</span>
+        </a>` : "")
+      .filter(a => a !== "")
+      .join("");
+
     shadow.innerHTML = `
       <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet">
       <style>
@@ -899,12 +942,7 @@ class MenutechNavbar extends HTMLElement {
       </style>
 
       <nav class="neo-navbar">
-        ${links.map((href, i) => `
-          <a href="${href.trim()}">
-            <i class="${icons[i] ? icons[i].trim() : 'ri-question-line'}"></i>
-            <span>${texts[i] ? texts[i].trim() : ''}</span>
-          </a>
-        `).join('')}
+        ${previewLinks}
       </nav>
     `;
   }
@@ -922,6 +960,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
