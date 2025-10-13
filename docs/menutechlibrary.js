@@ -193,13 +193,13 @@ customElements.define("menutech-particles", MenutechParticles);
 // ==================================================================
 // Modelados 3D
 // ==================================================================
-class CustomView3D extends HTMLElement {
+class MenutechModel3D extends HTMLElement {
   constructor() {
     super();
   }
 
-  async connectedCallback() {
-    // === Crear contenedor ===
+  connectedCallback() {
+    // === Crear estructura solo una vez ===
     if (!this.querySelector(".view3d-container")) {
       const container = document.createElement("div");
       container.classList.add("view3d-container");
@@ -212,43 +212,43 @@ class CustomView3D extends HTMLElement {
       this.appendChild(container);
     }
 
-    // === Estilos ===
-    if (!document.getElementById("custom-view3d-style")) {
+    // === Inyectar estilos globales solo una vez ===
+    if (!document.getElementById("menutech-model3d-style")) {
       const style = document.createElement("style");
-      style.id = "custom-view3d-style";
+      style.id = "menutech-model3d-style";
       style.textContent = `
-        custom-view3d {
+        menutech-model3d {
           display: flex;
           justify-content: center;
           align-items: center;
           width: 100%;
-          height: auto;
-          padding: 40px 0;
+          padding: 30px 0;
           box-sizing: border-box;
         }
+
         .view3d-container {
+          width: 100%;
+          max-width: 800px;
           display: flex;
           justify-content: center;
           align-items: center;
           flex-direction: column;
-          width: 100%;
-          max-width: 800px;
         }
+
         .view3d-wrapper {
           width: 100%;
           height: 500px;
           position: relative;
-          border-radius: 10px;
           overflow: hidden;
+          border-radius: 10px;
           box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-          display: flex;
-          justify-content: center;
-          align-items: center;
         }
+
         #view3d-element {
           width: 100%;
           height: 100%;
         }
+
         .view3d-loader {
           position: absolute;
           bottom: 15px;
@@ -256,95 +256,76 @@ class CustomView3D extends HTMLElement {
           transform: translateX(-50%);
           background: rgba(0,0,0,0.7);
           color: white;
-          padding: 5px 12px;
+          padding: 6px 12px;
           border-radius: 5px;
           font-size: 14px;
-          opacity: 0;
+          opacity: 1;
           transition: opacity 0.3s ease;
         }
-        .loading .view3d-loader {
-          opacity: 1;
+
+        .loaded .view3d-loader {
+          opacity: 0;
         }
       `;
       document.head.appendChild(style);
     }
 
-    // === Esperar librería View3D ===
-    console.log("🟡 Cargando librería View3D...");
-    try {
-      await this.ensureView3DLoaded();
-      console.log("✅ View3D lista:", typeof View3D);
-    } catch (err) {
-      console.error("❌ Error al cargar View3D:", err);
-      return;
-    }
+    // === Cargar librería View3D si no está presente ===
+    const loadView3D = () =>
+      new Promise((resolve, reject) => {
+        if (window.View3D) return resolve();
 
-    // === Configurar modelo ===
-    const modelPath = this.getAttribute("src") || "https://vikingantonio.github.io/bddCards/assets/flyer2.gltf";
-    const view3dEl = this.querySelector("#view3d-element");
-    const wrapper = this.querySelector(".view3d-wrapper");
+        const css = document.createElement("link");
+        css.rel = "stylesheet";
+        css.href = "https://unpkg.com/@egjs/view3d@latest/css/view3d-bundle.min.css";
+        document.head.appendChild(css);
 
-    console.log("🚀 Intentando crear instancia View3D con modelo:", modelPath);
-
-    try {
-      const view3d = new View3D(view3dEl, {
-        src: modelPath,
-        autoplay: true,
-        poster: this.getAttribute("poster") || "",
-      });
-
-      view3d.on("ready", () => {
-        console.log("✅ Modelo 3D listo");
-        wrapper.classList.remove("loading");
-      });
-
-      view3d.on("loaderror", (err) => {
-        console.error("⚠️ Error cargando modelo:", err);
-        wrapper.classList.remove("loading");
-      });
-    } catch (e) {
-      console.error("❌ Error creando View3D:", e);
-      wrapper.classList.remove("loading");
-    }
-  }
-
-  ensureView3DLoaded() {
-    return new Promise((resolve, reject) => {
-      if (window.View3D) return resolve();
-      if (window.__view3dLoading__) {
-        window.__view3dLoading__.then(resolve).catch(reject);
-        return;
-      }
-
-      window.__view3dLoading__ = new Promise((innerResolve, innerReject) => {
-        // Cargar CSS
-        if (!document.querySelector('link[href*="view3d-bundle.min.css"]')) {
-          const css = document.createElement("link");
-          css.rel = "stylesheet";
-          css.href = "https://unpkg.com/@egjs/view3d@latest/css/view3d-bundle.min.css";
-          document.head.appendChild(css);
-        }
-
-        // Cargar JS
         const script = document.createElement("script");
         script.src = "https://unpkg.com/@egjs/view3d@latest/dist/view3d.pkgd.min.js";
         script.onload = () => {
-          console.log("📦 View3D script cargado correctamente");
-          innerResolve();
+          console.log("✅ View3D cargado");
+          resolve();
         };
-        script.onerror = (err) => {
-          console.error("❌ No se pudo cargar el script View3D", err);
-          innerReject(err);
-        };
+        script.onerror = () => reject("❌ Error al cargar View3D.js");
         document.head.appendChild(script);
       });
 
-      window.__view3dLoading__.then(resolve).catch(reject);
-    });
+    // === Obtener el modelo ===
+    const modelPath =
+      this.getAttribute("src") ||
+      "https://vikingantonio.github.io/bddCards/assets/flyer2.gltf";
+
+    const wrapper = this.querySelector(".view3d-wrapper");
+    const view3dEl = this.querySelector("#view3d-element");
+
+    wrapper.classList.add("loading");
+
+    // === Iniciar View3D ===
+    loadView3D()
+      .then(() => {
+        const view3d = new View3D(view3dEl, {
+          src: modelPath,
+          autoplay: true,
+          poster: this.getAttribute("poster") || "",
+        });
+
+        view3d.on("ready", () => {
+          console.log("🚀 Modelo cargado correctamente");
+          wrapper.classList.remove("loading");
+          wrapper.classList.add("loaded");
+        });
+
+        view3d.on("loaderror", (err) => {
+          console.error("⚠️ Error al cargar el modelo:", err);
+          wrapper.classList.remove("loading");
+        });
+      })
+      .catch((err) => console.error(err));
   }
 }
 
-customElements.define("custom-view3d", CustomView3D);
+customElements.define("menutech-model3d", MenutechModel3D);
+
 
 
 
@@ -1038,6 +1019,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
