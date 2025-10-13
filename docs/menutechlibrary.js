@@ -799,128 +799,79 @@ customElements.define('menutech-carrusel', MenuTechCarrusel);
 class MenutechNavbar extends HTMLElement {
   constructor() {
     super();
-    const shadow = this.attachShadow({ mode: "open" });
+    this.shadow = this.attachShadow({mode:"open"});
+    this.render();
+  }
 
-    // === CONFIGURACIONES POR DEFECTO ===
+  static get observedAttributes() {
+    return ["color","text-color","hover-color",
+            "link1","link2","link3","link4","link5",
+            "text1","text2","text3","text4","text5"];
+  }
+
+  attributeChangedCallback() { this.render(); }
+
+  render() {
     const color = this.getAttribute("color") || "#e0e0e0";
-    const opacity = this.getAttribute("opacity") || "0.7";
-    const links = (this.getAttribute("links") || "index.html,index.html#services,index.html#gallery,index.html#contact").split(",");
-    const icons = (this.getAttribute("icons") || "ri-home-5-line,ri-tools-line,ri-image-2-line,ri-mail-line").split(",");
-    const texts = (this.getAttribute("texts") || "Home,Services,Gallery,Contact").split(",");
+    const textColor = this.getAttribute("text-color") || "#444";
+    const hoverColor = this.getAttribute("hover-color") || "#00bcd4";
 
-    // === HTML DEL NAVBAR ===
-    shadow.innerHTML = `
-      <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet">
+    const links = [
+      this.getAttribute("link1") || "index.html",
+      this.getAttribute("link2") || "index.html#services",
+      this.getAttribute("link3") || "index.html#gallery",
+      this.getAttribute("link4") || "index.html#contact",
+      this.getAttribute("link5") || ""
+    ];
+
+    const texts = [
+      this.getAttribute("text1") || "Home",
+      this.getAttribute("text2") || "Services",
+      this.getAttribute("text3") || "Gallery",
+      this.getAttribute("text4") || "Contact",
+      this.getAttribute("text5") || ""
+    ];
+
+    const previewLinks = texts.map((t,i)=>t ? `<a href="${links[i]}">${t}</a>` : "").filter(a=>a!=="");
+
+    this.shadow.innerHTML = `
       <style>
-        :host {
-          font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
-        }
-
-        .neo-navbar {
-          position: fixed;
-          bottom: 30px;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 760px;
-          padding: 14px 30px;
-          background: rgba(${this.hexToRgb(color)}, ${opacity});
-          border-radius: 35px;
-          box-shadow:
-            8px 8px 16px rgba(0,0,0,0.15),
-            -8px -8px 16px rgba(255,255,255,0.9);
-          display: flex;
-          justify-content: space-around;
-          align-items: center;
+        :host { display:block; width:100%; height:100%; }
+        nav {
+          display:flex;
+          justify-content: space-between;
+          align-items:center;
+          background: ${color};
+          padding:14px 20px;
+          border-radius:35px;
+          box-shadow: 8px 8px 16px rgba(0,0,0,0.15), -8px -8px 16px rgba(255,255,255,0.9);
           backdrop-filter: blur(10px);
-          transition: all 0.3s ease;
-          z-index: 1000;
+          width: 100%;
+          height: 100%;
+          box-sizing: border-box;
         }
-
         a {
-          text-decoration: none;
-          color: #444;
-          font-size: 0.9rem;
-          font-weight: 500;
-          padding: 10px 18px;
-          border-radius: 18px;
-          background: rgba(${this.hexToRgb(color)}, 0.4);
-          box-shadow:
-            inset 2px 2px 4px rgba(255,255,255,0.6),
-            inset -2px -2px 4px rgba(190,190,190,0.5);
-          display: flex;
-          align-items: center;
-          gap: 8px;
+          flex:1;
+          text-align:center;
+          text-decoration:none;
+          color:${textColor};
+          font-size:0.9rem;
+          font-weight:500;
+          padding:10px 0;
+          border-radius:18px;
+          background: rgba(255,255,255,0.1);
+          box-shadow: inset 2px 2px 4px rgba(255,255,255,0.6), inset -2px -2px 4px rgba(190,190,190,0.5);
           transition: all 0.25s ease;
+          margin:0 4px;
         }
-
-        a i {
-          font-size: 1.3rem;
-          opacity: 0.75;
-          transition: all 0.25s ease;
-        }
-
         a:hover {
-          color: #007aff;
-          box-shadow:
-            inset 3px 3px 6px rgba(190,190,190,0.65),
-            inset -3px -3px 6px rgba(255,255,255,0.7);
-          transform: translateY(-2px);
-        }
-
-        a:hover i {
-          color: #007aff;
-          opacity: 1;
-        }
-
-        /* ===== RESPONSIVE ===== */
-        @media (max-width: 768px) {
-          .neo-navbar {
-            width: 90%;
-            padding: 10px 20px;
-            border-radius: 25px;
-          }
-
-          a {
-            padding: 10px;
-            border-radius: 15px;
-            font-size: 0; /* oculta el texto */
-            background: rgba(${this.hexToRgb(color)}, 0.35);
-          }
-
-          a i {
-            font-size: 1.5rem;
-            opacity: 0.85;
-          }
-
-          a:hover {
-            transform: translateY(-3px);
-          }
+          box-shadow: inset 4px 4px 8px ${hoverColor}, inset -4px -4px 8px ${hoverColor};
         }
       </style>
-
-      <nav class="neo-navbar">
-        ${links.map((href, i) => `
-          <a href="${href.trim()}">
-            <i class="${icons[i] ? icons[i].trim() : 'ri-question-line'}"></i>
-            <span>${texts[i] ? texts[i].trim() : ''}</span>
-          </a>
-        `).join('')}
-      </nav>
+      <nav>${previewLinks.join("")}</nav>
     `;
   }
-
-  // Convierte color HEX a RGB
-  hexToRgb(hex) {
-    hex = hex.replace(/^#/, "");
-    if (hex.length === 3) hex = hex.split("").map(x => x + x).join("");
-    const num = parseInt(hex, 16);
-    const r = (num >> 16) & 255;
-    const g = (num >> 8) & 255;
-    const b = num & 255;
-    return `${r},${g},${b}`;
-  }
 }
-
 customElements.define("menutech-navbar", MenutechNavbar);
 
 
