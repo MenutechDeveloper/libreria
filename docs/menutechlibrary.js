@@ -799,23 +799,66 @@ customElements.define('menutech-carrusel', MenuTechCarrusel);
 class MenutechNavbar extends HTMLElement {
   constructor() {
     super();
-    const shadow = this.attachShadow({ mode: "open" });
-    this.render(shadow);
+    this.shadow = this.attachShadow({ mode: "open" });
+    this.render();
   }
 
   static get observedAttributes() {
     return [
-      "color","opacity",
-      "link1","link2","link3","link4","link5",
-      "text1","text2","text3","text4","text5"
+      "color", "opacity", "text-color", "hover-color",
+      "link1", "link2", "link3", "link4", "link5",
+      "text1", "text2", "text3", "text4", "text5",
+      "icon1", "icon2", "icon3", "icon4", "icon5"
     ];
   }
 
-  attributeChangedCallback() {
-    this.render(this.shadowRoot);
+  attributeChangedCallback(name, oldValue, newValue) {
+    // Si ya está renderizado, actualiza dinámicamente sin re-render completo
+    if (!this.shadowRoot) return;
+
+    // Cambios de texto
+    if (name.startsWith("text")) {
+      const index = parseInt(name.replace("text", "")) - 1;
+      const spans = this.shadowRoot.querySelectorAll("a span");
+      if (spans[index]) spans[index].textContent = newValue || "";
+    }
+
+    // Cambios de link
+    if (name.startsWith("link")) {
+      const index = parseInt(name.replace("link", "")) - 1;
+      const links = this.shadowRoot.querySelectorAll("a");
+      if (links[index]) links[index].href = newValue || "#";
+    }
+
+    // Cambios de ícono
+    if (name.startsWith("icon")) {
+      const index = parseInt(name.replace("icon", "")) - 1;
+      const icons = this.shadowRoot.querySelectorAll("a i");
+      if (icons[index]) icons[index].className = newValue || "ri-question-line";
+    }
+
+    // Cambios de color base
+    if (name === "color" || name === "opacity") {
+      const color = this.getAttribute("color") || "#e0e0e0";
+      const opacity = this.getAttribute("opacity") || "0.7";
+      const navbar = this.shadowRoot.querySelector(".neo-navbar");
+      if (navbar) navbar.style.background = `rgba(${this.hexToRgb(color)}, ${opacity})`;
+    }
+
+    // Cambios de color de texto
+    if (name === "text-color") {
+      const val = this.getAttribute("text-color") || "#444";
+      this.shadowRoot.querySelectorAll("a").forEach(a => a.style.color = val);
+    }
+
+    // Cambios de color hover
+    if (name === "hover-color") {
+      const val = this.getAttribute("hover-color") || "#007aff";
+      this.shadowRoot.querySelectorAll("a:hover, a:hover i").forEach(el => el.style.color = val);
+    }
   }
 
-  render(shadow) {
+  render() {
     const color = this.getAttribute("color") || "#e0e0e0";
     const opacity = this.getAttribute("opacity") || "0.7";
 
@@ -827,6 +870,14 @@ class MenutechNavbar extends HTMLElement {
       this.getAttribute("link5") || ""
     ];
 
+    const icons = [
+      this.getAttribute("icon1") || "ri-home-5-line",
+      this.getAttribute("icon2") || "ri-tools-line",
+      this.getAttribute("icon3") || "ri-image-2-line",
+      this.getAttribute("icon4") || "ri-mail-line",
+      this.getAttribute("icon5") || ""
+    ];
+
     const texts = [
       this.getAttribute("text1") || "Home",
       this.getAttribute("text2") || "Services",
@@ -835,24 +886,7 @@ class MenutechNavbar extends HTMLElement {
       this.getAttribute("text5") || ""
     ];
 
-    const icons = [
-      "ri-home-5-line",
-      "ri-tools-line",
-      "ri-image-2-line",
-      "ri-mail-line",
-      "ri-question-line"
-    ];
-
-    const previewLinks = texts
-      .map((t, i) => t ? `
-        <a href="${links[i] || "#"}">
-          <i class="${icons[i]}"></i>
-          <span>${t}</span>
-        </a>` : "")
-      .filter(a => a !== "")
-      .join("");
-
-    shadow.innerHTML = `
+    this.shadow.innerHTML = `
       <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet">
       <style>
         :host {
@@ -942,12 +976,16 @@ class MenutechNavbar extends HTMLElement {
       </style>
 
       <nav class="neo-navbar">
-        ${previewLinks}
+        ${links.map((href, i) => texts[i] ? `
+          <a href="${href.trim()}">
+            <i class="${icons[i] ? icons[i].trim() : 'ri-question-line'}"></i>
+            <span>${texts[i].trim()}</span>
+          </a>
+        ` : "").join('')}
       </nav>
     `;
   }
 
-  // Convierte color HEX a RGB
   hexToRgb(hex) {
     hex = hex.replace(/^#/, "");
     if (hex.length === 3) hex = hex.split("").map(x => x + x).join("");
@@ -960,6 +998,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
