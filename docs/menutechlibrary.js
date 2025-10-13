@@ -198,13 +198,13 @@ class CustomView3D extends HTMLElement {
     super();
   }
 
-  connectedCallback() {
-    // === Crear contenedor si no existe ===
+  async connectedCallback() {
+    // === Crear contenedor ===
     if (!this.querySelector(".view3d-container")) {
       const container = document.createElement("div");
       container.classList.add("view3d-container");
       container.innerHTML = `
-        <div class="view3d-wrapper">
+        <div class="view3d-wrapper loading">
           <div id="view3d-element"></div>
           <div class="view3d-loader">Cargando modelo...</div>
         </div>
@@ -212,7 +212,7 @@ class CustomView3D extends HTMLElement {
       this.appendChild(container);
     }
 
-    // === Inyectar estilos ===
+    // === Estilos ===
     if (!document.getElementById("custom-view3d-style")) {
       const style = document.createElement("style");
       style.id = "custom-view3d-style";
@@ -274,62 +274,78 @@ class CustomView3D extends HTMLElement {
       document.head.appendChild(style);
     }
 
-    // === Forzar carga de la librería View3D si no existe ===
-    const loadView3D = () => new Promise((resolve, reject) => {
-      if (window.View3D) return resolve();
+    // === Cargar View3D solo una vez ===
+    await this.ensureView3DLoaded();
 
-      // Cargar CSS
-      if (!document.querySelector('link[href*="view3d-bundle.min.css"]')) {
-        const css = document.createElement("link");
-        css.rel = "stylesheet";
-        css.href = "https://unpkg.com/@egjs/view3d@latest/css/view3d-bundle.min.css";
-        document.head.appendChild(css);
-      }
-
-      // Cargar JS
-      const script = document.createElement("script");
-      script.src = "https://unpkg.com/@egjs/view3d@latest/dist/view3d.pkgd.min.js";
-      script.onload = () => {
-        console.log("✅ View3D cargado correctamente");
-        resolve();
-      };
-      script.onerror = () => reject("❌ Error al cargar View3D.js");
-      document.head.appendChild(script);
-    });
-
-    // === Configurar el modelo ===
-    const modelPath = this.getAttribute("src") || "https://modelviewer.dev/shared-assets/models/Astronaut.glb";
+    // === Configurar modelo ===
+    const modelPath = this.getAttribute("src") || "https://vikingantonio.github.io/bddCards/assets/flyer2.gltf";
+    const poster = this.getAttribute("poster") || "";
     const view3dEl = this.querySelector("#view3d-element");
     const wrapper = this.querySelector(".view3d-wrapper");
 
-    wrapper.classList.add("loading");
-
-    // === Iniciar View3D ===
-    loadView3D()
-      .then(() => {
-        const view3d = new View3D(view3dEl, {
-          src: modelPath,
-          autoplay: true,
-          poster: this.getAttribute("poster") || "",
-        });
-
-        view3d.on("ready", () => {
-          console.log("🚀 Modelo cargado");
-          wrapper.classList.remove("loading");
-        });
-
-        view3d.on("loaderror", (err) => {
-          console.error("⚠️ Error cargando modelo:", err);
-          wrapper.classList.remove("loading");
-        });
-      })
-      .catch((err) => {
-        console.error(err);
+    try {
+      const view3d = new View3D(view3dEl, {
+        src: modelPath,
+        autoplay: true,
+        poster,
       });
+
+      view3d.on("ready", () => {
+        wrapper.classList.remove("loading");
+        console.log("🚀 Modelo 3D cargado correctamente");
+      });
+
+      view3d.on("loaderror", (err) => {
+        console.error("⚠️ Error al cargar modelo:", err);
+        wrapper.classList.remove("loading");
+      });
+    } catch (e) {
+      console.error("❌ Error inicializando View3D:", e);
+    }
+  }
+
+  /**
+   * Asegura que la librería @egjs/view3d esté cargada globalmente
+   */
+  ensureView3DLoaded() {
+    return new Promise((resolve, reject) => {
+      // Si ya está disponible, resolver de inmediato
+      if (window.View3D) return resolve();
+
+      // Verificar si ya se está cargando
+      if (window.__view3dLoading__) {
+        window.__view3dLoading__.then(resolve).catch(reject);
+        return;
+      }
+
+      // Marcar que se está cargando
+      window.__view3dLoading__ = new Promise((innerResolve, innerReject) => {
+        // Cargar CSS
+        if (!document.querySelector('link[href*="view3d-bundle.min.css"]')) {
+          const css = document.createElement("link");
+          css.rel = "stylesheet";
+          css.href = "https://unpkg.com/@egjs/view3d@latest/css/view3d-bundle.min.css";
+          document.head.appendChild(css);
+        }
+
+        // Cargar JS
+        const script = document.createElement("script");
+        script.src = "https://unpkg.com/@egjs/view3d@latest/dist/view3d.pkgd.min.js";
+        script.onload = () => {
+          console.log("✅ View3D cargado correctamente");
+          innerResolve();
+        };
+        script.onerror = () => innerReject("❌ Error cargando View3D");
+        document.head.appendChild(script);
+      });
+
+      window.__view3dLoading__.then(resolve).catch(reject);
+    });
   }
 }
 
 customElements.define("custom-view3d", CustomView3D);
+
 
 
 
@@ -1021,6 +1037,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
