@@ -799,42 +799,18 @@ customElements.define('menutech-carrusel', MenuTechCarrusel);
 class MenutechNavbar extends HTMLElement {
   constructor() {
     super();
-    this.shadow = this.attachShadow({mode:"open"});
-    this.render();
-  }
+    const shadow = this.attachShadow({ mode: "open" });
 
-  static get observedAttributes() {
-    return ["color","text-color","hover-color",
-            "link1","link2","link3","link4","link5",
-            "text1","text2","text3","text4","text5"];
-  }
-
-  attributeChangedCallback() { this.render(); }
-
-  render() {
+    // === CONFIGURACIONES POR DEFECTO ===
     const color = this.getAttribute("color") || "#e0e0e0";
-    const textColor = this.getAttribute("text-color") || "#444";
-    const hoverColor = this.getAttribute("hover-color") || "#00bcd4";
+    const opacity = this.getAttribute("opacity") || "0.7";
+    const links = (this.getAttribute("links") || "index.html,index.html#services,index.html#gallery,index.html#contact").split(",");
+    const icons = (this.getAttribute("icons") || "ri-home-5-line,ri-tools-line,ri-image-2-line,ri-mail-line").split(",");
+    const texts = (this.getAttribute("texts") || "Home,Services,Gallery,Contact").split(",");
 
-    const links = [
-      this.getAttribute("link1") || "index.html",
-      this.getAttribute("link2") || "index.html#services",
-      this.getAttribute("link3") || "index.html#gallery",
-      this.getAttribute("link4") || "index.html#contact",
-      this.getAttribute("link5") || ""
-    ];
-
-    const texts = [
-      this.getAttribute("text1") || "Home",
-      this.getAttribute("text2") || "Services",
-      this.getAttribute("text3") || "Gallery",
-      this.getAttribute("text4") || "Contact",
-      this.getAttribute("text5") || ""
-    ];
-
-    const previewLinks = texts.map((t,i)=>t ? `<a href="${links[i]}">${t}</a>` : "").filter(a=>a!=="");
-
-    this.shadow.innerHTML = `
+    // === HTML DEL NAVBAR ===
+    shadow.innerHTML = `
+      <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet">
       <style>
         :host {
           font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
@@ -921,10 +897,30 @@ class MenutechNavbar extends HTMLElement {
           }
         }
       </style>
-      <nav>${previewLinks.join("")}</nav>
+
+      <nav class="neo-navbar">
+        ${links.map((href, i) => `
+          <a href="${href.trim()}">
+            <i class="${icons[i] ? icons[i].trim() : 'ri-question-line'}"></i>
+            <span>${texts[i] ? texts[i].trim() : ''}</span>
+          </a>
+        `).join('')}
+      </nav>
     `;
   }
+
+  // Convierte color HEX a RGB
+  hexToRgb(hex) {
+    hex = hex.replace(/^#/, "");
+    if (hex.length === 3) hex = hex.split("").map(x => x + x).join("");
+    const num = parseInt(hex, 16);
+    const r = (num >> 16) & 255;
+    const g = (num >> 8) & 255;
+    const b = num & 255;
+    return `${r},${g},${b}`;
+  }
 }
+
 customElements.define("menutech-navbar", MenutechNavbar);
 
 
