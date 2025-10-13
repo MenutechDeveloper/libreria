@@ -212,7 +212,7 @@ class MenutechModel3D extends HTMLElement {
     `;
     this.appendChild(wrapper);
 
-    // === Agregar estilos solo una vez ===
+    // === Agregar estilos globales una sola vez ===
     if (!document.getElementById("menutech-view3d-styles")) {
       const style = document.createElement("style");
       style.id = "menutech-view3d-styles";
@@ -256,17 +256,15 @@ class MenutechModel3D extends HTMLElement {
       document.head.appendChild(style);
     }
 
-    // === Cargar librería View3D si no está presente ===
+    // === Cargar View3D (una vez por documento) ===
     const loadView3D = () => new Promise((resolve, reject) => {
       if (window.View3D) return resolve();
 
       // Cargar CSS
-      if (!document.querySelector('link[href*="view3d-bundle.min.css"]')) {
-        const css = document.createElement("link");
-        css.rel = "stylesheet";
-        css.href = "https://unpkg.com/@egjs/view3d@latest/css/view3d-bundle.min.css";
-        document.head.appendChild(css);
-      }
+      const css = document.createElement("link");
+      css.rel = "stylesheet";
+      css.href = "https://unpkg.com/@egjs/view3d@latest/css/view3d-bundle.min.css";
+      document.head.appendChild(css);
 
       // Cargar JS
       const script = document.createElement("script");
@@ -276,17 +274,14 @@ class MenutechModel3D extends HTMLElement {
       document.head.appendChild(script);
     });
 
-    // === Cargar modelo GLTF ===
-    const modelSrc =
-      this.getAttribute("src") ||
-      "https://vikingantonio.github.io/bddCards/assets/flyer2.gltf";
+    // === Modelo interno ===
+    const modelURL = "https://vikingantonio.github.io/bddCards/assets/flyer2.gltf";
 
     loadView3D()
       .then(() => {
-        // Inicializar View3D
         const view3D = new View3D("#view3d", {
-          src: modelSrc,
-          poster: "./poster.png",
+          src: modelURL,
+          poster: "",
           autoInit: true,
         });
 
@@ -294,29 +289,21 @@ class MenutechModel3D extends HTMLElement {
         view3D.on("loadStart", () => {
           wrapper.querySelector(".v3d-loader-progress").style.width = "0%";
         });
-
         view3D.on("progress", (e) => {
           wrapper.querySelector(".v3d-loader-progress").style.width =
-            e.loaded * 100 + "%";
+            (e.loaded * 100) + "%";
         });
-
         view3D.on("load", () => {
           wrapper.querySelector(".v3d-loader").style.display = "none";
         });
-
         view3D.on("ready", () => {
-          // Ajustar escala
           view3D.scene.scale.set(3, 3, 3);
-
-          // Ocultar loader y poster
-          wrapper.querySelector(".v3d-loader").style.display = "none";
           const poster = document.querySelector(".view3d-poster");
           if (poster) poster.style.display = "none";
-
-          console.log("✅ Modelo 3D cargado correctamente");
+          console.log("✅ Modelo 3D cargado correctamente desde librería");
         });
 
-        // === Aplicar corrección del poster (igual que tu script) ===
+        // === Corregir poster automáticamente ===
         (function fixView3DPoster(wrapperSelector = "#view3d", padding = 20) {
           const wrap = document.querySelector(wrapperSelector);
           if (!wrap) return;
@@ -336,7 +323,6 @@ class MenutechModel3D extends HTMLElement {
               el.style.maxWidth = `calc(100% - ${padding * 2}px)`;
               el.style.maxHeight = `calc(100% - ${padding * 2}px)`;
               el.style.objectFit = "contain";
-              el.style.margin = "0";
             } else {
               el.style.width = `calc(100% - ${padding * 2}px)`;
               el.style.height = `calc(100% - ${padding * 2}px)`;
@@ -373,6 +359,7 @@ class MenutechModel3D extends HTMLElement {
 }
 
 customElements.define("menutech-model3d", MenutechModel3D);
+
 
 
 
@@ -1068,6 +1055,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
