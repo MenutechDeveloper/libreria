@@ -226,7 +226,6 @@ class CustomView3D extends HTMLElement {
           padding: 40px 0;
           box-sizing: border-box;
         }
-
         .view3d-container {
           display: flex;
           justify-content: center;
@@ -235,7 +234,6 @@ class CustomView3D extends HTMLElement {
           width: 100%;
           max-width: 800px;
         }
-
         .view3d-wrapper {
           width: 100%;
           height: 500px;
@@ -247,12 +245,10 @@ class CustomView3D extends HTMLElement {
           justify-content: center;
           align-items: center;
         }
-
         #view3d-element {
           width: 100%;
           height: 100%;
         }
-
         .view3d-loader {
           position: absolute;
           bottom: 15px;
@@ -266,7 +262,6 @@ class CustomView3D extends HTMLElement {
           opacity: 0;
           transition: opacity 0.3s ease;
         }
-
         .loading .view3d-loader {
           opacity: 1;
         }
@@ -274,51 +269,53 @@ class CustomView3D extends HTMLElement {
       document.head.appendChild(style);
     }
 
-    // === Cargar View3D solo una vez ===
-    await this.ensureView3DLoaded();
+    // === Esperar librería View3D ===
+    console.log("🟡 Cargando librería View3D...");
+    try {
+      await this.ensureView3DLoaded();
+      console.log("✅ View3D lista:", typeof View3D);
+    } catch (err) {
+      console.error("❌ Error al cargar View3D:", err);
+      return;
+    }
 
     // === Configurar modelo ===
     const modelPath = this.getAttribute("src") || "https://vikingantonio.github.io/bddCards/assets/flyer2.gltf";
-    const poster = this.getAttribute("poster") || "";
     const view3dEl = this.querySelector("#view3d-element");
     const wrapper = this.querySelector(".view3d-wrapper");
+
+    console.log("🚀 Intentando crear instancia View3D con modelo:", modelPath);
 
     try {
       const view3d = new View3D(view3dEl, {
         src: modelPath,
         autoplay: true,
-        poster,
+        poster: this.getAttribute("poster") || "",
       });
 
       view3d.on("ready", () => {
+        console.log("✅ Modelo 3D listo");
         wrapper.classList.remove("loading");
-        console.log("🚀 Modelo 3D cargado correctamente");
       });
 
       view3d.on("loaderror", (err) => {
-        console.error("⚠️ Error al cargar modelo:", err);
+        console.error("⚠️ Error cargando modelo:", err);
         wrapper.classList.remove("loading");
       });
     } catch (e) {
-      console.error("❌ Error inicializando View3D:", e);
+      console.error("❌ Error creando View3D:", e);
+      wrapper.classList.remove("loading");
     }
   }
 
-  /**
-   * Asegura que la librería @egjs/view3d esté cargada globalmente
-   */
   ensureView3DLoaded() {
     return new Promise((resolve, reject) => {
-      // Si ya está disponible, resolver de inmediato
       if (window.View3D) return resolve();
-
-      // Verificar si ya se está cargando
       if (window.__view3dLoading__) {
         window.__view3dLoading__.then(resolve).catch(reject);
         return;
       }
 
-      // Marcar que se está cargando
       window.__view3dLoading__ = new Promise((innerResolve, innerReject) => {
         // Cargar CSS
         if (!document.querySelector('link[href*="view3d-bundle.min.css"]')) {
@@ -332,10 +329,13 @@ class CustomView3D extends HTMLElement {
         const script = document.createElement("script");
         script.src = "https://unpkg.com/@egjs/view3d@latest/dist/view3d.pkgd.min.js";
         script.onload = () => {
-          console.log("✅ View3D cargado correctamente");
+          console.log("📦 View3D script cargado correctamente");
           innerResolve();
         };
-        script.onerror = () => innerReject("❌ Error cargando View3D");
+        script.onerror = (err) => {
+          console.error("❌ No se pudo cargar el script View3D", err);
+          innerReject(err);
+        };
         document.head.appendChild(script);
       });
 
@@ -345,6 +345,7 @@ class CustomView3D extends HTMLElement {
 }
 
 customElements.define("custom-view3d", CustomView3D);
+
 
 
 
@@ -1037,6 +1038,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
