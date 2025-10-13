@@ -836,36 +836,89 @@ class MenutechNavbar extends HTMLElement {
 
     this.shadow.innerHTML = `
       <style>
-        :host { display:block; width:100%; height:100%; }
-        nav {
-          display:flex;
-          justify-content: space-between;
-          align-items:center;
-          background: ${color};
-          padding:14px 20px;
-          border-radius:35px;
-          box-shadow: 8px 8px 16px rgba(0,0,0,0.15), -8px -8px 16px rgba(255,255,255,0.9);
+        :host {
+          font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+        }
+
+        .neo-navbar {
+          position: fixed;
+          bottom: 30px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 760px;
+          padding: 14px 30px;
+          background: rgba(${this.hexToRgb(color)}, ${opacity});
+          border-radius: 35px;
+          box-shadow:
+            8px 8px 16px rgba(0,0,0,0.15),
+            -8px -8px 16px rgba(255,255,255,0.9);
+          display: flex;
+          justify-content: space-around;
+          align-items: center;
           backdrop-filter: blur(10px);
-          width: 100%;
-          height: 100%;
-          box-sizing: border-box;
+          transition: all 0.3s ease;
+          z-index: 1000;
         }
+
         a {
-          flex:1;
-          text-align:center;
-          text-decoration:none;
-          color:${textColor};
-          font-size:0.9rem;
-          font-weight:500;
-          padding:10px 0;
-          border-radius:18px;
-          background: rgba(255,255,255,0.1);
-          box-shadow: inset 2px 2px 4px rgba(255,255,255,0.6), inset -2px -2px 4px rgba(190,190,190,0.5);
+          text-decoration: none;
+          color: #444;
+          font-size: 0.9rem;
+          font-weight: 500;
+          padding: 10px 18px;
+          border-radius: 18px;
+          background: rgba(${this.hexToRgb(color)}, 0.4);
+          box-shadow:
+            inset 2px 2px 4px rgba(255,255,255,0.6),
+            inset -2px -2px 4px rgba(190,190,190,0.5);
+          display: flex;
+          align-items: center;
+          gap: 8px;
           transition: all 0.25s ease;
-          margin:0 4px;
         }
+
+        a i {
+          font-size: 1.3rem;
+          opacity: 0.75;
+          transition: all 0.25s ease;
+        }
+
         a:hover {
-          box-shadow: inset 4px 4px 8px ${hoverColor}, inset -4px -4px 8px ${hoverColor};
+          color: #007aff;
+          box-shadow:
+            inset 3px 3px 6px rgba(190,190,190,0.65),
+            inset -3px -3px 6px rgba(255,255,255,0.7);
+          transform: translateY(-2px);
+        }
+
+        a:hover i {
+          color: #007aff;
+          opacity: 1;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+          .neo-navbar {
+            width: 90%;
+            padding: 10px 20px;
+            border-radius: 25px;
+          }
+
+          a {
+            padding: 10px;
+            border-radius: 15px;
+            font-size: 0; /* oculta el texto */
+            background: rgba(${this.hexToRgb(color)}, 0.35);
+          }
+
+          a i {
+            font-size: 1.5rem;
+            opacity: 0.85;
+          }
+
+          a:hover {
+            transform: translateY(-3px);
+          }
         }
       </style>
       <nav>${previewLinks.join("")}</nav>
@@ -873,6 +926,7 @@ class MenutechNavbar extends HTMLElement {
   }
 }
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
