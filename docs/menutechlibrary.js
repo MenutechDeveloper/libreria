@@ -198,232 +198,143 @@ class MenutechView3D extends HTMLElement {
     super();
     this.shadow = this.attachShadow({ mode: "open" });
 
-    // Estilos básicos / estructura en shadow (poster + reserva de espacio)
-    const hostStyle = document.createElement("style");
-    hostStyle.textContent = `
-      :host { display:block; position:relative; width: ${this.getAttribute("width") || "100%"}; height: ${this.getAttribute("height") || "500px"}; }
-      .poster { position:absolute; inset:0; background-size:cover; background-position:center; transition:opacity .6s ease; z-index: 9999; }
-    `;
-    this.shadow.appendChild(hostStyle);
+    // Wrapper principal
+    this.wrapper = document.createElement("div");
+    this.wrapper.style.width = this.getAttribute("width") || "100%";
+    this.wrapper.style.height = this.getAttribute("height") || "500px";
+    this.wrapper.style.position = "relative";
+    this.wrapper.style.display = "flex";
+    this.wrapper.style.justifyContent = "center";
+    this.wrapper.style.alignItems = "center";
+    this.wrapper.style.overflow = "hidden";
+    this.shadow.appendChild(this.wrapper);
 
-    // Poster overlay (se muestra hasta que View3D esté listo)
+    // Póster
     this.posterDiv = document.createElement("div");
-    this.posterDiv.className = "poster";
-    this.shadow.appendChild(this.posterDiv);
-
-    // Placeholder interno (reserva el espacio)
-    this.innerPlaceholder = document.createElement("div");
-    this.innerPlaceholder.style.width = "100%";
-    this.innerPlaceholder.style.height = "100%";
-    this.shadow.appendChild(this.innerPlaceholder);
-
-    // id único para el container externo (en body)
-    this._externalId = `menutech-view3d-ext-${Math.random().toString(36).slice(2,9)}`;
-
-    // referencias
-    this._viewer = null;
-    this._externalContainer = null;
-    this._isDestroyed = false;
+    this.posterDiv.style.position = "absolute";
+    this.posterDiv.style.top = "0";
+    this.posterDiv.style.left = "0";
+    this.posterDiv.style.width = "100%";
+    this.posterDiv.style.height = "100%";
+    this.posterDiv.style.backgroundSize = "cover";
+    this.posterDiv.style.backgroundPosition = "center";
+    this.posterDiv.style.transition = "opacity 0.6s ease";
+    this.wrapper.appendChild(this.posterDiv);
   }
 
   connectedCallback() {
+    const posterUrl = this.getAttribute("poster");
+    if (posterUrl) {
+      this.posterDiv.style.backgroundImage = `url('${posterUrl}')`;
+    }
+
     const src = this.getAttribute("src") || this.getAttribute("gltf");
     if (!src) {
-      console.error("menutech-view3d: atributo 'src' o 'gltf' requerido");
+      console.error("menutech-view3d: necesitas atributo src o gltf");
       return;
     }
-    const poster = this.getAttribute("poster");
-    if (poster) this.posterDiv.style.backgroundImage = `url('${poster}')`;
 
-    // 1) Inyectar CSS+JS global y esperar
-    this._loadView3DResources({ timeoutMs: 20000 })
-      .then(() => {
-        if (this._isDestroyed) return;
-        // 2) crear contenedor externo (body) y posicionarlo encima del elemento
-        this._createOrUpdateExternalContainer();
-        // 3) inicializar View3D en ese contenedor externo
-        this._initExternalViewer(src);
-        // 4) observar cambios de layout para reposicionar
-        this._startPositionObservers();
-      })
-      .catch(err => {
-        console.error("menutech-view3d: no se pudieron cargar recursos View3D:", err);
-      });
+    this.injectStylesGlobal();
+    this.loadLibraryForcefully().then(() => {
+      this.initViewer(src);
+    });
   }
 
-  disconnectedCallback() {
-    this._isDestroyed = true;
-    this._stopPositionObservers();
-    if (this._viewer && typeof this._viewer.destroy === "function") {
-      try { this._viewer.destroy(); } catch (e) {}
-    }
-    if (this._externalContainer && this._externalContainer.parentElement) {
-      this._externalContainer.parentElement.removeChild(this._externalContainer);
-    }
-  }
-
-  // ---------- Recursos (CSS + JS) ----------
-  _loadView3DResources({ timeoutMs = 15000 } = {}) {
-    // Retorna una promesa que se resuelve cuando CSS y JS están listos y window.View3D existe
-    const ensureCSS = () => new Promise((resolve, reject) => {
-      if (document.querySelector('link[data-menutech-view3d-css]')) return resolve();
+  /** Inyecta CSS global (no dentro del shadow) para evitar aislamiento */
+  injectStylesGlobal() {
+    if (!document.querySelector('link[data-menutech-view3d-style]')) {
       const link = document.createElement("link");
       link.rel = "stylesheet";
-      link.href = "https://unpkg.com/@egjs/view3d@latest/css/view3d-bundle.min.css";
-      link.setAttribute("data-menutech-view3d-css", "true");
-      link.onload = () => resolve();
-      link.onerror = () => reject("Error cargando CSS view3d");
+      link.href =
+        "https://unpkg.com/@egjs/view3d@latest/css/view3d-bundle.min.css";
+      link.setAttribute("data-menutech-view3d-style", "true");
       document.head.appendChild(link);
-    });
+    }
+  }
 
-    const ensureScript = () => new Promise((resolve, reject) => {
-      if (window.View3D) return resolve();
-      const existing = document.querySelector('script[data-menutech-view3d-script]');
-      if (existing) {
-        // esperar que termine de cargar
-        const onLoad = () => { cleanup(); resolve(); };
-        const onError = () => { cleanup(); reject("Error cargando script view3d"); };
-        const cleanup = () => { existing.removeEventListener("load", onLoad); existing.removeEventListener("error", onError); };
-        existing.addEventListener("load", onLoad);
-        existing.addEventListener("error", onError);
+  /** Carga forzadamente la librería global y espera a que esté lista */
+  async loadLibraryForcefully() {
+    return new Promise((resolve, reject) => {
+      // Si ya existe, terminamos
+      if (window.View3D) {
+        resolve();
         return;
       }
+
+      // Si ya hay otro script cargándose
+      const existing = document.querySelector("script[data-menutech-view3d]");
+      if (existing) {
+        existing.addEventListener("load", () => resolve());
+        return;
+      }
+
+      // Insertar script globalmente
       const script = document.createElement("script");
-      script.src = "https://unpkg.com/@egjs/view3d@latest/dist/view3d.pkgd.min.js";
-      script.setAttribute("data-menutech-view3d-script", "true");
+      script.src =
+        "https://unpkg.com/@egjs/view3d@latest/dist/view3d.pkgd.min.js";
+      script.setAttribute("data-menutech-view3d", "true");
+      script.async = false;
       script.onload = () => {
-        // A veces la librería necesita un tick extra para registrar View3D en window
-        setTimeout(() => {
-          if (window.View3D) resolve();
-          else reject("Script cargado pero View3D no disponible");
-        }, 50);
+        console.log("✅ View3D librería cargada globalmente");
+        resolve();
       };
-      script.onerror = () => reject("Error cargando script view3d");
+      script.onerror = () => {
+        console.error("❌ No se pudo cargar la librería View3D");
+        reject();
+      };
       document.head.appendChild(script);
-    });
 
-    return new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => reject("Timeout cargando recursos View3D"), timeoutMs);
-      Promise.all([ensureCSS(), ensureScript()])
-        .then(() => {
-          clearTimeout(timeout);
-          // doble chequeo: View3D disponible
-          if (window.View3D) resolve();
-          else reject("View3D no registrado en window tras cargar recursos");
-        })
-        .catch(err => {
-          clearTimeout(timeout);
-          reject(err);
-        });
+      // Fallback si tarda en cargar
+      let tries = 0;
+      const checkInterval = setInterval(() => {
+        if (window.View3D) {
+          clearInterval(checkInterval);
+          resolve();
+        } else if (tries++ > 20) {
+          clearInterval(checkInterval);
+          reject("Timeout al cargar View3D");
+        }
+      }, 250);
     });
   }
 
-  // ---------- Contenedor externo (en document.body) ----------
-  _createOrUpdateExternalContainer() {
-    // Si ya existe por alguna razón, limpiarla
-    let ext = document.getElementById(this._externalId);
-    if (!ext) {
-      ext = document.createElement("div");
-      ext.id = this._externalId;
-      ext.style.position = "absolute";
-      ext.style.pointerEvents = "auto"; // permitir interacción
-      ext.style.zIndex = "9998"; // detrás del poster (poster zIndex=9999)
-      document.body.appendChild(ext);
-    } else {
-      // limpiar children previos (por si reconectar)
-      ext.innerHTML = "";
-    }
-    this._externalContainer = ext;
-    this._updateExternalPositionAndSize();
-  }
-
-  _updateExternalPositionAndSize() {
-    if (!this._externalContainer) return;
-    const r = this.getBoundingClientRect();
-    const top = r.top + window.scrollY;
-    const left = r.left + window.scrollX;
-    this._externalContainer.style.top = `${top}px`;
-    this._externalContainer.style.left = `${left}px`;
-    this._externalContainer.style.width = `${r.width}px`;
-    this._externalContainer.style.height = `${r.height}px`;
-  }
-
-  // ---------- Inicializar View3D en el contenedor externo ----------
-  _initExternalViewer(src) {
+  /** Inicializa el visor */
+  initViewer(src) {
     if (!window.View3D) {
-      console.error("menutech-view3d: View3D no está disponible al iniciar viewer");
+      console.error("View3D aún no disponible");
       return;
     }
 
-    // colocar un nodo donde View3D renderizará
-    const container = document.createElement("div");
-    container.style.width = "100%";
-    container.style.height = "100%";
-    container.style.position = "relative";
-    this._externalContainer.appendChild(container);
+    console.log("Inicializando View3D con", src);
 
-    // inicializar
-    try {
-      const opts = {
-        src: src,
-        poster: null,
-        autoInit: true,
-        autoResize: true,
-        environment: this.getAttribute("environment") || "neutral"
-      };
-      this._viewer = new window.View3D(container, opts);
+    requestAnimationFrame(() => {
+      try {
+        this.view3d = new View3D(this.wrapper, {
+          src: src,
+          poster: null,
+          autoInit: true,
+          autoResize: true,
+          environment: "neutral",
+        });
 
-      this._viewer.on("ready", () => {
-        // quitar poster del shadow
-        try {
+        this.view3d.on("ready", () => {
+          console.log("✅ Modelo listo");
           this.posterDiv.style.opacity = "0";
-          setTimeout(() => { this.posterDiv.style.display = "none"; }, 600);
-        } catch(e){}
-      });
+          setTimeout(() => (this.posterDiv.style.display = "none"), 700);
+        });
 
-      this._viewer.on("error", (e) => {
-        console.error("menutech-view3d: error View3D:", e);
-      });
-
-      // aplicar cámara si vienen atributos
-      const yawAttr = this.getAttribute("yaw");
-      const pitchAttr = this.getAttribute("pitch");
-      if (yawAttr || pitchAttr) {
-        // esperar que la cámara exista
-        setTimeout(() => {
-          try {
-            if (this._viewer && this._viewer.camera) {
-              if (yawAttr) this._viewer.camera.yaw = parseFloat(yawAttr);
-              if (pitchAttr) this._viewer.camera.pitch = parseFloat(pitchAttr);
-            }
-          } catch(e){}
-        }, 200);
+        this.view3d.on("error", (e) => {
+          console.error("Error cargando modelo 3D:", e);
+        });
+      } catch (e) {
+        console.error("Excepción en initViewer:", e);
       }
-    } catch (e) {
-      console.error("menutech-view3d: excepción inicializando", e);
-    }
-  }
-
-  // ---------- Observadores para mantener posición ----------
-  _startPositionObservers() {
-    this._onScrollOrResize = () => this._updateExternalPositionAndSize();
-    window.addEventListener("scroll", this._onScrollOrResize, { passive:true });
-    window.addEventListener("resize", this._onScrollOrResize);
-    // observar si el host cambia de tamaño por CSS/DOM
-    this._ro = new ResizeObserver(() => this._updateExternalPositionAndSize());
-    this._ro.observe(this);
-  }
-
-  _stopPositionObservers() {
-    window.removeEventListener("scroll", this._onScrollOrResize);
-    window.removeEventListener("resize", this._onScrollOrResize);
-    if (this._ro) {
-      try { this._ro.disconnect(); } catch(e){}
-    }
+    });
   }
 }
 
 customElements.define("menutech-view3d", MenutechView3D);
+
 
 
 
@@ -1112,6 +1023,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
