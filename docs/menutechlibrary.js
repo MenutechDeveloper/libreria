@@ -196,169 +196,98 @@ customElements.define("menutech-particles", MenutechParticles);
 class MenutechModel3D extends HTMLElement {
   constructor() {
     super();
-  }
+    this.attachShadow({ mode: 'open' });
 
-  connectedCallback() {
-    // === Crear estructura base ===
-    const wrapper = document.createElement("div");
-    wrapper.classList.add("menutech-view3d-wrapper");
-    wrapper.innerHTML = `
+    this.shadowRoot.innerHTML = `
+      <link rel="stylesheet" href="https://unpkg.com/@egjs/view3d@latest/css/view3d-bundle.min.css">
       <div id="view3d">
         <canvas class="view3d-canvas"></canvas>
         <div class="v3d-loader">
           <div class="v3d-loader-progress"></div>
         </div>
       </div>
-    `;
-    this.appendChild(wrapper);
-
-    // === Agregar estilos globales una sola vez ===
-    if (!document.getElementById("menutech-view3d-styles")) {
-      const style = document.createElement("style");
-      style.id = "menutech-view3d-styles";
-      style.textContent = `
-        menutech-model3d {
-          display: flex;
-          justify-content: center;
-          align-items: center;
+      <style>
+        :host {
+          display: block;
           width: 100%;
-          height: auto;
-          padding: 30px 0;
+          height: 100%;
+          position: relative;
         }
         #view3d {
           width: 100%;
-          max-width: 800px;
-          height: 500px;
+          height: 100%;
           position: relative;
-          border-radius: 10px;
           overflow: hidden;
-          box-shadow: 0 5px 20px rgba(0,0,0,0.25);
-          background: #111;
+          background: #000;
         }
         .v3d-loader {
           position: absolute;
-          bottom: 20px;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 80%;
-          height: 4px;
-          background: rgba(255,255,255,0.2);
-          border-radius: 2px;
-          overflow: hidden;
+          top: 0; left: 0;
+          width: 100%; height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: rgba(0,0,0,0.4);
         }
         .v3d-loader-progress {
           width: 0%;
-          height: 100%;
-          background: #00bfff;
-          transition: width 0.2s ease;
+          height: 4px;
+          background: #09f;
+          transition: width 0.2s;
         }
-      `;
-      document.head.appendChild(style);
+      </style>
+    `;
+  }
+
+  connectedCallback() {
+    this.initView3D();
+  }
+
+  async initView3D() {
+    // Espera a que la librería se cargue si no está aún disponible
+    if (typeof View3D === 'undefined') {
+      await this.loadScript("https://unpkg.com/@egjs/view3d@latest/dist/view3d.pkgd.min.js");
     }
 
-    // === Cargar View3D (una vez por documento) ===
-    const loadView3D = () => new Promise((resolve, reject) => {
-      if (window.View3D) return resolve();
+    // Inicializa dentro del Shadow DOM
+    const container = this.shadowRoot.querySelector("#view3d");
 
-      // Cargar CSS
-      const css = document.createElement("link");
-      css.rel = "stylesheet";
-      css.href = "https://unpkg.com/@egjs/view3d@latest/css/view3d-bundle.min.css";
-      document.head.appendChild(css);
+    const src = this.getAttribute("src") ||
+      "https://vikingantonio.github.io/bddCards/assets/pos/pos.gltf";
+    const poster = this.getAttribute("poster") || "./pos.png";
 
-      // Cargar JS
-      const script = document.createElement("script");
-      script.src = "https://unpkg.com/@egjs/view3d@latest/dist/view3d.pkgd.min.js";
-      script.onload = resolve;
-      script.onerror = reject;
-      document.head.appendChild(script);
+    const view3D = new View3D(container, {
+      src,
+      poster,
+      autoInit: true,
     });
 
-    // === Modelo interno ===
-    const modelURL = "https://vikingantonio.github.io/bddCards/assets/flyer2.gltf";
+    // Loader
+    const progressEl = this.shadowRoot.querySelector(".v3d-loader-progress");
+    const loaderEl = this.shadowRoot.querySelector(".v3d-loader");
 
-    loadView3D()
-      .then(() => {
-        const view3D = new View3D("#view3d", {
-          src: modelURL,
-          poster: "",
-          autoInit: true,
-        });
+    view3D.on("loadStart", () => progressEl.style.width = "0%");
+    view3D.on("progress", e => progressEl.style.width = (e.loaded * 100) + "%");
+    view3D.on("load", () => loaderEl.style.display = "none");
+    view3D.on("ready", () => {
+      view3D.scene.scale.set(3, 3, 3);
+      loaderEl.style.display = "none";
+    });
+  }
 
-        // === Loader ===
-        view3D.on("loadStart", () => {
-          wrapper.querySelector(".v3d-loader-progress").style.width = "0%";
-        });
-        view3D.on("progress", (e) => {
-          wrapper.querySelector(".v3d-loader-progress").style.width =
-            (e.loaded * 100) + "%";
-        });
-        view3D.on("load", () => {
-          wrapper.querySelector(".v3d-loader").style.display = "none";
-        });
-        view3D.on("ready", () => {
-          view3D.scene.scale.set(3, 3, 3);
-          const poster = document.querySelector(".view3d-poster");
-          if (poster) poster.style.display = "none";
-          console.log("✅ Modelo 3D cargado correctamente desde librería");
-        });
-
-        // === Corregir poster automáticamente ===
-        (function fixView3DPoster(wrapperSelector = "#view3d", padding = 20) {
-          const wrap = document.querySelector(wrapperSelector);
-          if (!wrap) return;
-
-          const applyStyles = (el) => {
-            if (!el) return;
-            el.style.position = "absolute";
-            el.style.top = "50%";
-            el.style.left = "50%";
-            el.style.transform = "translate(-50%, -50%)";
-            el.style.boxSizing = "border-box";
-            el.style.setProperty("filter", "none", "important");
-
-            if (el.tagName && el.tagName.toLowerCase() === "img") {
-              el.style.width = "auto";
-              el.style.height = `calc(100% - ${padding * 2}px)`;
-              el.style.maxWidth = `calc(100% - ${padding * 2}px)`;
-              el.style.maxHeight = `calc(100% - ${padding * 2}px)`;
-              el.style.objectFit = "contain";
-            } else {
-              el.style.width = `calc(100% - ${padding * 2}px)`;
-              el.style.height = `calc(100% - ${padding * 2}px)`;
-              el.style.maxWidth = `calc(100% - ${padding * 2}px)`;
-              el.style.maxHeight = `calc(100% - ${padding * 2}px)`;
-              el.style.backgroundSize = "contain";
-              el.style.backgroundRepeat = "no-repeat";
-              el.style.backgroundPosition = "center center";
-            }
-          };
-
-          const existing = wrap.querySelector(".view3d-poster");
-          if (existing) applyStyles(existing);
-
-          const mo = new MutationObserver(() => {
-            const p = wrap.querySelector(".view3d-poster");
-            if (p) {
-              applyStyles(p);
-              mo.disconnect();
-            }
-          });
-          mo.observe(wrap, { childList: true, subtree: true });
-
-          window.addEventListener("resize", () => {
-            const p = wrap.querySelector(".view3d-poster");
-            if (p) applyStyles(p);
-          });
-        })();
-      })
-      .catch((err) => {
-        console.error("❌ Error al cargar View3D:", err);
-      });
+  loadScript(src) {
+    return new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = src;
+      s.onload = resolve;
+      s.onerror = reject;
+      document.head.appendChild(s);
+    });
   }
 }
 
 customElements.define("menutech-model3d", MenutechModel3D);
+
 
 
 
@@ -1055,6 +984,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
