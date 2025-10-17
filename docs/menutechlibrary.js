@@ -849,10 +849,10 @@ class MenutechNavbar extends HTMLElement {
     const opacity = this.getAttribute("opacity") || "0.7";
 
     const links = [
-      this.getAttribute("link1") || "index.html",
-      this.getAttribute("link2") || "index.html#services",
-      this.getAttribute("link3") || "index.html#gallery",
-      this.getAttribute("link4") || "index.html#contact",
+      this.getAttribute("link1") || "./index.html",
+      this.getAttribute("link2") || "./index.html#services",
+      this.getAttribute("link3") || "./index.html#gallery",
+      this.getAttribute("link4") || "./index.html#contact",
       this.getAttribute("link5") || ""
     ];
 
@@ -984,6 +984,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
