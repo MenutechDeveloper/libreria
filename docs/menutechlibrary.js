@@ -193,133 +193,97 @@ customElements.define("menutech-particles", MenutechParticles);
 // ==================================================================
 // Hero
 // ==================================================================
-class MenuTechHero extends HTMLElement {
+class MenutechHero extends HTMLElement {
+  static get observedAttributes() {
+    return ['title', 'description', 'bg-image', 'cta', 'shadow-color', 'shadow-opacity'];
+  }
+
   constructor() {
     super();
-    const shadow = this.attachShadow({ mode: "open" });
-
-    shadow.innerHTML = `
-      <style>
-        /* HERO SECTION */
-        .hero {
-          position: relative;
-          width: 100%;
-          height: 100vh;
-          background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-          overflow: hidden;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #fff;
-        }
-
-        .hero::before {
-          content: "";
-          position: absolute;
-          inset: 0;
-          background: url("https://images.unsplash.com/photo-1522199710521-72d69614c702?auto=format&fit=crop&w=1920&q=80")
-            center/cover no-repeat;
-          opacity: 0.35;
-          z-index: 0;
-        }
-
-        .hero-overlay {
-          position: absolute;
-          inset: 0;
-          background: radial-gradient(circle at center, rgba(255,255,255,0.05), transparent 70%);
-          z-index: 1;
-        }
-
-        .hero-content {
-          position: relative;
-          z-index: 2;
-          text-align: center;
-          max-width: 700px;
-          padding: 2rem;
-          animation: fadeInUp 1.2s ease forwards;
-        }
-
-        .hero h1 {
-          font-size: 3rem;
-          font-weight: 700;
-          margin-bottom: 1rem;
-          letter-spacing: -0.5px;
-        }
-
-        .hero p {
-          font-size: 1.2rem;
-          line-height: 1.6;
-          margin-bottom: 2rem;
-          opacity: 0.9;
-        }
-
-        #cta-btn {
-          background: #00b894;
-          color: #fff;
-          border: none;
-          padding: 0.9rem 2rem;
-          border-radius: 50px;
-          font-size: 1.1rem;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          box-shadow: 0 4px 15px rgba(0, 184, 148, 0.4);
-        }
-
-        #cta-btn:hover {
-          background: #019874;
-          transform: translateY(-3px);
-          box-shadow: 0 6px 20px rgba(0, 184, 148, 0.6);
-        }
-
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(40px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-          .hero h1 {
-            font-size: 2.2rem;
-          }
-          .hero p {
-            font-size: 1rem;
-          }
-        }
-      </style>
-
-      <!-- HERO SECTION -->
-      <section class="hero">
-        <div class="hero-content">
-          <h1>Eleva tu Experiencia Digital</h1>
-          <p>Transforma tu presencia en línea con un diseño moderno, fluido y atractivo.</p>
-          <button id="cta-btn">Comienza Ahora</button>
-        </div>
-        <div class="hero-overlay"></div>
-      </section>
-    `;
+    this.attachShadow({ mode: 'open' });
   }
 
   connectedCallback() {
-    const btn = this.shadowRoot.querySelector("#cta-btn");
-    if (btn) {
-      btn.addEventListener("click", () => {
-        btn.style.transform = "scale(0.95)";
-        setTimeout(() => {
-          btn.style.transform = "scale(1)";
-          window.location.href = "#contacto";
-        }, 150);
-      });
-    }
+    this.render();
+  }
+
+  attributeChangedCallback() {
+    this.render();
+  }
+
+  render() {
+    const title = this.getAttribute('title') || 'Título principal';
+    const desc = this.getAttribute('description') || 'Esta es una descripción editable de la carta hero.';
+    const bg = this.getAttribute('bg-image') || 'https://picsum.photos/1200/600';
+    const cta = this.getAttribute('cta') || `<button style='padding:10px 18px;border:none;border-radius:8px;background:#00bcd4;color:white;font-weight:bold;cursor:pointer;'>Ver más</button>`;
+    const shadowColor = this.getAttribute('shadow-color') || 'rgba(0,0,0,0.5)';
+    const shadowOpacity = this.getAttribute('shadow-opacity') || '0.6';
+
+    this.shadowRoot.innerHTML = `
+      <style>
+        .hero-card {
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          height: 250px;
+          color: white;
+          text-align: center;
+          background: url('${bg}') center/cover no-repeat;
+          border-radius: 16px;
+          overflow: hidden;
+        }
+
+        .overlay {
+          position: absolute;
+          inset: 0;
+          background: ${shadowColor};
+          opacity: ${shadowOpacity};
+          transition: opacity 0.3s ease;
+        }
+
+        .content {
+          position: relative;
+          z-index: 2;
+          padding: 20px;
+          max-width: 90%;
+        }
+
+        h2 {
+          margin: 0 0 10px;
+          font-size: 1.8em;
+        }
+
+        p {
+          margin: 0 0 20px;
+          font-size: 1em;
+          line-height: 1.4;
+        }
+
+        .cta {
+          display: inline-block;
+        }
+
+        .hero-card:hover .overlay {
+          opacity: calc(${shadowOpacity} + 0.2);
+        }
+      </style>
+
+      <div class="hero-card">
+        <div class="overlay"></div>
+        <div class="content">
+          <h2>${title}</h2>
+          <p>${desc}</p>
+          <div class="cta">${cta}</div>
+        </div>
+      </div>
+    `;
   }
 }
 
-customElements.define("menutech-hero", MenuTechHero);
+customElements.define('menutech-hero', MenutechHero);
+
 
 
 // ==================================================================
@@ -1116,6 +1080,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
