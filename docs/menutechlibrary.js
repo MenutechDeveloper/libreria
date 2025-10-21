@@ -191,6 +191,138 @@ class MenutechParticles extends HTMLElement {
 customElements.define("menutech-particles", MenutechParticles);
 
 // ==================================================================
+// Hero
+// ==================================================================
+class MenuTechHero extends HTMLElement {
+  constructor() {
+    super();
+    const shadow = this.attachShadow({ mode: "open" });
+
+    shadow.innerHTML = `
+      <style>
+        /* HERO SECTION */
+        .hero {
+          position: relative;
+          width: 100%;
+          height: 100vh;
+          background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+          overflow: hidden;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #fff;
+        }
+
+        .hero::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background: url("https://images.unsplash.com/photo-1522199710521-72d69614c702?auto=format&fit=crop&w=1920&q=80")
+            center/cover no-repeat;
+          opacity: 0.35;
+          z-index: 0;
+        }
+
+        .hero-overlay {
+          position: absolute;
+          inset: 0;
+          background: radial-gradient(circle at center, rgba(255,255,255,0.05), transparent 70%);
+          z-index: 1;
+        }
+
+        .hero-content {
+          position: relative;
+          z-index: 2;
+          text-align: center;
+          max-width: 700px;
+          padding: 2rem;
+          animation: fadeInUp 1.2s ease forwards;
+        }
+
+        .hero h1 {
+          font-size: 3rem;
+          font-weight: 700;
+          margin-bottom: 1rem;
+          letter-spacing: -0.5px;
+        }
+
+        .hero p {
+          font-size: 1.2rem;
+          line-height: 1.6;
+          margin-bottom: 2rem;
+          opacity: 0.9;
+        }
+
+        #cta-btn {
+          background: #00b894;
+          color: #fff;
+          border: none;
+          padding: 0.9rem 2rem;
+          border-radius: 50px;
+          font-size: 1.1rem;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 15px rgba(0, 184, 148, 0.4);
+        }
+
+        #cta-btn:hover {
+          background: #019874;
+          transform: translateY(-3px);
+          box-shadow: 0 6px 20px rgba(0, 184, 148, 0.6);
+        }
+
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(40px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+          .hero h1 {
+            font-size: 2.2rem;
+          }
+          .hero p {
+            font-size: 1rem;
+          }
+        }
+      </style>
+
+      <!-- HERO SECTION -->
+      <section class="hero">
+        <div class="hero-content">
+          <h1>Eleva tu Experiencia Digital</h1>
+          <p>Transforma tu presencia en línea con un diseño moderno, fluido y atractivo.</p>
+          <button id="cta-btn">Comienza Ahora</button>
+        </div>
+        <div class="hero-overlay"></div>
+      </section>
+    `;
+  }
+
+  connectedCallback() {
+    const btn = this.shadowRoot.querySelector("#cta-btn");
+    if (btn) {
+      btn.addEventListener("click", () => {
+        btn.style.transform = "scale(0.95)";
+        setTimeout(() => {
+          btn.style.transform = "scale(1)";
+          window.location.href = "#contacto";
+        }, 150);
+      });
+    }
+  }
+}
+
+customElements.define("menutech-hero", MenuTechHero);
+
+
+// ==================================================================
 // Modelados 3D
 // ==================================================================
 class MenutechModel3D extends HTMLElement {
@@ -984,6 +1116,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
