@@ -212,89 +212,76 @@ class MenutechHero extends HTMLElement {
   }
 
   render() {
-    const title = this.getAttribute('title') || 'Eleva tu Experiencia Digital';
-    const description = this.getAttribute('description') || 'Transforma tu presencia en línea con un diseño moderno, fluido y atractivo.';
-    const bgImage = this.getAttribute('bg-image') || 'https://images.unsplash.com/photo-1522199710521-72d69614c702?auto=format&fit=crop&w=1920&q=80';
+    const title = this.getAttribute('title') || '';
+    const desc = this.getAttribute('description') || '';
+    const bg = this.getAttribute('bg-image') || '';
     const shadowColor = this.getAttribute('shadow-color') || 'rgba(0,0,0,0.5)';
-    const shadowOpacity = parseFloat(this.getAttribute('shadow-opacity')) || 0.35;
+    const shadowOpacity = this.getAttribute('shadow-opacity') || '0.5';
 
     this.shadowRoot.innerHTML = `
       <style>
-        .hero {
+        .hero-card {
           position: relative;
-          width: 100%;
-          height: 100vh;
-          overflow: hidden;
           display: flex;
-          align-items: center;
+          flex-direction: column;
           justify-content: center;
-          color: #fff;
-          background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+          align-items: center;
+          height: 250px;
+          color: white;
+          text-align: center;
+          background: url('${bg}') center/cover no-repeat;
+          border-radius: 16px;
+          overflow: hidden;
         }
 
-        .hero::before {
-          content: "";
+        .overlay {
           position: absolute;
           inset: 0;
-          background: url('${bgImage}') center/cover no-repeat;
-          z-index: 0;
-        }
-
-        .hero-overlay {
-          position: absolute;
-          inset: 0;
-          background-color: ${shadowColor};
+          background: ${shadowColor};
           opacity: ${shadowOpacity};
-          z-index: 1;
+          transition: opacity 0.3s ease;
         }
 
-        .hero-content {
+        .content {
           position: relative;
           z-index: 2;
-          text-align: center;
-          max-width: 700px;
-          padding: 2rem;
-          animation: fadeInUp 1.2s ease forwards;
+          padding: 20px;
+          max-width: 90%;
         }
 
-        h1 {
-          font-size: 3rem;
-          font-weight: 700;
-          margin-bottom: 1rem;
-          letter-spacing: -0.5px;
+        h2 {
+          margin: 0 0 10px;
+          font-size: 1.8em;
         }
 
         p {
-          font-size: 1.2rem;
-          line-height: 1.6;
-          margin-bottom: 2rem;
-          opacity: 0.9;
+          margin: 0 0 20px;
+          font-size: 1em;
+          line-height: 1.4;
         }
 
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(40px); }
-          to { opacity: 1; transform: translateY(0); }
+        .cta {
+          display: inline-block;
         }
 
-        @media (max-width: 768px) {
-          h1 { font-size: 2.2rem; }
-          p { font-size: 1rem; }
+        .hero-card:hover .overlay {
+          opacity: calc(${shadowOpacity} + 0.2);
         }
       </style>
 
-      <section class="hero">
-        <div class="hero-content">
-          <h1>${title}</h1>
-          <p>${description}</p>
-          <!-- Aquí se inyectará el custom code -->
-          <div class="glf-button"></div>
+      <div class="hero-card">
+        <div class="overlay"></div>
+        <div class="content">
+          <h2>${title}</h2>
+          <p>${desc}</p>
+          <div class="cta"></div>
         </div>
-        <div class="hero-overlay"></div>
-      </section>
+      </div>
     `;
 
-    // Buscar código custom en el <menutech-hero> y ponerlo dentro de .glf-button
-    const container = this.shadowRoot.querySelector('.glf-button');
+    // Inyectar cualquier contenido interno del <menutech-hero>
+    const slotContainer = this.shadowRoot.querySelector('.cta');
+
     if (this.innerHTML.trim()) {
       const temp = document.createElement('div');
       temp.innerHTML = this.innerHTML;
@@ -314,9 +301,11 @@ class MenutechHero extends HTMLElement {
         oldScript.remove();
       });
 
-      // Insertar HTML restante dentro de la clase
+      // Insertar el HTML restante en el contenedor CTA
       Array.from(temp.childNodes).forEach(node => {
-        if (node.tagName !== 'SCRIPT') container.appendChild(node.cloneNode(true));
+        if (node.tagName !== 'SCRIPT') {
+          slotContainer.appendChild(node.cloneNode(true));
+        }
       });
     }
   }
@@ -1125,6 +1114,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
