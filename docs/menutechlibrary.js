@@ -195,6 +195,45 @@ customElements.define("menutech-particles", MenutechParticles);
 // ==================================================================
 class MenutechHero extends HTMLElement {
   static get observedAttributes() {
+    return ['title', 'description', 'bg-image', 'cta', 'shadow-color', 'shadow-opacity'];
+  }
+
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+  }
+
+  connectedCallback() {
+    this.render();
+  }
+
+  attributeChangedCallback() {
+    this.render();
+  }
+
+  render() {
+    const title = this.getAttribute('title') || 'Eleva tu Experiencia Digital';
+    const description = this.getAttribute('description') || 'Transforma tu presencia en línea con un diseño moderno, fluido y atractivo.';
+    const bgImage = this.getAttribute('bg-image') || 'https://images.unsplash.com/photo-1522199710521-72d69614c702?auto=format&fit=crop&w=1920&q=80';
+    const ctaText = this.getAttribute('cta') || 'Comienza Ahora';
+    const shadowColor = this.getAttribute('shadow-color') || 'rgba(255,255,255,0.05)';
+    const shadowOpacity = this.getAttribute('shadow-opacity') || '0.35';
+
+    this.shadowRoot.innerHTML = `
+      <style>
+        .hero {
+          position: relative;
+          width: 100%;
+          height: 100vh;
+          background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+          overflow: hidden;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #fff;
+        }
+class MenutechHero extends HTMLElement {
+  static get observedAttributes() {
     return ['title', 'description', 'bg-image', 'shadow-color', 'shadow-opacity'];
   }
 
@@ -212,15 +251,16 @@ class MenutechHero extends HTMLElement {
   }
 
   render() {
-    const title = this.getAttribute('title') || '';
-    const desc = this.getAttribute('description') || '';
-    const bg = this.getAttribute('bg-image') || '';
+    const title = this.getAttribute('title') || 'Eleva tu Experiencia Digital';
+    const description = this.getAttribute('description') || 'Transforma tu presencia en línea con un diseño moderno, fluido y atractivo.';
+    const bgImage = this.getAttribute('bg-image') || 'https://images.unsplash.com/photo-1522199710521-72d69614c702?auto=format&fit=crop&w=1920&q=80';
     const shadowColor = this.getAttribute('shadow-color') || 'rgba(0,0,0,0.5)';
-    const shadowOpacity = this.getAttribute('shadow-opacity') || '0.5';
+    const shadowOpacity = parseFloat(this.getAttribute('shadow-opacity')) || 0.5;
 
+    // Hero principal
     this.shadowRoot.innerHTML = `
       <style>
-       .hero {
+        .hero {
           position: relative;
           width: 100%;
           height: 100vh;
@@ -282,44 +322,35 @@ class MenutechHero extends HTMLElement {
         }
       </style>
 
-      <div class="hero-card">
-        <div class="overlay"></div>
-        <div class="content">
-          <h2>${title}</h2>
-          <p>${desc}</p>
-          <div class="cta"></div>
+      <section class="hero">
+        <div class="hero-content">
+          <h1>${title}</h1>
+          <p>${description}</p>
+          <!-- Aquí se insertará automáticamente el glf-button -->
+          <div class="glf-button-container"></div>
         </div>
-      </div>
+        <div class="hero-overlay"></div>
+      </section>
     `;
 
-    // Inyectar cualquier contenido interno del <menutech-hero>
-    const slotContainer = this.shadowRoot.querySelector('.cta');
+    // Buscar si en el DOM hay un glf-button y colocarlo en la sombra
+    const container = this.shadowRoot.querySelector('.glf-button-container');
+    const button = document.querySelector('.glf-button'); // busca el botón en el DOM normal
 
-    if (this.innerHTML.trim()) {
-      const temp = document.createElement('div');
-      temp.innerHTML = this.innerHTML;
+    if (button) {
+      // Clonar el span y colocarlo en el hero
+      const clone = button.cloneNode(true);
+      container.appendChild(clone);
 
-      // Ejecutar scripts correctamente
-      const scripts = Array.from(temp.querySelectorAll('script'));
-      scripts.forEach(oldScript => {
+      // Ejecutar el script correspondiente si existe
+      const script = document.querySelector('script[src*="ewm2.js"]');
+      if (script) {
         const newScript = document.createElement('script');
-        if (oldScript.src) {
-          newScript.src = oldScript.src;
-          newScript.defer = oldScript.defer;
-          newScript.async = oldScript.async;
-        } else {
-          newScript.textContent = oldScript.textContent;
-        }
+        newScript.src = script.src;
+        newScript.defer = script.defer;
+        newScript.async = script.async;
         document.head.appendChild(newScript);
-        oldScript.remove();
-      });
-
-      // Insertar el HTML restante en el contenedor CTA
-      Array.from(temp.childNodes).forEach(node => {
-        if (node.tagName !== 'SCRIPT') {
-          slotContainer.appendChild(node.cloneNode(true));
-        }
-      });
+      }
     }
   }
 }
@@ -1127,6 +1158,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
