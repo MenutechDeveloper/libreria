@@ -216,7 +216,7 @@ class MenutechHero extends HTMLElement {
     const description = this.getAttribute('description') || 'Transforma tu presencia en línea con un diseño moderno, fluido y atractivo.';
     const bgImage = this.getAttribute('bg-image') || 'https://images.unsplash.com/photo-1522199710521-72d69614c702?auto=format&fit=crop&w=1920&q=80';
     const ctaHTML = this.getAttribute('cta') || '<button id="cta-btn">Comienza Ahora</button>';
-    const shadowColor = this.getAttribute('shadow-color') || 'rgba(0,0,0,0.7)';
+    const shadowColor = this.getAttribute('shadow-color') || 'rgba(0,0,0,0.5)';
     const shadowOpacity = parseFloat(this.getAttribute('shadow-opacity')) || 0.5;
 
     this.shadowRoot.innerHTML = `
@@ -272,24 +272,6 @@ class MenutechHero extends HTMLElement {
           opacity: 0.9;
         }
 
-        button {
-          background: #00b894;
-          color: #fff;
-          border: none;
-          padding: 0.9rem 2rem;
-          border-radius: 50px;
-          font-size: 1.1rem;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          box-shadow: 0 4px 15px rgba(0, 184, 148, 0.4);
-        }
-
-        button:hover {
-          background: #019874;
-          transform: translateY(-3px);
-          box-shadow: 0 6px 20px rgba(0, 184, 148, 0.6);
-        }
-
         @keyframes fadeInUp {
           from { opacity: 0; transform: translateY(40px); }
           to { opacity: 1; transform: translateY(0); }
@@ -305,14 +287,17 @@ class MenutechHero extends HTMLElement {
         <div class="hero-content">
           <h1>${title}</h1>
           <p>${description}</p>
-          <div class="cta">${ctaHTML}</div>
+          <div class="cta"></div>
         </div>
         <div class="hero-overlay"></div>
       </section>
     `;
 
-    // Ejecutar cualquier script que venga dentro del custom code del CTA
+    // Insertar custom code dentro de .cta y ejecutar scripts
     const ctaContainer = this.shadowRoot.querySelector('.cta');
+    ctaContainer.innerHTML = ctaHTML;
+
+    // Ejecutar scripts que vengan en el custom code
     const scripts = ctaContainer.querySelectorAll('script');
     scripts.forEach(oldScript => {
       const newScript = document.createElement('script');
@@ -320,12 +305,14 @@ class MenutechHero extends HTMLElement {
       if (oldScript.defer) newScript.defer = true;
       if (oldScript.async) newScript.async = true;
       newScript.textContent = oldScript.textContent;
-      oldScript.replaceWith(newScript);
+      document.head.appendChild(newScript); // ejecuta el script
+      oldScript.remove();
     });
   }
 }
 
 customElements.define('menutech-hero', MenutechHero);
+
 
 
 
@@ -1125,6 +1112,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
