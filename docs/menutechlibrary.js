@@ -220,52 +220,65 @@ class MenutechHero extends HTMLElement {
 
     this.shadowRoot.innerHTML = `
       <style>
-        .hero-card {
+       .hero {
           position: relative;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-          height: 250px;
-          color: white;
-          text-align: center;
-          background: url('${bg}') center/cover no-repeat;
-          border-radius: 16px;
+          width: 100%;
+          height: 100vh;
           overflow: hidden;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #fff;
+          background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
         }
 
-        .overlay {
+        .hero::before {
+          content: "";
           position: absolute;
           inset: 0;
-          background: ${shadowColor};
-          opacity: ${shadowOpacity};
-          transition: opacity 0.3s ease;
+          background: url('${bgImage}') center/cover no-repeat;
+          z-index: 0;
         }
 
-        .content {
+        .hero-overlay {
+          position: absolute;
+          inset: 0;
+          background-color: ${shadowColor};
+          opacity: ${shadowOpacity};
+          z-index: 1;
+        }
+
+        .hero-content {
           position: relative;
           z-index: 2;
-          padding: 20px;
-          max-width: 90%;
+          text-align: center;
+          max-width: 700px;
+          padding: 2rem;
+          animation: fadeInUp 1.2s ease forwards;
         }
 
-        h2 {
-          margin: 0 0 10px;
-          font-size: 1.8em;
+        h1 {
+          font-size: 3rem;
+          font-weight: 700;
+          margin-bottom: 1rem;
+          letter-spacing: -0.5px;
         }
 
         p {
-          margin: 0 0 20px;
-          font-size: 1em;
-          line-height: 1.4;
+          font-size: 1.2rem;
+          line-height: 1.6;
+          margin-bottom: 2rem;
+          opacity: 0.9;
         }
 
-        .cta {
-          display: inline-block;
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(40px); }
+          to { opacity: 1; transform: translateY(0); }
         }
 
-        .hero-card:hover .overlay {
-          opacity: calc(${shadowOpacity} + 0.2);
+        @media (max-width: 768px) {
+          h1 { font-size: 2.2rem; }
+          p { font-size: 1rem; }
         }
       </style>
 
@@ -1114,6 +1127,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
