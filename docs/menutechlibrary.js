@@ -215,9 +215,9 @@ class MenutechHero extends HTMLElement {
     const title = this.getAttribute('title') || 'Eleva tu Experiencia Digital';
     const description = this.getAttribute('description') || 'Transforma tu presencia en línea con un diseño moderno, fluido y atractivo.';
     const bgImage = this.getAttribute('bg-image') || 'https://images.unsplash.com/photo-1522199710521-72d69614c702?auto=format&fit=crop&w=1920&q=80';
-    const ctaText = this.getAttribute('cta') || 'Comienza Ahora';
-    const shadowColor = this.getAttribute('shadow-color') || 'rgba(255,255,255,0.05)';
-    const shadowOpacity = this.getAttribute('shadow-opacity') || '0.35';
+    const ctaHTML = this.getAttribute('cta') || '<button id="cta-btn">Comienza Ahora</button>';
+    const shadowColor = this.getAttribute('shadow-color') || 'rgba(0,0,0,0.5)';
+    const shadowOpacity = parseFloat(this.getAttribute('shadow-opacity')) || 0.35;
 
     this.shadowRoot.innerHTML = `
       <style>
@@ -238,14 +238,13 @@ class MenutechHero extends HTMLElement {
           position: absolute;
           inset: 0;
           background: url('${bgImage}') center/cover no-repeat;
-          opacity: ${shadowOpacity};
           z-index: 0;
         }
 
         .hero-overlay {
           position: absolute;
           inset: 0;
-          background: radial-gradient(circle at center, ${shadowColor}, transparent 70%);
+          background: radial-gradient(circle at center, ${shadowColor} ${shadowOpacity * 100}%, transparent 70%);
           z-index: 1;
         }
 
@@ -291,23 +290,13 @@ class MenutechHero extends HTMLElement {
         }
 
         @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(40px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+          from { opacity: 0; transform: translateY(40px); }
+          to { opacity: 1; transform: translateY(0); }
         }
 
         @media (max-width: 768px) {
-          h1 {
-            font-size: 2.2rem;
-          }
-          p {
-            font-size: 1rem;
-          }
+          h1 { font-size: 2.2rem; }
+          p { font-size: 1rem; }
         }
       </style>
 
@@ -315,26 +304,29 @@ class MenutechHero extends HTMLElement {
         <div class="hero-content">
           <h1>${title}</h1>
           <p>${description}</p>
-          <button id="cta-btn">${ctaText}</button>
+          <div class="cta">${ctaHTML}</div>
         </div>
         <div class="hero-overlay"></div>
       </section>
-
-      <script>
-        const btn = this.shadowRoot.querySelector('#cta-btn');
-        btn.addEventListener('click', () => {
-          btn.style.transform = "scale(0.95)";
-          setTimeout(() => {
-            btn.style.transform = "scale(1)";
-            window.location.href = "#contacto";
-          }, 150);
-        });
-      </script>
     `;
+
+    // Animación del botón si existe
+    const btn = this.shadowRoot.querySelector('#cta-btn');
+    if (btn) {
+      btn.addEventListener('click', () => {
+        btn.style.transform = "scale(0.95)";
+        setTimeout(() => {
+          btn.style.transform = "scale(1)";
+          window.location.href = "#contacto";
+        }, 150);
+      });
+    }
   }
 }
 
 customElements.define('menutech-hero', MenutechHero);
+
+
 
 
 
@@ -1132,6 +1124,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
