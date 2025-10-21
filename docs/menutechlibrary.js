@@ -1,14 +1,5 @@
-/************************************************************
- * MENUTECH EFFECTS
- * Contiene dos etiquetas personalizadas:
- * 1. <menutech-gradient> - fondo animado con gradientes
- * 2. <menutech-particles> - partículas animadas encima de la web
- * Totalmente configurable mediante atributos
- ************************************************************/
-
-
 /******************************
- * 1️⃣ MENUTECH GRADIENT
+ * MENUTECH GRADIENT
  ******************************/
 class MenutechGradient extends HTMLElement {
   static get observedAttributes() {
@@ -25,10 +16,10 @@ class MenutechGradient extends HTMLElement {
 
   render() {
     const colors = this.getAttribute("colors") || "#ff6b6b,#f06595,#845ef7,#339af0,#22b8cf,#51cf66,#fcc419";
-    const speed = this.getAttribute("speed") || "30s"; // más lento para menos carga
+    const speed = this.getAttribute("speed") || "30s";
     const angle = this.getAttribute("angle") || "45deg";
     const overlayOpacity = this.getAttribute("overlay-opacity") || 0.1;
-    const blur = this.getAttribute("blur") || "5px"; // blur más bajo
+    const blur = this.getAttribute("blur") || "5px";
 
     this.shadow.innerHTML = `
       <style>
@@ -77,7 +68,7 @@ customElements.define("menutech-gradient", MenutechGradient);
 
 
 /******************************
- * 2️⃣ MENUTECH PARTICLES
+ * MENUTECH PARTICLES
  ******************************/
 class MenutechParticles extends HTMLElement {
   static get observedAttributes() {
@@ -127,7 +118,6 @@ class MenutechParticles extends HTMLElement {
 
     const particles = [];
 
-    // Crear partículas
     for (let i = 0; i < count; i++) {
       const size = minSize + Math.random() * (maxSize - minSize);
 
@@ -162,7 +152,6 @@ class MenutechParticles extends HTMLElement {
         p.x += p.vx;
         p.y += p.vy;
 
-        // Movimiento continuo: reaparecen al salir de la pantalla
         if(p.x < -p.size) p.x = canvas.width + p.size;
         if(p.x > canvas.width + p.size) p.x = -p.size;
         if(p.y < -p.size) p.y = canvas.height + p.size;
@@ -191,181 +180,7 @@ class MenutechParticles extends HTMLElement {
 customElements.define("menutech-particles", MenutechParticles);
 
 // ==================================================================
-// Hero
-// ==================================================================
-class MenutechHero extends HTMLElement {
-  static get observedAttributes() {
-    return ['title', 'description', 'bg-image', 'cta', 'shadow-color', 'shadow-opacity'];
-  }
-
-  constructor() {
-    super();
-    this.attachShadow({ mode: 'open' });
-  }
-
-  connectedCallback() {
-    this.render();
-  }
-
-  attributeChangedCallback() {
-    this.render();
-  }
-
-  render() {
-    const title = this.getAttribute('title') || 'Eleva tu Experiencia Digital';
-    const description = this.getAttribute('description') || 'Transforma tu presencia en línea con un diseño moderno, fluido y atractivo.';
-    const bgImage = this.getAttribute('bg-image') || 'https://images.unsplash.com/photo-1522199710521-72d69614c702?auto=format&fit=crop&w=1920&q=80';
-    const ctaText = this.getAttribute('cta') || 'Comienza Ahora';
-    const shadowColor = this.getAttribute('shadow-color') || 'rgba(255,255,255,0.05)';
-    const shadowOpacity = this.getAttribute('shadow-opacity') || '0.35';
-
-    this.shadowRoot.innerHTML = `
-      <style>
-        .hero {
-          position: relative;
-          width: 100%;
-          height: 100vh;
-          background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-          overflow: hidden;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #fff;
-        }
-class MenutechHero extends HTMLElement {
-  static get observedAttributes() {
-    return ['title', 'description', 'bg-image', 'shadow-color', 'shadow-opacity'];
-  }
-
-  constructor() {
-    super();
-    this.attachShadow({ mode: 'open' });
-  }
-
-  connectedCallback() {
-    this.render();
-  }
-
-  attributeChangedCallback() {
-    this.render();
-  }
-
-  render() {
-    const title = this.getAttribute('title') || 'Eleva tu Experiencia Digital';
-    const description = this.getAttribute('description') || 'Transforma tu presencia en línea con un diseño moderno, fluido y atractivo.';
-    const bgImage = this.getAttribute('bg-image') || 'https://images.unsplash.com/photo-1522199710521-72d69614c702?auto=format&fit=crop&w=1920&q=80';
-    const shadowColor = this.getAttribute('shadow-color') || 'rgba(0,0,0,0.5)';
-    const shadowOpacity = parseFloat(this.getAttribute('shadow-opacity')) || 0.5;
-
-    // Hero principal
-    this.shadowRoot.innerHTML = `
-      <style>
-        .hero {
-          position: relative;
-          width: 100%;
-          height: 100vh;
-          overflow: hidden;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #fff;
-          background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-        }
-
-        .hero::before {
-          content: "";
-          position: absolute;
-          inset: 0;
-          background: url('${bgImage}') center/cover no-repeat;
-          z-index: 0;
-        }
-
-        .hero-overlay {
-          position: absolute;
-          inset: 0;
-          background-color: ${shadowColor};
-          opacity: ${shadowOpacity};
-          z-index: 1;
-        }
-
-        .hero-content {
-          position: relative;
-          z-index: 2;
-          text-align: center;
-          max-width: 700px;
-          padding: 2rem;
-          animation: fadeInUp 1.2s ease forwards;
-        }
-
-        h1 {
-          font-size: 3rem;
-          font-weight: 700;
-          margin-bottom: 1rem;
-          letter-spacing: -0.5px;
-        }
-
-        p {
-          font-size: 1.2rem;
-          line-height: 1.6;
-          margin-bottom: 2rem;
-          opacity: 0.9;
-        }
-
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(40px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-
-        @media (max-width: 768px) {
-          h1 { font-size: 2.2rem; }
-          p { font-size: 1rem; }
-        }
-      </style>
-
-      <section class="hero">
-        <div class="hero-content">
-          <h1>${title}</h1>
-          <p>${description}</p>
-          <!-- Aquí se insertará automáticamente el glf-button -->
-          <div class="glf-button-container"></div>
-        </div>
-        <div class="hero-overlay"></div>
-      </section>
-    `;
-
-    // Buscar si en el DOM hay un glf-button y colocarlo en la sombra
-    const container = this.shadowRoot.querySelector('.glf-button-container');
-    const button = document.querySelector('.glf-button'); // busca el botón en el DOM normal
-
-    if (button) {
-      // Clonar el span y colocarlo en el hero
-      const clone = button.cloneNode(true);
-      container.appendChild(clone);
-
-      // Ejecutar el script correspondiente si existe
-      const script = document.querySelector('script[src*="ewm2.js"]');
-      if (script) {
-        const newScript = document.createElement('script');
-        newScript.src = script.src;
-        newScript.defer = script.defer;
-        newScript.async = script.async;
-        document.head.appendChild(newScript);
-      }
-    }
-  }
-}
-
-customElements.define('menutech-hero', MenutechHero);
-
-
-
-
-
-
-
-
-// ==================================================================
-// Modelados 3D
+// Menutech View 3D
 // ==================================================================
 class MenutechModel3D extends HTMLElement {
   constructor() {
@@ -418,12 +233,9 @@ class MenutechModel3D extends HTMLElement {
   }
 
   async initView3D() {
-    // Espera a que la librería se cargue si no está aún disponible
     if (typeof View3D === 'undefined') {
       await this.loadScript("https://unpkg.com/@egjs/view3d@latest/dist/view3d.pkgd.min.js");
     }
-
-    // Inicializa dentro del Shadow DOM
     const container = this.shadowRoot.querySelector("#view3d");
 
     const src = this.getAttribute("src") ||
@@ -435,8 +247,6 @@ class MenutechModel3D extends HTMLElement {
       poster,
       autoInit: true,
     });
-
-    // Loader
     const progressEl = this.shadowRoot.querySelector(".v3d-loader-progress");
     const loaderEl = this.shadowRoot.querySelector(".v3d-loader");
 
@@ -462,34 +272,15 @@ class MenutechModel3D extends HTMLElement {
 
 customElements.define("menutech-model3d", MenutechModel3D);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // =========================================================
 // Menutech form
 // =========================================================
-
-// menutechlibrary.js
 
 class MenutechForm extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
 
-    // Propiedades editables desde el HTML
     const bgColor = this.getAttribute('bg-color') || '#fff';
     const labelColor = this.getAttribute('label-color') || '#000';
     const inputColor = this.getAttribute('input-color') || '#000';
@@ -498,7 +289,6 @@ class MenutechForm extends HTMLElement {
     const buttonColor = this.getAttribute('button-color') || '#f7d6d6';
     const buttonTextColor = this.getAttribute('button-text-color') || '#000';
 
-    // URL del Apps Script fijo
     const scriptURL = "https://script.google.com/macros/s/AKfycbzkS-PWHOxgcpOPl_V179BTF8egKI8_yvJC6TaYVy2b1A1wbeHsaaVnHAqkJFU3rc9P9g/exec";
 
     this.shadowRoot.innerHTML = `
@@ -605,7 +395,6 @@ class MenutechForm extends HTMLElement {
       </div>
     `;
 
-    // Eventos
     const form = this.shadowRoot.getElementById('contactForm');
     const popup = this.shadowRoot.getElementById('popup');
     const popupText = this.shadowRoot.getElementById('popupText');
@@ -622,16 +411,16 @@ class MenutechForm extends HTMLElement {
         .then(resp => resp.json())
         .then(res => {
           if (res.result === "success") {
-            popupText.textContent = "✅ Mensaje enviado con éxito!";
+            popupText.textContent = " Mensaje enviado con éxito!";
             form.reset();
           } else {
-            popupText.textContent = "⚠️ Error al enviar. Intenta de nuevo.";
+            popupText.textContent = " Error al enviar. Intenta de nuevo.";
           }
           setTimeout(() => popup.classList.remove("show"), 2500);
         })
         .catch(err => {
           console.error(err);
-          popupText.textContent = "❌ Error al conectar con el servidor.";
+          popupText.textContent = " Error al conectar con el servidor.";
           setTimeout(() => popup.classList.remove("show"), 2500);
         });
     });
@@ -641,7 +430,7 @@ class MenutechForm extends HTMLElement {
 customElements.define('menutech-form', MenutechForm);
 
 // ==============================================================================
-// Efecto Neomorfismo
+// Menutech Morfico
 // ==============================================================================
 
 class MenutechNeomorphism extends HTMLElement {
@@ -711,7 +500,7 @@ class MenutechNeomorphism extends HTMLElement {
 customElements.define('menutech-neomorphism', MenutechNeomorphism);
 
 // ==========================================================================
-// carrusel
+// Menutech Carrusel
 // ==========================================================================
 
 class MenuTechCarrusel extends HTMLElement {
@@ -720,7 +509,6 @@ class MenuTechCarrusel extends HTMLElement {
   }
 
   connectedCallback() {
-    // === Crear estructura si no existe ===
     if (!this.querySelector('.menus')) {
       const container = document.createElement('div');
       container.classList.add('menus');
@@ -746,7 +534,6 @@ class MenuTechCarrusel extends HTMLElement {
       this.appendChild(popup);
     }
 
-    // === Inyectar CSS ===
     if (!document.getElementById('menutech-carrusel-style')) {
       const style = document.createElement('style');
       style.id = 'menutech-carrusel-style';
@@ -833,8 +620,6 @@ class MenuTechCarrusel extends HTMLElement {
       `;
       document.head.appendChild(style);
     }
-
-    // === Inyectar Swiper si no existe ===
     const loadSwiper = () => new Promise((resolve) => {
       if (window.Swiper) return resolve();
 
@@ -848,8 +633,6 @@ class MenuTechCarrusel extends HTMLElement {
       script.onload = () => resolve();
       document.head.appendChild(script);
     });
-
-    // === Configurar slides ===
     const wrapper = this.querySelector('.swiper-wrapper');
     const imagesAttr = this.getAttribute('images');
     const width = this.getAttribute('slide-width') || '300px';
@@ -870,8 +653,6 @@ class MenuTechCarrusel extends HTMLElement {
       div.innerHTML = `<img src="${slide.src}" data-url="${slide.url || ''}">`;
       wrapper.appendChild(div);
     });
-
-    // === Inicializar Swiper después de cargar ===
     loadSwiper().then(() => {
       const container = this.querySelector('.swiper-container');
       const imgs = container.querySelectorAll('img');
@@ -909,7 +690,6 @@ class MenuTechCarrusel extends HTMLElement {
       });
     });
 
-    // === Popup ===
     const popup = this.querySelector('#popup');
     const popupFrame = this.querySelector('#popupFrame');
     const closeBtn = this.querySelector('.close');
@@ -953,7 +733,7 @@ customElements.define('menutech-carrusel', MenuTechCarrusel);
 
 
 // ==========================================================================================================================
-// Navbar
+// Menutech Navbar
 // ==========================================================================================================================
 
 class MenutechNavbar extends HTMLElement {
@@ -973,31 +753,27 @@ class MenutechNavbar extends HTMLElement {
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
-    // Si ya está renderizado, actualiza dinámicamente sin re-render completo
+
     if (!this.shadowRoot) return;
 
-    // Cambios de texto
     if (name.startsWith("text")) {
       const index = parseInt(name.replace("text", "")) - 1;
       const spans = this.shadowRoot.querySelectorAll("a span");
       if (spans[index]) spans[index].textContent = newValue || "";
     }
 
-    // Cambios de link
     if (name.startsWith("link")) {
       const index = parseInt(name.replace("link", "")) - 1;
       const links = this.shadowRoot.querySelectorAll("a");
       if (links[index]) links[index].href = newValue || "#";
     }
 
-    // Cambios de ícono
     if (name.startsWith("icon")) {
       const index = parseInt(name.replace("icon", "")) - 1;
       const icons = this.shadowRoot.querySelectorAll("a i");
       if (icons[index]) icons[index].className = newValue || "ri-question-line";
     }
 
-    // Cambios de color base
     if (name === "color" || name === "opacity") {
       const color = this.getAttribute("color") || "#e0e0e0";
       const opacity = this.getAttribute("opacity") || "0.7";
@@ -1005,13 +781,11 @@ class MenutechNavbar extends HTMLElement {
       if (navbar) navbar.style.background = `rgba(${this.hexToRgb(color)}, ${opacity})`;
     }
 
-    // Cambios de color de texto
     if (name === "text-color") {
       const val = this.getAttribute("text-color") || "#444";
       this.shadowRoot.querySelectorAll("a").forEach(a => a.style.color = val);
     }
 
-    // Cambios de color hover
     if (name === "hover-color") {
       const val = this.getAttribute("hover-color") || "#007aff";
       this.shadowRoot.querySelectorAll("a:hover, a:hover i").forEach(el => el.style.color = val);
@@ -1023,10 +797,10 @@ class MenutechNavbar extends HTMLElement {
     const opacity = this.getAttribute("opacity") || "0.7";
 
     const links = [
-      this.getAttribute("link1") || "./index.html",
-      this.getAttribute("link2") || "./index.html#services",
-      this.getAttribute("link3") || "./index.html#gallery",
-      this.getAttribute("link4") || "./index.html#contact",
+      this.getAttribute("link1") || "index.html",
+      this.getAttribute("link2") || "index.html#services",
+      this.getAttribute("link3") || "index.html#gallery",
+      this.getAttribute("link4") || "index.html#contact",
       this.getAttribute("link5") || ""
     ];
 
@@ -1158,64 +932,3 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
