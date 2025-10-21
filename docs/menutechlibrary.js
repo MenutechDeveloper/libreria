@@ -219,6 +219,7 @@ class MenutechHero extends HTMLElement {
     const shadowColor = this.getAttribute('shadow-color') || 'rgba(0,0,0,0.5)';
     const shadowOpacity = parseFloat(this.getAttribute('shadow-opacity')) || 0.5;
 
+    // HTML principal del hero (estilos intactos)
     this.shadowRoot.innerHTML = `
       <style>
         .hero {
@@ -293,20 +294,28 @@ class MenutechHero extends HTMLElement {
       </section>
     `;
 
-    // Insertar custom code dentro de .cta y ejecutar scripts
+    // Insertar custom code en .cta
     const ctaContainer = this.shadowRoot.querySelector('.cta');
-    ctaContainer.innerHTML = ctaHTML;
 
-    // Ejecutar scripts que vengan en el custom code
-    const scripts = ctaContainer.querySelectorAll('script');
-    scripts.forEach(oldScript => {
+    // Separar HTML y scripts del custom code
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = ctaHTML;
+
+    // Insertar solo HTML en el shadow DOM
+    Array.from(tempDiv.childNodes).forEach(node => {
+      if (node.tagName !== 'SCRIPT') {
+        ctaContainer.appendChild(node.cloneNode(true));
+      }
+    });
+
+    // Ejecutar los scripts separados en el document (no en shadow DOM)
+    tempDiv.querySelectorAll('script').forEach(oldScript => {
       const newScript = document.createElement('script');
       if (oldScript.src) newScript.src = oldScript.src;
-      if (oldScript.defer) newScript.defer = true;
-      if (oldScript.async) newScript.async = true;
+      newScript.defer = oldScript.defer;
+      newScript.async = oldScript.async;
       newScript.textContent = oldScript.textContent;
-      document.head.appendChild(newScript); // ejecuta el script
-      oldScript.remove();
+      document.head.appendChild(newScript); // ejecuta correctamente
     });
   }
 }
@@ -1112,6 +1121,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
