@@ -288,35 +288,16 @@ class MenutechHero extends HTMLElement {
         <div class="hero-content">
           <h1>${title}</h1>
           <p>${description}</p>
-          <div class="cta"></div>
+          <!-- Placeholder para custom code -->
+          <div id="custom-code-container"></div>
         </div>
         <div class="hero-overlay"></div>
       </section>
     `;
 
-    // Insertar custom code en .cta
-    const ctaContainer = this.shadowRoot.querySelector('.cta');
-
-    // Separar HTML y scripts del custom code
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = ctaHTML;
-
-    // Insertar solo HTML en el shadow DOM
-    Array.from(tempDiv.childNodes).forEach(node => {
-      if (node.tagName !== 'SCRIPT') {
-        ctaContainer.appendChild(node.cloneNode(true));
-      }
-    });
-
-    // Ejecutar los scripts separados en el document (no en shadow DOM)
-    tempDiv.querySelectorAll('script').forEach(oldScript => {
-      const newScript = document.createElement('script');
-      if (oldScript.src) newScript.src = oldScript.src;
-      newScript.defer = oldScript.defer;
-      newScript.async = oldScript.async;
-      newScript.textContent = oldScript.textContent;
-      document.head.appendChild(newScript); // ejecuta correctamente
-    });
+    // Insertar custom code directamente en el placeholder
+    const container = this.shadowRoot.querySelector('#custom-code-container');
+    container.innerHTML = ctaHTML; // se pone tal cual, scripts incluidos
   }
 }
 
@@ -1121,6 +1102,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
