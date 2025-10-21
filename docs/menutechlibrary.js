@@ -212,16 +212,16 @@ class MenutechHero extends HTMLElement {
   }
 
   render() {
-    const title = this.getAttribute('title') || 'Título principal';
-    const desc = this.getAttribute('description') || 'Esta es una descripción editable de la carta hero.';
-    const bg = this.getAttribute('bg-image') || 'https://picsum.photos/1200/600';
-    const cta = this.getAttribute('cta') || `<button style='padding:10px 18px;border:none;border-radius:8px;background:#00bcd4;color:white;font-weight:bold;cursor:pointer;'>Ver más</button>`;
-    const shadowColor = this.getAttribute('shadow-color') || 'rgba(0,0,0,0.5)';
-    const shadowOpacity = this.getAttribute('shadow-opacity') || '0.6';
+    const title = this.getAttribute('title') || 'Eleva tu Experiencia Digital';
+    const description = this.getAttribute('description') || 'Transforma tu presencia en línea con un diseño moderno, fluido y atractivo.';
+    const bgImage = this.getAttribute('bg-image') || 'https://images.unsplash.com/photo-1522199710521-72d69614c702?auto=format&fit=crop&w=1920&q=80';
+    const ctaText = this.getAttribute('cta') || 'Comienza Ahora';
+    const shadowColor = this.getAttribute('shadow-color') || 'rgba(255,255,255,0.05)';
+    const shadowOpacity = this.getAttribute('shadow-opacity') || '0.35';
 
     this.shadowRoot.innerHTML = `
       <style>
-        .hero-card {
+        .hero {
           position: relative;
           width: 100%;
           height: 100vh;
@@ -233,49 +233,103 @@ class MenutechHero extends HTMLElement {
           color: #fff;
         }
 
-        .overlay {
+        .hero::before {
+          content: "";
           position: absolute;
           inset: 0;
-          background: ${shadowColor};
+          background: url('${bgImage}') center/cover no-repeat;
           opacity: ${shadowOpacity};
-          transition: opacity 0.3s ease;
+          z-index: 0;
         }
 
-        .content {
+        .hero-overlay {
+          position: absolute;
+          inset: 0;
+          background: radial-gradient(circle at center, ${shadowColor}, transparent 70%);
+          z-index: 1;
+        }
+
+        .hero-content {
           position: relative;
           z-index: 2;
-          padding: 20px;
-          max-width: 90%;
+          text-align: center;
+          max-width: 700px;
+          padding: 2rem;
+          animation: fadeInUp 1.2s ease forwards;
         }
 
-        h2 {
-          margin: 0 0 10px;
-          font-size: 1.8em;
+        h1 {
+          font-size: 3rem;
+          font-weight: 700;
+          margin-bottom: 1rem;
+          letter-spacing: -0.5px;
         }
 
         p {
-          margin: 0 0 20px;
-          font-size: 1em;
-          line-height: 1.4;
+          font-size: 1.2rem;
+          line-height: 1.6;
+          margin-bottom: 2rem;
+          opacity: 0.9;
         }
 
-        .cta {
-          display: inline-block;
+        button {
+          background: #00b894;
+          color: #fff;
+          border: none;
+          padding: 0.9rem 2rem;
+          border-radius: 50px;
+          font-size: 1.1rem;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 15px rgba(0, 184, 148, 0.4);
         }
 
-        .hero-card:hover .overlay {
-          opacity: calc(${shadowOpacity} + 0.2);
+        button:hover {
+          background: #019874;
+          transform: translateY(-3px);
+          box-shadow: 0 6px 20px rgba(0, 184, 148, 0.6);
+        }
+
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(40px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @media (max-width: 768px) {
+          h1 {
+            font-size: 2.2rem;
+          }
+          p {
+            font-size: 1rem;
+          }
         }
       </style>
 
-      <div class="hero-card">
-        <div class="overlay"></div>
-        <div class="content">
-          <h2>${title}</h2>
-          <p>${desc}</p>
-          <div class="cta">${cta}</div>
+      <section class="hero">
+        <div class="hero-content">
+          <h1>${title}</h1>
+          <p>${description}</p>
+          <button id="cta-btn">${ctaText}</button>
         </div>
-      </div>
+        <div class="hero-overlay"></div>
+      </section>
+
+      <script>
+        const btn = this.shadowRoot.querySelector('#cta-btn');
+        btn.addEventListener('click', () => {
+          btn.style.transform = "scale(0.95)";
+          setTimeout(() => {
+            btn.style.transform = "scale(1)";
+            window.location.href = "#contacto";
+          }, 150);
+        });
+      </script>
     `;
   }
 }
@@ -1078,6 +1132,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
