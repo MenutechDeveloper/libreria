@@ -223,16 +223,14 @@ class MenutechHero extends HTMLElement {
       <style>
         .hero-card {
           position: relative;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-          height: 250px;
-          color: white;
-          text-align: center;
-          background: url('${bg}') center/cover no-repeat;
-          border-radius: 16px;
+          width: 100%;
+          height: 100vh;
+          background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
           overflow: hidden;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #fff;
         }
 
         .overlay {
@@ -1080,6 +1078,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
