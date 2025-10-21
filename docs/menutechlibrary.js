@@ -216,8 +216,8 @@ class MenutechHero extends HTMLElement {
     const description = this.getAttribute('description') || 'Transforma tu presencia en línea con un diseño moderno, fluido y atractivo.';
     const bgImage = this.getAttribute('bg-image') || 'https://images.unsplash.com/photo-1522199710521-72d69614c702?auto=format&fit=crop&w=1920&q=80';
     const ctaHTML = this.getAttribute('cta') || '<button id="cta-btn">Comienza Ahora</button>';
-    const shadowColor = this.getAttribute('shadow-color') || 'rgba(0,0,0,0.5)';
-    const shadowOpacity = parseFloat(this.getAttribute('shadow-opacity')) || 0.35;
+    const shadowColor = this.getAttribute('shadow-color') || 'rgba(0,0,0,0.7)';
+    const shadowOpacity = parseFloat(this.getAttribute('shadow-opacity')) || 0.5;
 
     this.shadowRoot.innerHTML = `
       <style>
@@ -225,12 +225,12 @@ class MenutechHero extends HTMLElement {
           position: relative;
           width: 100%;
           height: 100vh;
-          background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
           overflow: hidden;
           display: flex;
           align-items: center;
           justify-content: center;
           color: #fff;
+          background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
         }
 
         .hero::before {
@@ -244,7 +244,8 @@ class MenutechHero extends HTMLElement {
         .hero-overlay {
           position: absolute;
           inset: 0;
-          background: radial-gradient(circle at center, ${shadowColor} ${shadowOpacity * 100}%, transparent 70%);
+          background-color: ${shadowColor};
+          opacity: ${shadowOpacity};
           z-index: 1;
         }
 
@@ -310,17 +311,17 @@ class MenutechHero extends HTMLElement {
       </section>
     `;
 
-    // Animación del botón si existe
-    const btn = this.shadowRoot.querySelector('#cta-btn');
-    if (btn) {
-      btn.addEventListener('click', () => {
-        btn.style.transform = "scale(0.95)";
-        setTimeout(() => {
-          btn.style.transform = "scale(1)";
-          window.location.href = "#contacto";
-        }, 150);
-      });
-    }
+    // Ejecutar cualquier script que venga dentro del custom code del CTA
+    const ctaContainer = this.shadowRoot.querySelector('.cta');
+    const scripts = ctaContainer.querySelectorAll('script');
+    scripts.forEach(oldScript => {
+      const newScript = document.createElement('script');
+      if (oldScript.src) newScript.src = oldScript.src;
+      if (oldScript.defer) newScript.defer = true;
+      if (oldScript.async) newScript.async = true;
+      newScript.textContent = oldScript.textContent;
+      oldScript.replaceWith(newScript);
+    });
   }
 }
 
@@ -1124,6 +1125,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
