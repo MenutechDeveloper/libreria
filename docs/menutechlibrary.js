@@ -195,7 +195,7 @@ customElements.define("menutech-particles", MenutechParticles);
 // ==================================================================
 class MenutechHero extends HTMLElement {
   static get observedAttributes() {
-    return ['title', 'description', 'bg-image', 'cta', 'shadow-color', 'shadow-opacity'];
+    return ['title', 'description', 'bg-image', 'shadow-color', 'shadow-opacity'];
   }
 
   constructor() {
@@ -215,11 +215,10 @@ class MenutechHero extends HTMLElement {
     const title = this.getAttribute('title') || 'Eleva tu Experiencia Digital';
     const description = this.getAttribute('description') || 'Transforma tu presencia en línea con un diseño moderno, fluido y atractivo.';
     const bgImage = this.getAttribute('bg-image') || 'https://images.unsplash.com/photo-1522199710521-72d69614c702?auto=format&fit=crop&w=1920&q=80';
-    const ctaHTML = this.getAttribute('cta') || '<button id="cta-btn">Comienza Ahora</button>';
     const shadowColor = this.getAttribute('shadow-color') || 'rgba(0,0,0,0.5)';
     const shadowOpacity = parseFloat(this.getAttribute('shadow-opacity')) || 0.5;
 
-    // HTML principal del hero (estilos intactos)
+    // Hero principal
     this.shadowRoot.innerHTML = `
       <style>
         .hero {
@@ -288,20 +287,37 @@ class MenutechHero extends HTMLElement {
         <div class="hero-content">
           <h1>${title}</h1>
           <p>${description}</p>
-          <!-- Placeholder para custom code -->
-          <div id="custom-code-container"></div>
+          <!-- Aquí se insertará automáticamente el glf-button -->
+          <div class="glf-button-container"></div>
         </div>
         <div class="hero-overlay"></div>
       </section>
     `;
 
-    // Insertar custom code directamente en el placeholder
-    const container = this.shadowRoot.querySelector('#custom-code-container');
-    container.innerHTML = ctaHTML; // se pone tal cual, scripts incluidos
+    // Buscar si en el DOM hay un glf-button y colocarlo en la sombra
+    const container = this.shadowRoot.querySelector('.glf-button-container');
+    const button = document.querySelector('.glf-button'); // busca el botón en el DOM normal
+
+    if (button) {
+      // Clonar el span y colocarlo en el hero
+      const clone = button.cloneNode(true);
+      container.appendChild(clone);
+
+      // Ejecutar el script correspondiente si existe
+      const script = document.querySelector('script[src*="ewm2.js"]');
+      if (script) {
+        const newScript = document.createElement('script');
+        newScript.src = script.src;
+        newScript.defer = script.defer;
+        newScript.async = script.async;
+        document.head.appendChild(newScript);
+      }
+    }
   }
 }
 
 customElements.define('menutech-hero', MenutechHero);
+
 
 
 
@@ -1102,6 +1118,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
