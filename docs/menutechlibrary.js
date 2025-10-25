@@ -71,8 +71,7 @@ class MenutechNavidad extends HTMLElement {
   static get observedAttributes() {
     return [
       "color","cantidad","tamano","velocidad","opacidad",
-      "popup-activo","popup-image","popup-link","fecha-inicio","fecha-fin",
-      "imagen1","imagen2","imagen3"
+      "popup-activo","popup-image","popup-link","fecha-inicio","fecha-fin"
     ];
   }
 
@@ -97,24 +96,18 @@ class MenutechNavidad extends HTMLElement {
     const popupLink = this.getAttribute("popup-link") || "";
     const fechaInicio = this.getAttribute("fecha-inicio");
     const fechaFin = this.getAttribute("fecha-fin");
-    const img1 = this.getAttribute("imagen1") || "";
-    const img2 = this.getAttribute("imagen2") || "";
-    const img3 = this.getAttribute("imagen3") || "";
 
-    const enEditor = this.closest('.preview') !== null;
     const hoy = new Date();
-
-    // --- lógica para activar en Navidad ---
     const defaultInicio = new Date(`${hoy.getFullYear()}-12-25T00:00:00`);
     const defaultFin = new Date(`${hoy.getFullYear()}-12-25T23:59:59`);
     const inicio = fechaInicio ? new Date(fechaInicio) : defaultInicio;
     const fin = fechaFin ? new Date(fechaFin) : defaultFin;
-    const activo = enEditor || (hoy >= inicio && hoy <= fin);
+    const activo = hoy >= inicio && hoy <= fin;
 
-    // --- generar partículas ---
+    // --- partículas fijas con rutas correctas ---
+    const imagenes = ["./snow1.png","./snow2.png","./snow3.png"];
     let dots = "";
     if (activo) {
-      const imagenes = [img1, img2, img3].filter(Boolean);
       for (let i = 0; i < cantidad; i++) {
         const x = Math.random() * 100;
         const y = Math.random() * 100;
@@ -122,7 +115,7 @@ class MenutechNavidad extends HTMLElement {
         const dur = 4 + Math.random() * 3;
         const delay = Math.random() * 2;
         const rot = Math.random() * 360;
-        const imgSrc = imagenes.length ? imagenes[i % imagenes.length] : null;
+        const imgSrc = imagenes[i % imagenes.length];
 
         dots += `
           <div class="flake" style="
@@ -133,9 +126,10 @@ class MenutechNavidad extends HTMLElement {
             animation-duration:${dur/velocidad}s;
             animation-delay:${delay}s;
             transform:rotate(${rot}deg);
-            ${imgSrc 
-              ? `background-image:url('${imgSrc}');background-size:contain;background-repeat:no-repeat;background-position:center;` 
-              : `background:${color};border-radius:50%;`}
+            background-image:url('${imgSrc}');
+            background-size:contain;
+            background-repeat:no-repeat;
+            background-position:center;
           "></div>`;
       }
     }
@@ -198,6 +192,7 @@ class MenutechNavidad extends HTMLElement {
 }
 
 customElements.define("menutech-navidad", MenutechNavidad);
+
 
 
 
@@ -1075,6 +1070,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
