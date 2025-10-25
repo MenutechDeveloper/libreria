@@ -91,22 +91,27 @@ class MenutechNavidad extends HTMLElement {
     const tamano = parseFloat(this.getAttribute("tamano")) || 3;
     const velocidad = parseFloat(this.getAttribute("velocidad")) || 1;
     const opacidad = parseFloat(this.getAttribute("opacidad")) || 0.8;
-    const popupActivo = this.getAttribute("popup-activo") !== "false"; 
+    const popupActivo = this.getAttribute("popup-activo") !== "false"; // por defecto TRUE
     const popupImage = this.getAttribute("popup-image") || "";
     const popupLink = this.getAttribute("popup-link") || "";
-    const fechaInicio = this.getAttribute("fecha-inicio");
-    const fechaFin = this.getAttribute("fecha-fin");
+    const fechaInicio = this.getAttribute("fecha-inicio") || `${new Date().getFullYear()}-12-25`;
+    const fechaFin = this.getAttribute("fecha-fin") || `${new Date().getFullYear()}-12-25`;
 
     const hoy = new Date();
-    const defaultInicio = new Date(`${hoy.getFullYear()}-12-25T00:00:00`);
-    const defaultFin = new Date(`${hoy.getFullYear()}-12-25T23:59:59`);
-    const inicio = fechaInicio ? new Date(fechaInicio) : defaultInicio;
-    const fin = fechaFin ? new Date(fechaFin) : defaultFin;
+    const inicio = new Date(fechaInicio);
+    const fin = new Date(fechaFin);
 
-    const activo = (hoy >= inicio && hoy <= fin);
+    // Mostrar siempre en Navidad o dentro del rango de fechas
+    const esNavidad = hoy.getMonth() === 11 && hoy.getDate() === 25;
+    const activo = esNavidad || (hoy >= inicio && hoy <= fin);
 
     // Copos de nieve fijos
-    const snowImages = ["./snow1.png","./snow2.png","./snow3.png"];
+    const snowImages = [
+      "./snow1.png",
+      "./snow2.png",
+      "./snow3.png"
+    ];
+
     let dots = "";
     if (activo) {
       for (let i = 0; i < cantidad; i++) {
@@ -115,7 +120,6 @@ class MenutechNavidad extends HTMLElement {
         const size = tamano + Math.random() * tamano;
         const dur = 4 + Math.random() * 3;
         const delay = Math.random() * 2;
-        const rot = Math.random() * 360;
         const img = snowImages[i % snowImages.length];
         dots += `
           <div class="flake" style="
@@ -125,7 +129,6 @@ class MenutechNavidad extends HTMLElement {
             height:${size * 5}px;
             animation-duration:${dur / velocidad}s;
             animation-delay:${delay}s;
-            transform:rotate(${rot}deg);
             opacity:${opacidad};
             background-image:url('${img}');
             background-size:contain;
@@ -143,8 +146,8 @@ class MenutechNavidad extends HTMLElement {
           width:100%;
           height:100%;
           overflow:hidden;
-          background:linear-gradient(180deg,#001b33,#002b44);
           pointer-events:none;
+          background:linear-gradient(180deg,#001b33,#002b44);
         }
         .flake {
           position:absolute;
@@ -193,6 +196,7 @@ class MenutechNavidad extends HTMLElement {
 }
 
 customElements.define("menutech-navidad", MenutechNavidad);
+
 
 
 
@@ -1071,6 +1075,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
