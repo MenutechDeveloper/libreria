@@ -71,7 +71,8 @@ class MenutechNavidad extends HTMLElement {
   static get observedAttributes() {
     return [
       "color","cantidad","tamano","velocidad","opacidad",
-      "popup-activo","popup-image","popup-link","fecha-inicio","fecha-fin"
+      "popup-activo","popup-image","popup-link",
+      "fecha-inicio","fecha-fin"
     ];
   }
 
@@ -91,20 +92,25 @@ class MenutechNavidad extends HTMLElement {
     const tamano = parseFloat(this.getAttribute("tamano")) || 3;
     const velocidad = parseFloat(this.getAttribute("velocidad")) || 1;
     const opacidad = parseFloat(this.getAttribute("opacidad")) || 0.8;
-    const popupActivo = this.getAttribute("popup-activo") !== "false";
+    const popupActivo = this.getAttribute("popup-activo") === "true";
     const popupImage = this.getAttribute("popup-image") || "";
     const popupLink = this.getAttribute("popup-link") || "";
-    const fechaInicio = this.getAttribute("fecha-inicio") || `${new Date().getFullYear()}-12-25`;
-    const fechaFin = this.getAttribute("fecha-fin") || `${new Date().getFullYear()}-12-25`;
+    const fechaInicio = this.getAttribute("fecha-inicio");
+    const fechaFin = this.getAttribute("fecha-fin");
 
     const hoy = new Date();
-    const inicio = new Date(fechaInicio);
-    const fin = new Date(fechaFin);
+    const inicio = fechaInicio ? new Date(fechaInicio) : new Date(`${hoy.getFullYear()}-12-25T00:00:00`);
+    const fin = fechaFin ? new Date(fechaFin) : new Date(`${hoy.getFullYear()}-12-25T23:59:59`);
 
-    const activo = hoy >= inicio && hoy <= fin;
+    // Determina si es Navidad
+    const esNavidad = hoy.getMonth() === 11 && hoy.getDate() === 25;
+
+    // Activo si es Navidad o está dentro del rango
+    const activo = esNavidad || (hoy >= inicio && hoy <= fin);
 
     // Copos de nieve fijos
     const snowImages = ["./snow1.png","./snow2.png","./snow3.png"];
+
     let dots = "";
     if (activo) {
       for (let i = 0; i < cantidad; i++) {
@@ -114,6 +120,7 @@ class MenutechNavidad extends HTMLElement {
         const dur = 4 + Math.random() * 3;
         const delay = Math.random() * 2;
         const img = snowImages[i % snowImages.length];
+
         dots += `
           <div class="flake" style="
             left:${x}%;
@@ -1068,6 +1075,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
