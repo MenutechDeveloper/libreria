@@ -67,9 +67,17 @@ customElements.define("menutech-gradient", MenutechGradient);
 /******************************
  * MENUTECH EVENTS
  ******************************/
+// =======================
+// CUSTOM LABEL: menutech-navidad
+// =======================
 class MenutechNavidad extends HTMLElement {
   static get observedAttributes() {
-    return ["color","cantidad","tamano","velocidad","opacidad","popup-activo","popup-image","popup-link","fecha-inicio","fecha-fin"];
+    return [
+      "color","cantidad","tamano","velocidad","opacidad",
+      "popup-activo","popup-image","popup-link",
+      "fecha-inicio","fecha-fin",
+      "imagen1","imagen2","imagen3"
+    ];
   }
 
   constructor() {
@@ -88,19 +96,29 @@ class MenutechNavidad extends HTMLElement {
     const tamano = parseFloat(this.getAttribute("tamano")) || 3;
     const velocidad = parseFloat(this.getAttribute("velocidad")) || 1;
     const opacidad = parseFloat(this.getAttribute("opacidad")) || 0.8;
-    const popupActivo = this.getAttribute("popup-activo") === "true";
+    const popupActivo = this.getAttribute("popup-activo") !== "false"; // por defecto TRUE
     const popupImage = this.getAttribute("popup-image") || "";
     const popupLink = this.getAttribute("popup-link") || "";
-    const fechaInicio = this.getAttribute("fecha-inicio") || "2025-12-25";
-    const fechaFin = this.getAttribute("fecha-fin") || "2025-12-25";
+    const fechaInicio = this.getAttribute("fecha-inicio");
+    const fechaFin = this.getAttribute("fecha-fin");
+    const img1 = this.getAttribute("imagen1") || "";
+    const img2 = this.getAttribute("imagen2") || "";
+    const img3 = this.getAttribute("imagen3") || "";
 
+    const enEditor = this.closest('.preview') !== null;
     const hoy = new Date();
-    const inicio = new Date(fechaInicio);
-    const fin = new Date(fechaFin);
-    const activo = hoy >= inicio && hoy <= fin;
 
+    // --- lógica para activar en Navidad ---
+    const defaultInicio = new Date(`${hoy.getFullYear()}-12-25T00:00:00`);
+    const defaultFin = new Date(`${hoy.getFullYear()}-12-25T23:59:59`);
+    const inicio = fechaInicio ? new Date(fechaInicio) : defaultInicio;
+    const fin = fechaFin ? new Date(fechaFin) : defaultFin;
+    const activo = enEditor || (hoy >= inicio && hoy <= fin);
+
+    // --- generar partículas ---
     let dots = "";
     if (activo) {
+      const imagenes = [img1, img2, img3].filter(Boolean);
       for (let i = 0; i < cantidad; i++) {
         const x = Math.random() * 100;
         const y = Math.random() * 100;
@@ -108,20 +126,21 @@ class MenutechNavidad extends HTMLElement {
         const dur = 4 + Math.random() * 3;
         const delay = Math.random() * 2;
         const rot = Math.random() * 360;
+        const imgSrc = imagenes.length ? imagenes[i % imagenes.length] : null;
+
         dots += `
           <div class="flake" style="
             left:${x}%;
             top:${y}%;
-            width:${size * 4}px;
-            height:${size * 4}px;
+            width:${size * 5}px;
+            height:${size * 5}px;
             animation-duration:${dur/velocidad}s;
             animation-delay:${delay}s;
             transform:rotate(${rot}deg);
-          ">
-            <svg viewBox="0 0 24 24" fill="${color}" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2L12 22M12 12L4 8M12 12L20 8M12 12L4 16M12 12L20 16M12 12L2 12M12 12L22 12" stroke="${color}" stroke-width="1.2" stroke-linecap="round" />
-            </svg>
-          </div>`;
+            ${imgSrc 
+              ? `background-image:url('${imgSrc}');background-size:contain;background-repeat:no-repeat;background-position:center;` 
+              : `background:${color};border-radius:50%;`}
+          "></div>`;
       }
     }
 
@@ -133,16 +152,14 @@ class MenutechNavidad extends HTMLElement {
           width:100%;
           height:100%;
           overflow:hidden;
+          background:linear-gradient(180deg,#001b33,#002b44);
         }
         .flake {
           position:absolute;
           opacity:${opacidad};
           animation:fall linear infinite;
-        }
-        .flake svg {
-          width:100%;
-          height:100%;
-          filter:drop-shadow(0 0 6px ${color});
+          will-change: transform;
+          pointer-events:none;
         }
         @keyframes fall {
           0% { transform:translateY(0) rotate(0deg); opacity:${opacidad}; }
@@ -150,7 +167,7 @@ class MenutechNavidad extends HTMLElement {
         }
         .popup {
           position:absolute;
-          bottom:25px;
+          bottom:20px;
           left:50%;
           transform:translateX(-50%);
           background:rgba(255,255,255,0.9);
@@ -162,7 +179,7 @@ class MenutechNavidad extends HTMLElement {
           z-index:5;
         }
         .popup img {
-          max-width:180px;
+          max-width:160px;
           border-radius:8px;
           margin-bottom:8px;
         }
@@ -185,6 +202,7 @@ class MenutechNavidad extends HTMLElement {
 }
 
 customElements.define("menutech-navidad", MenutechNavidad);
+
 
 
 
@@ -1061,6 +1079,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
