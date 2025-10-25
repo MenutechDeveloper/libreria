@@ -91,9 +91,37 @@ class MenutechNavidad extends HTMLElement {
     const tamano = parseFloat(this.getAttribute("tamano")) || 3;
     const velocidad = parseFloat(this.getAttribute("velocidad")) || 1;
     const opacidad = parseFloat(this.getAttribute("opacidad")) || 0.8;
-    const popupActivo = this.getAttribute("popup-activo") === "true";
+    const popupActivo = this.getAttribute("popup-activo") === "true" && activo;
     const popupImage = this.getAttribute("popup-image") || "";
     const popupLink = this.getAttribute("popup-link") || "";
+
+    // === CONTROL DE FECHAS ===
+const fechaInicio = this.getAttribute("fecha-inicio") || "2025-12-25";
+const fechaFin = this.getAttribute("fecha-fin") || "2025-12-25";
+
+const hoy = new Date();
+const inicio = new Date(fechaInicio);
+const fin = new Date(fechaFin);
+const navidad = new Date(hoy.getFullYear(), 11, 25); // diciembre = 11
+
+// Detectar si las fechas están en el valor por defecto
+const fechasPorDefecto =
+  fechaInicio === "2025-12-25" && fechaFin === "2025-12-25";
+
+// Activar solo si es navidad o dentro del rango configurado
+let activo = false;
+if (fechasPorDefecto) {
+  activo = hoy.toDateString() === navidad.toDateString();
+} else {
+  activo = hoy >= inicio && hoy <= fin;
+}
+
+// Si no está activo, no renderizar nada
+if (!activo) {
+  this.shadowRoot.innerHTML = "";
+  return;
+}
+
 
     // Copos de nieve fijos
     const snowImages = [
@@ -240,8 +268,13 @@ customElements.define("menutech-navidad", MenutechNavidad);
  ******************************/
 class MenutechParticles extends HTMLElement {
   static get observedAttributes() {
-    return ["count", "color", "min-size", "max-size", "speed", "image", "opacity", "direction"];
-  }
+  return [
+    "color","cantidad","tamano","velocidad","opacidad",
+    "popup-activo","popup-image","popup-link",
+    "fecha-inicio","fecha-fin"
+  ];
+}
+
 
   constructor() {
     super();
@@ -1106,6 +1139,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
