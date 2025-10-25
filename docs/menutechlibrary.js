@@ -71,8 +71,7 @@ class MenutechNavidad extends HTMLElement {
   static get observedAttributes() {
     return [
       "color","cantidad","tamano","velocidad","opacidad",
-      "popup-activo","popup-image","popup-link",
-      "fecha-inicio","fecha-fin"
+      "popup-activo","popup-image","popup-link"
     ];
   }
 
@@ -92,50 +91,42 @@ class MenutechNavidad extends HTMLElement {
     const tamano = parseFloat(this.getAttribute("tamano")) || 3;
     const velocidad = parseFloat(this.getAttribute("velocidad")) || 1;
     const opacidad = parseFloat(this.getAttribute("opacidad")) || 0.8;
-    const popupActivo = this.getAttribute("popup-activo") === "true";
+    const popupActivo = ["true","on"].includes(this.getAttribute("popup-activo"));
     const popupImage = this.getAttribute("popup-image") || "";
     const popupLink = this.getAttribute("popup-link") || "";
-    const fechaInicio = this.getAttribute("fecha-inicio");
-    const fechaFin = this.getAttribute("fecha-fin");
 
-    const hoy = new Date();
-    const inicio = fechaInicio ? new Date(fechaInicio) : new Date(`${hoy.getFullYear()}-12-25T00:00:00`);
-    const fin = fechaFin ? new Date(fechaFin) : new Date(`${hoy.getFullYear()}-12-25T23:59:59`);
+    // MOSTRAR SIEMPRE PARA PRUEBAS
+    const activo = true;
 
-    // Determina si es Navidad
-    const esNavidad = hoy.getMonth() === 11 && hoy.getDate() === 25;
-
-    // Activo si es Navidad o está dentro del rango
-    const activo = esNavidad || (hoy >= inicio && hoy <= fin);
-
-    // Copos de nieve fijos
-    const snowImages = ["https://menutechdeveloper.github.io/libreria/snow1.png","https://menutechdeveloper.github.io/libreria/snow2.png","https://menutechdeveloper.github.io/libreria/snow3.png"];
+    const snowImages = [
+      "https://menutechdeveloper.github.io/libreria/snow1.png",
+      "https://menutechdeveloper.github.io/libreria/snow2.png",
+      "https://menutechdeveloper.github.io/libreria/snow3.png"
+    ];
 
     let dots = "";
-    if (activo) {
-      for (let i = 0; i < cantidad; i++) {
-        const x = Math.random() * 100;
-        const y = Math.random() * 100;
-        const size = tamano + Math.random() * tamano;
-        const dur = 4 + Math.random() * 3;
-        const delay = Math.random() * 2;
-        const img = snowImages[i % snowImages.length];
+    for (let i = 0; i < cantidad; i++) {
+      const x = Math.random() * 100;
+      const y = Math.random() * 100;
+      const size = tamano + Math.random() * tamano;
+      const dur = 4 + Math.random() * 3;
+      const delay = Math.random() * 2;
+      const img = snowImages[i % snowImages.length];
 
-        dots += `
-          <div class="flake" style="
-            left:${x}%;
-            top:${y}%;
-            width:${size * 5}px;
-            height:${size * 5}px;
-            animation-duration:${dur / velocidad}s;
-            animation-delay:${delay}s;
-            opacity:${opacidad};
-            background-image:url('${img}');
-            background-size:contain;
-            background-repeat:no-repeat;
-            background-position:center;
-          "></div>`;
-      }
+      dots += `
+        <div class="flake" style="
+          left:${x}%;
+          top:${y}%;
+          width:${size * 5}px;
+          height:${size * 5}px;
+          animation-duration:${dur / velocidad}s;
+          animation-delay:${delay}s;
+          opacity:${opacidad};
+          background-image:url('${img}');
+          background-size:contain;
+          background-repeat:no-repeat;
+          background-position:center;
+        "></div>`;
     }
 
     this.shadowRoot.innerHTML = `
@@ -158,44 +149,82 @@ class MenutechNavidad extends HTMLElement {
           0% { transform:translateY(0) rotate(0deg); opacity:1; }
           100% { transform:translateY(100vh) rotate(360deg); opacity:0; }
         }
-        .popup {
-          position:absolute;
-          bottom:25px;
-          left:50%;
-          transform:translateX(-50%);
-          background:rgba(255,255,255,0.9);
+        .popup-overlay {
+          position:fixed;
+          top:0; left:0; right:0; bottom:0;
+          background:rgba(0,0,0,0.6);
+          display:${popupActivo ? "flex" : "none"};
+          justify-content:center;
+          align-items:center;
+          z-index:9999;
+        }
+        .popup-content {
+          position:relative;
+          background:#fff;
           border-radius:12px;
-          box-shadow:0 4px 20px rgba(0,0,0,0.2);
-          padding:15px;
+          max-width:90%;
+          max-height:90%;
+          padding:20px;
+          box-shadow:0 4px 30px rgba(0,0,0,0.3);
           text-align:center;
-          display:${popupActivo && activo ? "block" : "none"};
-          z-index:5;
-          pointer-events:auto;
+          overflow:auto;
         }
-        .popup img {
-          max-width:180px;
+        .popup-content img {
+          max-width:100%;
           border-radius:8px;
-          margin-bottom:8px;
         }
-        .popup button {
+        .popup-close {
+          position:absolute;
+          top:10px;
+          right:10px;
+          width:30px;
+          height:30px;
           background:#d32f2f;
           color:#fff;
+          font-weight:bold;
           border:none;
-          padding:6px 12px;
+          border-radius:50%;
+          cursor:pointer;
+          display:flex;
+          justify-content:center;
+          align-items:center;
+          font-size:18px;
+        }
+        .popup-content button {
+          margin-top:15px;
+          background:#00bcd4;
+          color:#fff;
+          border:none;
+          padding:8px 16px;
           border-radius:6px;
           cursor:pointer;
+          font-size:16px;
         }
       </style>
-      ${activo ? dots : ""}
-      <div class="popup">
-        ${popupImage ? `<img src="${popupImage}" alt="Promoción">` : ""}
-        ${popupLink ? `<button onclick="window.open('${popupLink}','_blank')">Ver promoción</button>` : ""}
+
+      ${dots}
+
+      <div class="popup-overlay">
+        <div class="popup-content">
+          <button class="popup-close">&times;</button>
+          ${popupImage ? `<img src="${popupImage}" alt="Promoción">` : ""}
+          ${popupLink ? `<button onclick="window.open('${popupLink}','_blank')">Ver promoción</button>` : ""}
+        </div>
       </div>
     `;
+
+    const closeBtn = this.shadowRoot.querySelector(".popup-close");
+    const overlay = this.shadowRoot.querySelector(".popup-overlay");
+    if (closeBtn && overlay) {
+      closeBtn.addEventListener("click", () => {
+        overlay.style.display = "none";
+      });
+    }
   }
 }
 
 customElements.define("menutech-navidad", MenutechNavidad);
+
 
 
 
@@ -1075,6 +1104,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
