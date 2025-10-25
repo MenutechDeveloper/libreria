@@ -91,7 +91,7 @@ class MenutechNavidad extends HTMLElement {
     const tamano = parseFloat(this.getAttribute("tamano")) || 3;
     const velocidad = parseFloat(this.getAttribute("velocidad")) || 1;
     const opacidad = parseFloat(this.getAttribute("opacidad")) || 0.8;
-    const popupActivo = this.getAttribute("popup-activo") !== "false"; // por defecto TRUE
+    const popupActivo = this.getAttribute("popup-activo") !== "false"; 
     const popupImage = this.getAttribute("popup-image") || "";
     const popupLink = this.getAttribute("popup-link") || "";
     const fechaInicio = this.getAttribute("fecha-inicio");
@@ -102,10 +102,11 @@ class MenutechNavidad extends HTMLElement {
     const defaultFin = new Date(`${hoy.getFullYear()}-12-25T23:59:59`);
     const inicio = fechaInicio ? new Date(fechaInicio) : defaultInicio;
     const fin = fechaFin ? new Date(fechaFin) : defaultFin;
-    const activo = hoy >= inicio && hoy <= fin;
 
-    // --- partículas fijas con rutas correctas ---
-    const imagenes = ["./snow1.png","./snow2.png","./snow3.png"];
+    const activo = (hoy >= inicio && hoy <= fin);
+
+    // Copos de nieve fijos
+    const snowImages = ["./snow1.png","./snow2.png","./snow3.png"];
     let dots = "";
     if (activo) {
       for (let i = 0; i < cantidad; i++) {
@@ -115,18 +116,18 @@ class MenutechNavidad extends HTMLElement {
         const dur = 4 + Math.random() * 3;
         const delay = Math.random() * 2;
         const rot = Math.random() * 360;
-        const imgSrc = imagenes[i % imagenes.length];
-
+        const img = snowImages[i % snowImages.length];
         dots += `
           <div class="flake" style="
             left:${x}%;
             top:${y}%;
             width:${size * 5}px;
             height:${size * 5}px;
-            animation-duration:${dur/velocidad}s;
+            animation-duration:${dur / velocidad}s;
             animation-delay:${delay}s;
             transform:rotate(${rot}deg);
-            background-image:url('${imgSrc}');
+            opacity:${opacidad};
+            background-image:url('${img}');
             background-size:contain;
             background-repeat:no-repeat;
             background-position:center;
@@ -143,21 +144,20 @@ class MenutechNavidad extends HTMLElement {
           height:100%;
           overflow:hidden;
           background:linear-gradient(180deg,#001b33,#002b44);
+          pointer-events:none;
         }
         .flake {
           position:absolute;
-          opacity:${opacidad};
           animation:fall linear infinite;
-          will-change: transform;
-          pointer-events:none;
+          will-change: transform, opacity;
         }
         @keyframes fall {
-          0% { transform:translateY(0) rotate(0deg); opacity:${opacidad}; }
+          0% { transform:translateY(0) rotate(0deg); opacity:1; }
           100% { transform:translateY(100vh) rotate(360deg); opacity:0; }
         }
         .popup {
           position:absolute;
-          bottom:20px;
+          bottom:25px;
           left:50%;
           transform:translateX(-50%);
           background:rgba(255,255,255,0.9);
@@ -167,9 +167,10 @@ class MenutechNavidad extends HTMLElement {
           text-align:center;
           display:${popupActivo && activo ? "block" : "none"};
           z-index:5;
+          pointer-events:auto;
         }
         .popup img {
-          max-width:160px;
+          max-width:180px;
           border-radius:8px;
           margin-bottom:8px;
         }
@@ -1070,6 +1071,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
