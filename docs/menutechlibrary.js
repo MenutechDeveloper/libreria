@@ -91,7 +91,7 @@ class MenutechNavidad extends HTMLElement {
     const tamano = parseFloat(this.getAttribute("tamano")) || 3;
     const velocidad = parseFloat(this.getAttribute("velocidad")) || 1;
     const opacidad = parseFloat(this.getAttribute("opacidad")) || 0.8;
-    const popupActivo = this.getAttribute("popup-activo") !== "false"; // por defecto TRUE
+    const popupActivo = this.getAttribute("popup-activo") !== "false";
     const popupImage = this.getAttribute("popup-image") || "";
     const popupLink = this.getAttribute("popup-link") || "";
     const fechaInicio = this.getAttribute("fecha-inicio") || `${new Date().getFullYear()}-12-25`;
@@ -101,17 +101,10 @@ class MenutechNavidad extends HTMLElement {
     const inicio = new Date(fechaInicio);
     const fin = new Date(fechaFin);
 
-    // Mostrar siempre en Navidad o dentro del rango de fechas
-    const esNavidad = hoy.getMonth() === 11 && hoy.getDate() === 25;
-    const activo = esNavidad || (hoy >= inicio && hoy <= fin);
+    const activo = hoy >= inicio && hoy <= fin;
 
     // Copos de nieve fijos
-    const snowImages = [
-      "./snow1.png",
-      "./snow2.png",
-      "./snow3.png"
-    ];
-
+    const snowImages = ["./snow1.png","./snow2.png","./snow3.png"];
     let dots = "";
     if (activo) {
       for (let i = 0; i < cantidad; i++) {
@@ -1075,6 +1068,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
