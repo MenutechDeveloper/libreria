@@ -120,7 +120,10 @@ if (!activo) {
   this.shadowRoot.innerHTML = "";
   return;
 }
-this.getAttribute("popup-activo") === "true" || this.getAttribute("popup-activo") === "on";
+const popupActivo =
+  this.getAttribute("popup-activo") === "true" ||
+  this.getAttribute("popup-activo") === "on";
+
 
 
 
@@ -1140,6 +1143,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
