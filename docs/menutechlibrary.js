@@ -109,7 +109,7 @@ class MenutechNavidad extends HTMLElement {
     const activo = esNavidad || (hoy >= inicio && hoy <= fin);
 
     // Copos de nieve fijos
-    const snowImages = ["./snow1.png","./snow2.png","./snow3.png"];
+    const snowImages = ["https://menutechdeveloper.github.io/libreria/snow1.png","https://menutechdeveloper.github.io/libreria/snow2.png","https://menutechdeveloper.github.io/libreria/snow3.png"];
 
     let dots = "";
     if (activo) {
@@ -1075,6 +1075,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
