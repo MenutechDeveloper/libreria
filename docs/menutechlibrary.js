@@ -140,15 +140,19 @@ class MenutechNavidad extends HTMLElement {
           pointer-events:none;
           background:linear-gradient(180deg,#001b33,#002b44);
         }
+
         .flake {
           position:absolute;
           animation:fall linear infinite;
           will-change: transform, opacity;
         }
+
         @keyframes fall {
           0% { transform:translateY(0) rotate(0deg); opacity:1; }
           100% { transform:translateY(100vh) rotate(360deg); opacity:0; }
         }
+
+        /* POPUP */
         .popup-overlay {
           position:fixed;
           top:0; left:0; right:0; bottom:0;
@@ -157,22 +161,30 @@ class MenutechNavidad extends HTMLElement {
           justify-content:center;
           align-items:center;
           z-index:9999;
+          pointer-events:auto;
         }
+
         .popup-content {
           position:relative;
           background:#fff;
           border-radius:12px;
-          max-width:90%;
-          max-height:90%;
+          max-width:400px;
+          width:90%;
           padding:20px;
-          box-shadow:0 4px 30px rgba(0,0,0,0.3);
           text-align:center;
-          overflow:auto;
+          box-shadow:0 8px 30px rgba(0,0,0,0.4);
+          pointer-events:auto;
         }
+
         .popup-content img {
           max-width:100%;
+          height:auto;
           border-radius:8px;
+          margin-bottom:15px;
+          display:block;
+          object-fit:contain;
         }
+
         .popup-close {
           position:absolute;
           top:10px;
@@ -189,16 +201,18 @@ class MenutechNavidad extends HTMLElement {
           justify-content:center;
           align-items:center;
           font-size:18px;
+          line-height:1;
         }
+
         .popup-content button {
-          margin-top:15px;
           background:#00bcd4;
           color:#fff;
           border:none;
-          padding:8px 16px;
+          padding:10px 18px;
           border-radius:6px;
           cursor:pointer;
           font-size:16px;
+          margin-top:10px;
         }
       </style>
 
@@ -213,11 +227,20 @@ class MenutechNavidad extends HTMLElement {
       </div>
     `;
 
-    const closeBtn = this.shadowRoot.querySelector(".popup-close");
     const overlay = this.shadowRoot.querySelector(".popup-overlay");
-    if (closeBtn && overlay) {
+    const closeBtn = this.shadowRoot.querySelector(".popup-close");
+
+    // Cierra al dar click en la X
+    if (closeBtn) {
       closeBtn.addEventListener("click", () => {
         overlay.style.display = "none";
+      });
+    }
+
+    // Cierra al click fuera del contenido
+    if (overlay) {
+      overlay.addEventListener("click", e => {
+        if (e.target === overlay) overlay.style.display = "none";
       });
     }
   }
@@ -1104,6 +1127,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
