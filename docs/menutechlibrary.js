@@ -94,7 +94,6 @@ class MenutechNavidad extends HTMLElement {
     const fechaInicio = this.getAttribute("fecha-inicio") || "2025-12-25";
     const fechaFin = this.getAttribute("fecha-fin") || "2025-12-25";
 
-    // Verifica si debe mostrarse (fecha actual dentro del rango)
     const hoy = new Date();
     const inicio = new Date(fechaInicio);
     const fin = new Date(fechaFin);
@@ -108,16 +107,21 @@ class MenutechNavidad extends HTMLElement {
         const size = tamano + Math.random() * tamano;
         const dur = 4 + Math.random() * 3;
         const delay = Math.random() * 2;
+        const rot = Math.random() * 360;
         dots += `
           <div class="flake" style="
             left:${x}%;
             top:${y}%;
-            width:${size}px;
-            height:${size}px;
+            width:${size * 4}px;
+            height:${size * 4}px;
             animation-duration:${dur/velocidad}s;
             animation-delay:${delay}s;
-            background:${color};
-          "></div>`;
+            transform:rotate(${rot}deg);
+          ">
+            <svg viewBox="0 0 24 24" fill="${color}" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L12 22M12 12L4 8M12 12L20 8M12 12L4 16M12 12L20 16M12 12L2 12M12 12L22 12" stroke="${color}" stroke-width="1.2" stroke-linecap="round" />
+            </svg>
+          </div>`;
       }
     }
 
@@ -132,10 +136,13 @@ class MenutechNavidad extends HTMLElement {
         }
         .flake {
           position:absolute;
-          border-radius:50%;
           opacity:${opacidad};
           animation:fall linear infinite;
-          box-shadow: 0 0 10px ${color};
+        }
+        .flake svg {
+          width:100%;
+          height:100%;
+          filter:drop-shadow(0 0 6px ${color});
         }
         @keyframes fall {
           0% { transform:translateY(0) rotate(0deg); opacity:${opacidad}; }
@@ -178,6 +185,7 @@ class MenutechNavidad extends HTMLElement {
 }
 
 customElements.define("menutech-navidad", MenutechNavidad);
+
 
 
 
@@ -1053,6 +1061,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
