@@ -67,28 +67,15 @@ customElements.define("menutech-gradient", MenutechGradient);
 /******************************
  * MENUTECH EVENTS
  ******************************/
-class MenutechEvents extends HTMLElement {
+class MenutechNavidad extends HTMLElement {
   static get observedAttributes() {
-    return ["active-events"];
+    return ["popup-image", "popup-link"];
   }
 
   constructor() {
     super();
     this.shadow = this.attachShadow({ mode: "open" });
-    this.eventsConfig = this.defaultEvents();
-  }
-
-  defaultEvents() {
-    return {
-      "New Year’s Day": { type: "fireworks", popup: false },
-      "Valentine’s Day": { type: "hearts", popup: false },
-      "St. Patrick’s Day": { type: "confetti", popup: false },
-      "Independence Day": { type: "fireworks", popup: false },
-      "Halloween": { type: "confetti", popup: false },
-      "Christmas Day": { type: "snow", popup: false },
-      "Christmas Eve": { type: "snow", popup: false },
-      "New Year’s Eve": { type: "fireworks", popup: false },
-    };
+    this.particles = [];
   }
 
   connectedCallback() {
@@ -97,131 +84,135 @@ class MenutechEvents extends HTMLElement {
   }
 
   attributeChangedCallback() {
-    this.render();
+    this.renderPopup();
   }
 
   render() {
     this.shadow.innerHTML = `
       <style>
         :host {
-          display:block;
-          position:relative;
-          width:100%;
-          height:100%;
+          display: block;
+          position: relative;
+          width: 100%;
+          height: 100%;
+          overflow: hidden;
         }
         canvas {
-          position:absolute;
-          top:0; left:0;
-          width:100%; height:100%;
-          pointer-events:none;
+          position: absolute;
+          top: 0; left: 0;
+          width: 100%; height: 100%;
+          pointer-events: none;
         }
         .popup {
-          position:absolute;
-          bottom:20px; left:50%;
-          transform:translateX(-50%);
-          background:#fff;
-          padding:15px 25px;
-          border-radius:10px;
-          box-shadow:0 4px 15px rgba(0,0,0,0.2);
-          text-align:center;
-          font-family:sans-serif;
-          display:none;
-          z-index:2;
+          position: absolute;
+          bottom: 25px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: rgba(255,255,255,0.95);
+          border-radius: 12px;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+          padding: 15px;
+          text-align: center;
+          display: none;
+          z-index: 5;
         }
         .popup img {
-          max-width:200px;
-          display:block;
-          margin:0 auto 8px;
+          max-width: 180px;
+          border-radius: 8px;
+          margin-bottom: 8px;
         }
         .popup button {
-          padding:6px 12px;
-          border:none;
-          background:#007bff;
-          color:#fff;
-          border-radius:6px;
-          cursor:pointer;
+          background: #d32f2f;
+          color: white;
+          border: none;
+          padding: 6px 12px;
+          border-radius: 6px;
+          cursor: pointer;
         }
       </style>
       <canvas></canvas>
-      <div class="popup" id="popup"></div>
+      <div class="popup" id="promo"></div>
     `;
     this.canvas = this.shadow.querySelector("canvas");
     this.ctx = this.canvas.getContext("2d");
-    this.popup = this.shadow.getElementById("popup");
+    this.popup = this.shadow.querySelector("#promo");
+    this.renderPopup();
   }
 
-  start() {
-    const today = new Date();
-    const currentDate = today.toLocaleString("en-US", { month: "long", day: "numeric" });
-    this.activeEvent = Object.keys(this.eventsConfig).find(name => name.includes(currentDate)) || null;
-
-    this.resizeCanvas();
-    window.addEventListener("resize", () => this.resizeCanvas());
-
-    if (this.activeEvent) {
-      const conf = this.eventsConfig[this.activeEvent];
-      this.showParticles(conf.type);
-      if (conf.popup && conf.promo) this.showPopup(conf.promo);
+  renderPopup() {
+    const img = this.getAttribute("popup-image");
+    const link = this.getAttribute("popup-link");
+    if (img || link) {
+      this.popup.innerHTML = `
+        ${img ? `<img src="${img}" alt="Promoción">` : ""}
+        ${link ? `<button onclick="window.open('${link}','_blank')">Ver promoción</button>` : ""}
+      `;
+      this.popup.style.display = "block";
+    } else {
+      this.popup.style.display = "none";
     }
   }
 
+  start() {
+    this.resizeCanvas();
+    window.addEventListener("resize", () => this.resizeCanvas());
+    this.generateSnowflakes();
+    this.animate();
+  }
+
   resizeCanvas() {
-    if (!this.canvas) return;
     this.canvas.width = this.canvas.clientWidth;
     this.canvas.height = this.canvas.clientHeight;
   }
 
-  showParticles(type) {
-    const ctx = this.ctx;
-    let particles = [];
-
-    const createParticle = () => {
-      const x = Math.random() * this.canvas.width;
-      const y = Math.random() * this.canvas.height;
-      const size = Math.random() * 5 + 3;
-      const speed = Math.random() * 2 + 1;
-      const color = this.getColor(type);
-      return { x, y, size, speed, color, type };
-    };
-
-    for (let i = 0; i < 100; i++) particles.push(createParticle());
-
-    const animate = () => {
-      ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-      particles.forEach(p => {
-        p.y += p.speed;
-        if (p.y > this.canvas.height) p.y = -10;
-        ctx.fillStyle = p.color;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fill();
+  generateSnowflakes() {
+    const count = 80;
+    this.particles = [];
+    for (let i = 0; i < count; i++) {
+      this.particles.push({
+        x: Math.random() * this.canvas.width,
+        y: Math.random() * this.canvas.height,
+        r: 1 + Math.random() * 3,
+        d: Math.random() + 1,
       });
-      requestAnimationFrame(animate);
-    };
-    animate();
-  }
-
-  getColor(type) {
-    switch (type) {
-      case "snow": return "white";
-      case "hearts": return "pink";
-      case "fireworks": return `hsl(${Math.random() * 360},100%,70%)`;
-      case "confetti": return `hsl(${Math.random() * 360},100%,60%)`;
-      default: return "white";
     }
   }
 
-  showPopup(promo) {
-    this.popup.innerHTML = `
-      ${promo.image ? `<img src="${promo.image}">` : ""}
-      ${promo.text ? `<p>${promo.text}</p>` : ""}
-      ${promo.link ? `<button onclick="window.open('${promo.link}','_blank')">${promo.buttonText || 'Ver promoción'}</button>` : ""}
-    `;
-    this.popup.style.display = "block";
+  animate() {
+    const ctx = this.ctx;
+    const flakes = this.particles;
+    const w = this.canvas.width;
+    const h = this.canvas.height;
+
+    const draw = () => {
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = "white";
+      ctx.beginPath();
+      for (let i = 0; i < flakes.length; i++) {
+        const f = flakes[i];
+        ctx.moveTo(f.x, f.y);
+        ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2, true);
+      }
+      ctx.fill();
+      this.update();
+      requestAnimationFrame(draw);
+    };
+    draw();
+  }
+
+  update() {
+    for (let i = 0; i < this.particles.length; i++) {
+      const f = this.particles[i];
+      f.y += Math.pow(f.d, 2) + 1;
+      if (f.y > this.canvas.height) {
+        f.x = Math.random() * this.canvas.width;
+        f.y = -10;
+      }
+    }
   }
 }
 
-customElements.define("menutech-events", MenutechEvents);
+customElements.define("menutech-navidad", MenutechNavidad);
 
 
 
@@ -1096,6 +1087,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
