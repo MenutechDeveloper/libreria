@@ -102,21 +102,22 @@ class MenutechNavidad extends HTMLElement {
       "https://menutechdeveloper.github.io/libreria/snow3.png"
     ];
 
+    // Generar copos
     let dots = "";
     for (let i = 0; i < cantidad; i++) {
       const x = Math.random() * 100;
       const y = Math.random() * 100;
       const size = tamano + Math.random() * tamano;
-      const dur = 4 + Math.random() * 3;
-      const delay = Math.random() * 2;
+      const dur = 4 + Math.random() * 3; // duración de la caída
+      const delay = Math.random() * 2;   // delay inicial
       const img = snowImages[i % snowImages.length];
 
       dots += `
         <div class="flake" style="
           left:${x}%;
           top:${y}%;
-          width:${size * 5}px;
-          height:${size * 5}px;
+          width:${size*2}px;
+          height:${size*2}px;
           animation-duration:${dur / velocidad}s;
           animation-delay:${delay}s;
           opacity:${opacidad};
@@ -143,8 +144,8 @@ class MenutechNavidad extends HTMLElement {
           will-change: transform, opacity;
         }
         @keyframes fall {
-          0% { transform:translateY(0) rotate(0deg); opacity:1; }
-          100% { transform:translateY(100vh) rotate(360deg); opacity:0; }
+          0% { transform: translateY(0) rotate(0deg); opacity:1; }
+          100% { transform: translateY(100vh) rotate(360deg); opacity:0; }
         }
 
         /* POPUP */
@@ -223,6 +224,7 @@ class MenutechNavidad extends HTMLElement {
 }
 
 customElements.define("menutech-navidad", MenutechNavidad);
+
 
 
 
@@ -1104,6 +1106,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
