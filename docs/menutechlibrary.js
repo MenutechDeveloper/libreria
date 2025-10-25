@@ -67,15 +67,11 @@ customElements.define("menutech-gradient", MenutechGradient);
 /******************************
  * MENUTECH EVENTS
  ******************************/
-// =======================
-// CUSTOM LABEL: menutech-navidad
-// =======================
 class MenutechNavidad extends HTMLElement {
   static get observedAttributes() {
     return [
       "color","cantidad","tamano","velocidad","opacidad",
-      "popup-activo","popup-image","popup-link",
-      "fecha-inicio","fecha-fin",
+      "popup-activo","popup-image","popup-link","fecha-inicio","fecha-fin",
       "imagen1","imagen2","imagen3"
     ];
   }
@@ -1079,6 +1075,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
