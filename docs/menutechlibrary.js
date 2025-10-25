@@ -64,6 +64,164 @@ class MenutechGradient extends HTMLElement {
 
 customElements.define("menutech-gradient", MenutechGradient);
 
+/******************************
+ * MENUTECH EVENTS
+ ******************************/
+class MenutechEvents extends HTMLElement {
+  static get observedAttributes() {
+    return ["active-events"];
+  }
+
+  constructor() {
+    super();
+    this.shadow = this.attachShadow({ mode: "open" });
+    this.eventsConfig = this.defaultEvents();
+  }
+
+  defaultEvents() {
+    return {
+      "New Year’s Day": { type: "fireworks", popup: false },
+      "Valentine’s Day": { type: "hearts", popup: false },
+      "St. Patrick’s Day": { type: "confetti", popup: false },
+      "Independence Day": { type: "fireworks", popup: false },
+      "Halloween": { type: "confetti", popup: false },
+      "Christmas Day": { type: "snow", popup: false },
+      "Christmas Eve": { type: "snow", popup: false },
+      "New Year’s Eve": { type: "fireworks", popup: false },
+    };
+  }
+
+  connectedCallback() {
+    this.render();
+    this.start();
+  }
+
+  attributeChangedCallback() {
+    this.render();
+  }
+
+  render() {
+    this.shadow.innerHTML = `
+      <style>
+        :host {
+          display:block;
+          position:relative;
+          width:100%;
+          height:100%;
+        }
+        canvas {
+          position:absolute;
+          top:0; left:0;
+          width:100%; height:100%;
+          pointer-events:none;
+        }
+        .popup {
+          position:absolute;
+          bottom:20px; left:50%;
+          transform:translateX(-50%);
+          background:#fff;
+          padding:15px 25px;
+          border-radius:10px;
+          box-shadow:0 4px 15px rgba(0,0,0,0.2);
+          text-align:center;
+          font-family:sans-serif;
+          display:none;
+          z-index:2;
+        }
+        .popup img {
+          max-width:200px;
+          display:block;
+          margin:0 auto 8px;
+        }
+        .popup button {
+          padding:6px 12px;
+          border:none;
+          background:#007bff;
+          color:#fff;
+          border-radius:6px;
+          cursor:pointer;
+        }
+      </style>
+      <canvas></canvas>
+      <div class="popup" id="popup"></div>
+    `;
+    this.canvas = this.shadow.querySelector("canvas");
+    this.ctx = this.canvas.getContext("2d");
+    this.popup = this.shadow.getElementById("popup");
+  }
+
+  start() {
+    const today = new Date();
+    const currentDate = today.toLocaleString("en-US", { month: "long", day: "numeric" });
+    this.activeEvent = Object.keys(this.eventsConfig).find(name => name.includes(currentDate)) || null;
+
+    this.resizeCanvas();
+    window.addEventListener("resize", () => this.resizeCanvas());
+
+    if (this.activeEvent) {
+      const conf = this.eventsConfig[this.activeEvent];
+      this.showParticles(conf.type);
+      if (conf.popup && conf.promo) this.showPopup(conf.promo);
+    }
+  }
+
+  resizeCanvas() {
+    if (!this.canvas) return;
+    this.canvas.width = this.canvas.clientWidth;
+    this.canvas.height = this.canvas.clientHeight;
+  }
+
+  showParticles(type) {
+    const ctx = this.ctx;
+    let particles = [];
+
+    const createParticle = () => {
+      const x = Math.random() * this.canvas.width;
+      const y = Math.random() * this.canvas.height;
+      const size = Math.random() * 5 + 3;
+      const speed = Math.random() * 2 + 1;
+      const color = this.getColor(type);
+      return { x, y, size, speed, color, type };
+    };
+
+    for (let i = 0; i < 100; i++) particles.push(createParticle());
+
+    const animate = () => {
+      ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      particles.forEach(p => {
+        p.y += p.speed;
+        if (p.y > this.canvas.height) p.y = -10;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      requestAnimationFrame(animate);
+    };
+    animate();
+  }
+
+  getColor(type) {
+    switch (type) {
+      case "snow": return "white";
+      case "hearts": return "pink";
+      case "fireworks": return `hsl(${Math.random() * 360},100%,70%)`;
+      case "confetti": return `hsl(${Math.random() * 360},100%,60%)`;
+      default: return "white";
+    }
+  }
+
+  showPopup(promo) {
+    this.popup.innerHTML = `
+      ${promo.image ? `<img src="${promo.image}">` : ""}
+      ${promo.text ? `<p>${promo.text}</p>` : ""}
+      ${promo.link ? `<button onclick="window.open('${promo.link}','_blank')">${promo.buttonText || 'Ver promoción'}</button>` : ""}
+    `;
+    this.popup.style.display = "block";
+  }
+}
+
+customElements.define("menutech-events", MenutechEvents);
 
 
 
@@ -938,6 +1096,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
