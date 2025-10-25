@@ -69,150 +69,116 @@ customElements.define("menutech-gradient", MenutechGradient);
  ******************************/
 class MenutechNavidad extends HTMLElement {
   static get observedAttributes() {
-    return ["popup-image", "popup-link"];
+    return ["color","cantidad","tamano","velocidad","opacidad","popup-activo","popup-image","popup-link","fecha-inicio","fecha-fin"];
   }
 
   constructor() {
     super();
-    this.shadow = this.attachShadow({ mode: "open" });
-    this.particles = [];
-  }
-
-  connectedCallback() {
+    this.attachShadow({ mode: "open" });
     this.render();
-    this.start();
   }
 
   attributeChangedCallback() {
-    this.renderPopup();
+    this.render();
   }
 
   render() {
-    this.shadow.innerHTML = `
+    const color = this.getAttribute("color") || "#ffffff";
+    const cantidad = parseInt(this.getAttribute("cantidad")) || 60;
+    const tamano = parseFloat(this.getAttribute("tamano")) || 3;
+    const velocidad = parseFloat(this.getAttribute("velocidad")) || 1;
+    const opacidad = parseFloat(this.getAttribute("opacidad")) || 0.8;
+    const popupActivo = this.getAttribute("popup-activo") === "true";
+    const popupImage = this.getAttribute("popup-image") || "";
+    const popupLink = this.getAttribute("popup-link") || "";
+    const fechaInicio = this.getAttribute("fecha-inicio") || "2025-12-25";
+    const fechaFin = this.getAttribute("fecha-fin") || "2025-12-25";
+
+    // Verifica si debe mostrarse (fecha actual dentro del rango)
+    const hoy = new Date();
+    const inicio = new Date(fechaInicio);
+    const fin = new Date(fechaFin);
+    const activo = hoy >= inicio && hoy <= fin;
+
+    let dots = "";
+    if (activo) {
+      for (let i = 0; i < cantidad; i++) {
+        const x = Math.random() * 100;
+        const y = Math.random() * 100;
+        const size = tamano + Math.random() * tamano;
+        const dur = 4 + Math.random() * 3;
+        const delay = Math.random() * 2;
+        dots += `
+          <div class="flake" style="
+            left:${x}%;
+            top:${y}%;
+            width:${size}px;
+            height:${size}px;
+            animation-duration:${dur/velocidad}s;
+            animation-delay:${delay}s;
+            background:${color};
+          "></div>`;
+      }
+    }
+
+    this.shadowRoot.innerHTML = `
       <style>
         :host {
-          display: block;
-          position: relative;
-          width: 100%;
-          height: 100%;
-          overflow: hidden;
+          display:block;
+          position:relative;
+          width:100%;
+          height:100%;
+          overflow:hidden;
         }
-        canvas {
-          position: absolute;
-          top: 0; left: 0;
-          width: 100%; height: 100%;
-          pointer-events: none;
+        .flake {
+          position:absolute;
+          border-radius:50%;
+          opacity:${opacidad};
+          animation:fall linear infinite;
+          box-shadow: 0 0 10px ${color};
+        }
+        @keyframes fall {
+          0% { transform:translateY(0) rotate(0deg); opacity:${opacidad}; }
+          100% { transform:translateY(100vh) rotate(360deg); opacity:0; }
         }
         .popup {
-          position: absolute;
-          bottom: 25px;
-          left: 50%;
-          transform: translateX(-50%);
-          background: rgba(255,255,255,0.95);
-          border-radius: 12px;
-          box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-          padding: 15px;
-          text-align: center;
-          display: none;
-          z-index: 5;
+          position:absolute;
+          bottom:25px;
+          left:50%;
+          transform:translateX(-50%);
+          background:rgba(255,255,255,0.9);
+          border-radius:12px;
+          box-shadow:0 4px 20px rgba(0,0,0,0.2);
+          padding:15px;
+          text-align:center;
+          display:${popupActivo && activo ? "block" : "none"};
+          z-index:5;
         }
         .popup img {
-          max-width: 180px;
-          border-radius: 8px;
-          margin-bottom: 8px;
+          max-width:180px;
+          border-radius:8px;
+          margin-bottom:8px;
         }
         .popup button {
-          background: #d32f2f;
-          color: white;
-          border: none;
-          padding: 6px 12px;
-          border-radius: 6px;
-          cursor: pointer;
+          background:#d32f2f;
+          color:#fff;
+          border:none;
+          padding:6px 12px;
+          border-radius:6px;
+          cursor:pointer;
         }
       </style>
-      <canvas></canvas>
-      <div class="popup" id="promo"></div>
+      ${activo ? dots : ""}
+      <div class="popup">
+        ${popupImage ? `<img src="${popupImage}" alt="Promoción">` : ""}
+        ${popupLink ? `<button onclick="window.open('${popupLink}','_blank')">Ver promoción</button>` : ""}
+      </div>
     `;
-    this.canvas = this.shadow.querySelector("canvas");
-    this.ctx = this.canvas.getContext("2d");
-    this.popup = this.shadow.querySelector("#promo");
-    this.renderPopup();
-  }
-
-  renderPopup() {
-    const img = this.getAttribute("popup-image");
-    const link = this.getAttribute("popup-link");
-    if (img || link) {
-      this.popup.innerHTML = `
-        ${img ? `<img src="${img}" alt="Promoción">` : ""}
-        ${link ? `<button onclick="window.open('${link}','_blank')">Ver promoción</button>` : ""}
-      `;
-      this.popup.style.display = "block";
-    } else {
-      this.popup.style.display = "none";
-    }
-  }
-
-  start() {
-    this.resizeCanvas();
-    window.addEventListener("resize", () => this.resizeCanvas());
-    this.generateSnowflakes();
-    this.animate();
-  }
-
-  resizeCanvas() {
-    this.canvas.width = this.canvas.clientWidth;
-    this.canvas.height = this.canvas.clientHeight;
-  }
-
-  generateSnowflakes() {
-    const count = 80;
-    this.particles = [];
-    for (let i = 0; i < count; i++) {
-      this.particles.push({
-        x: Math.random() * this.canvas.width,
-        y: Math.random() * this.canvas.height,
-        r: 1 + Math.random() * 3,
-        d: Math.random() + 1,
-      });
-    }
-  }
-
-  animate() {
-    const ctx = this.ctx;
-    const flakes = this.particles;
-    const w = this.canvas.width;
-    const h = this.canvas.height;
-
-    const draw = () => {
-      ctx.clearRect(0, 0, w, h);
-      ctx.fillStyle = "white";
-      ctx.beginPath();
-      for (let i = 0; i < flakes.length; i++) {
-        const f = flakes[i];
-        ctx.moveTo(f.x, f.y);
-        ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2, true);
-      }
-      ctx.fill();
-      this.update();
-      requestAnimationFrame(draw);
-    };
-    draw();
-  }
-
-  update() {
-    for (let i = 0; i < this.particles.length; i++) {
-      const f = this.particles[i];
-      f.y += Math.pow(f.d, 2) + 1;
-      if (f.y > this.canvas.height) {
-        f.x = Math.random() * this.canvas.width;
-        f.y = -10;
-      }
-    }
   }
 }
 
 customElements.define("menutech-navidad", MenutechNavidad);
+
 
 
 
@@ -1087,6 +1053,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
