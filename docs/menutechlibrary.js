@@ -91,19 +91,18 @@ class MenutechNavidad extends HTMLElement {
     const tamano = parseFloat(this.getAttribute("tamano")) || 3;
     const velocidad = parseFloat(this.getAttribute("velocidad")) || 1;
     const opacidad = parseFloat(this.getAttribute("opacidad")) || 0.8;
-    const popupActivo = ["true","on"].includes(this.getAttribute("popup-activo"));
+    const popupActivo = this.getAttribute("popup-activo") === "true";
     const popupImage = this.getAttribute("popup-image") || "";
     const popupLink = this.getAttribute("popup-link") || "";
 
-    // MOSTRAR SIEMPRE PARA PRUEBAS
-    const activo = true;
-
+    // Partículas de nieve fijas
     const snowImages = [
       "https://menutechdeveloper.github.io/libreria/snow1.png",
       "https://menutechdeveloper.github.io/libreria/snow2.png",
       "https://menutechdeveloper.github.io/libreria/snow3.png"
     ];
 
+    // Generar partículas
     let dots = "";
     for (let i = 0; i < cantidad; i++) {
       const x = Math.random() * 100;
@@ -129,118 +128,103 @@ class MenutechNavidad extends HTMLElement {
         "></div>`;
     }
 
+    // Popup solo si está activado
+    const popupHTML = popupActivo ? `
+      <div class="popup-backdrop">
+        <div class="popup-container">
+          <button class="popup-close">&times;</button>
+          ${popupImage ? `<img src="${popupImage}" alt="Promoción">` : ""}
+          ${popupLink ? `<a href="${popupLink}" target="_blank" class="popup-button">Ver promoción</a>` : ""}
+        </div>
+      </div>` : "";
+
     this.shadowRoot.innerHTML = `
       <style>
         :host {
           display:block;
           position:relative;
           width:100%;
-          height:100%;
+          height:100vh;
           overflow:hidden;
-          pointer-events:none;
-          background:linear-gradient(180deg,#001b33,#002b44);
         }
-
         .flake {
           position:absolute;
           animation:fall linear infinite;
           will-change: transform, opacity;
         }
-
         @keyframes fall {
           0% { transform:translateY(0) rotate(0deg); opacity:1; }
           100% { transform:translateY(100vh) rotate(360deg); opacity:0; }
         }
 
-        /* POPUP */
-        .popup-overlay {
+        /* POPUP MODAL */
+        .popup-backdrop {
           position:fixed;
-          top:0; left:0; right:0; bottom:0;
-          background:rgba(0,0,0,0.6);
-          display:${popupActivo ? "flex" : "none"};
+          top:0;
+          left:0;
+          width:100vw;
+          height:100vh;
+          background:rgba(0,0,0,0.5);
+          display:flex;
           justify-content:center;
           align-items:center;
           z-index:9999;
-          pointer-events:auto;
         }
-
-        .popup-content {
+        .popup-container {
           position:relative;
+          max-width:90%;
+          max-height:90%;
           background:#fff;
           border-radius:12px;
-          max-width:400px;
-          width:90%;
           padding:20px;
-          text-align:center;
-          box-shadow:0 8px 30px rgba(0,0,0,0.4);
-          pointer-events:auto;
+          box-shadow:0 10px 30px rgba(0,0,0,0.3);
+          display:flex;
+          flex-direction:column;
+          align-items:center;
+          justify-content:center;
         }
-
-        .popup-content img {
+        .popup-container img {
           max-width:100%;
-          height:auto;
-          border-radius:8px;
-          margin-bottom:15px;
-          display:block;
+          max-height:60vh;
           object-fit:contain;
+          margin-bottom:20px;
+          border-radius:8px;
         }
-
+        .popup-button {
+          background:#d32f2f;
+          color:#fff;
+          text-decoration:none;
+          padding:12px 25px;
+          border-radius:8px;
+          font-weight:bold;
+          font-size:16px;
+        }
         .popup-close {
           position:absolute;
           top:10px;
           right:10px;
-          width:30px;
-          height:30px;
-          background:#d32f2f;
-          color:#fff;
-          font-weight:bold;
+          background:transparent;
           border:none;
-          border-radius:50%;
+          font-size:28px;
           cursor:pointer;
-          display:flex;
-          justify-content:center;
-          align-items:center;
-          font-size:18px;
           line-height:1;
         }
-
-        .popup-content button {
-          background:#00bcd4;
-          color:#fff;
-          border:none;
-          padding:10px 18px;
-          border-radius:6px;
-          cursor:pointer;
-          font-size:16px;
-          margin-top:10px;
+        .popup-close:hover {
+          color:#d32f2f;
         }
       </style>
-
       ${dots}
-
-      <div class="popup-overlay">
-        <div class="popup-content">
-          <button class="popup-close">&times;</button>
-          ${popupImage ? `<img src="${popupImage}" alt="Promoción">` : ""}
-          ${popupLink ? `<button onclick="window.open('${popupLink}','_blank')">Ver promoción</button>` : ""}
-        </div>
-      </div>
+      ${popupHTML}
     `;
 
-    const overlay = this.shadowRoot.querySelector(".popup-overlay");
+    // FUNCIONALIDAD CIERRE POPUP
     const closeBtn = this.shadowRoot.querySelector(".popup-close");
+    const backdrop = this.shadowRoot.querySelector(".popup-backdrop");
 
-    // Cierra al dar click en la X
-    if (closeBtn) {
-      closeBtn.addEventListener("click", () => {
-        overlay.style.display = "none";
-      });
-    }
-
-    // Cierra al click fuera del contenido
-    if (overlay) {
-      overlay.addEventListener("click", e => {
-        if (e.target === overlay) overlay.style.display = "none";
+    if (closeBtn && backdrop) {
+      closeBtn.addEventListener("click", () => backdrop.remove());
+      backdrop.addEventListener("click", e => {
+        if (e.target === backdrop) backdrop.remove();
       });
     }
   }
@@ -1127,6 +1111,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
