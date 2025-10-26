@@ -311,7 +311,7 @@ class MenutechHalloween extends HTMLElement {
       activo = hoy >= inicio && hoy <= fin;
     }
 
-    if (!activo) {
+    if (!activo && !this.closest('.preview')) {
       this.shadowRoot.innerHTML = "";
       return;
     }
@@ -370,8 +370,8 @@ class MenutechHalloween extends HTMLElement {
     const batCount = 6;
     let bats = "";
     for (let i = 0; i < batCount; i++) {
-      const y = Math.random() * 80; // posición vertical aleatoria
-      const duration = 5 + Math.random() * 5; // velocidad diferente
+      const y = Math.random() * 80;
+      const duration = 5 + Math.random() * 5;
       const delay = Math.random() * 5;
       bats += `<div class="bat" style="
         top:${y}%;
@@ -444,9 +444,11 @@ class MenutechHalloween extends HTMLElement {
           0% { left:-60px; }
           100% { left:100vw; }
         }
+        /* POPUP igual que MenutechNavidad */
         .popup-overlay {
           position:fixed;
-          inset:0;
+          top:0; left:0;
+          width:100%; height:100%;
           background:rgba(0,0,0,0.5);
           display:${popupActivo ? "flex" : "none"};
           justify-content:center;
@@ -455,17 +457,18 @@ class MenutechHalloween extends HTMLElement {
           z-index:10000;
         }
         .popup-content {
+          position:relative;
           background:#fff;
+          max-width:90%;
+          max-height:80%;
           border-radius:12px;
           box-shadow:0 4px 20px rgba(0,0,0,0.3);
           padding:20px;
-          max-width:90%;
-          max-height:80%;
+          text-align:center;
           display:flex;
           flex-direction:column;
-          align-items:center;
           gap:12px;
-          text-align:center;
+          overflow:hidden;
         }
         .popup-content img {
           max-width:100%;
@@ -1400,6 +1403,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
