@@ -293,7 +293,6 @@ class MenutechHalloween extends HTMLElement {
     const popupImage = this.getAttribute("popup-image-hw") || "";
     const popupLink = this.getAttribute("popup-link-hw") || "";
     const popupColor = this.getAttribute("popup-color-hw") || "#ff6600";
-    const popupActivo = this.getAttribute("popup-activo-hw") === "true";
     const tamanoPumpkin = parseFloat(this.getAttribute("tamano-pumpkin-hw")) || 60;
 
     const fechaInicio = this.getAttribute("fecha-inicio-hw") || "2025-10-31";
@@ -316,7 +315,10 @@ class MenutechHalloween extends HTMLElement {
       this.shadowRoot.innerHTML = "";
       return;
     }
-
+    const popupActivo =
+    this.getAttribute("popup-activo-hw") === "true" ||
+    this.getAttribute("popup-activo-hw") === "on";
+    
     // === Partículas base (hw1, hw2, hw3) ===
     const particleImages = [
       "https://menutechdeveloper.github.io/libreria/hw1.png",
@@ -1406,6 +1408,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
