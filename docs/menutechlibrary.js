@@ -400,7 +400,7 @@ class MenutechHalloween extends HTMLElement {
         .smoke-layer {
           position:absolute;
           inset:0;
-          background:url("https://menutechdeveloper.github.io/libreria/smoke.png") repeat;
+          background:url("https://menutechdeveloper.github.io/libreria/smoke2.png") repeat;
           background-size:cover;
           opacity:0.25;
           filter:blur(4px);
@@ -1408,6 +1408,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
