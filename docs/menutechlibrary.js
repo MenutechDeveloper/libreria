@@ -321,9 +321,9 @@ class MenutechHalloween extends HTMLElement {
     let dots = "";
     if (activo) {
       const particleImages = [
-        "https://menutechdeveloper.github.io/libreria/snow1.png",
-        "https://menutechdeveloper.github.io/libreria/snow1.png",
-        "https://menutechdeveloper.github.io/libreria/snow1.png"
+        "https://menutechdeveloper.github.io/libreria/hw1.png",
+        "https://menutechdeveloper.github.io/libreria/hw2.png",
+        "https://menutechdeveloper.github.io/libreria/hw3.png"
       ];
       for (let i = 0; i < cantidad; i++) {
         const x = Math.random() * 100;
@@ -352,7 +352,7 @@ class MenutechHalloween extends HTMLElement {
     // === Calabazas luminosas random ===
     let pumpkins = "";
     if (activo) {
-      const pumpkinImg = "https://menutechdeveloper.github.io/libreria/pumpkin-glow.png";
+      const pumpkinImg = "https://menutechdeveloper.github.io/libreria/calabaza.gif";
       const count = 8; // cantidad de calabazas visibles en distintas zonas
       for (let i = 0; i < count; i++) {
         const x = Math.random() * 100;
@@ -1385,6 +1385,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
