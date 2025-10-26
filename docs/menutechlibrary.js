@@ -376,7 +376,7 @@ class MenutechHalloween extends HTMLElement {
     let bats = "";
     for (let i = 0; i < batCount; i++) {
       const y = Math.random() * 80;
-      const duration = 5 + Math.random() * 5;
+      const duration = 15 + Math.random() * 5;
       const delay = Math.random() * 5;
       bats += `<div class="bat" style="
         top:${y}%;
@@ -1408,6 +1408,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
