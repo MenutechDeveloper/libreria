@@ -270,7 +270,8 @@ class MenutechHalloween extends HTMLElement {
     return [
       "color-hw","cantidad-hw","tamano-hw","velocidad-hw","opacidad-hw",
       "popup-activo-hw","popup-image-hw","popup-link-hw","popup-color-hw",
-      "fecha-inicio-hw","fecha-fin-hw", "tamano-pumpkin-hw"
+      "fecha-inicio-hw","fecha-fin-hw", "tamano-pumpkin-hw","tamano-bat-hw", 
+      "velocidad-bat-hw"
     ];
   }
 
@@ -294,6 +295,8 @@ class MenutechHalloween extends HTMLElement {
     const popupLink = this.getAttribute("popup-link-hw") || "";
     const popupColor = this.getAttribute("popup-color-hw") || "#ff6600";
     const tamanoPumpkin = parseFloat(this.getAttribute("tamano-pumpkin-hw")) || 60;
+    const tamanoBat = parseFloat(this.getAttribute("tamano-bat-hw")) || 50;
+    const velocidadBat = parseFloat(this.getAttribute("velocidad-bat-hw")) || 1;
 
     const fechaInicio = this.getAttribute("fecha-inicio-hw") || "2025-10-31";
     const fechaFin = this.getAttribute("fecha-fin-hw") || "2025-10-31";
@@ -372,19 +375,22 @@ class MenutechHalloween extends HTMLElement {
 
     // === Murciélagos GIF volando horizontalmente ===
     const batGif = "https://menutechdeveloper.github.io/libreria/murcielago.gif";
-    const batCount = 6;
-    let bats = "";
-    for (let i = 0; i < batCount; i++) {
-      const y = Math.random() * 80;
-      const duration = 15 + Math.random() * 5;
-      const delay = Math.random() * 5;
-      bats += `<div class="bat" style="
-        top:${y}%;
-        animation-duration:${duration}s;
-        animation-delay:${delay}s;
-        background-image:url('${batGif}');
-      "></div>`;
-    }
+  const batCount = 6;
+  let bats = "";
+  for (let i = 0; i < batCount; i++) {
+  const y = Math.random() * 80;
+  const duration = (15 + Math.random() * 5) / velocidadBat;
+  const delay = Math.random() * 5;
+  bats += `<div class="bat" style="
+    top:${y}%;
+    width:${tamanoBat}px;
+    height:${tamanoBat}px;
+    animation-duration:${duration}s;
+    animation-delay:${delay}s;
+    background-image:url('${batGif}');
+  "></div>`;
+}
+
 
     // === Render Shadow DOM ===
     this.shadowRoot.innerHTML = `
@@ -1408,6 +1414,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
