@@ -267,14 +267,14 @@ customElements.define("menutech-navidad", MenutechNavidad);
  ******************************/
 /* ================================
    🎃 MENUTECH HALLOWEEN
-   Animación con humo, partículas y calabazas brillantes
+   Animación con partículas, humo y calabazas luminosas
    ================================ */
 class MenutechHalloween extends HTMLElement {
   static get observedAttributes() {
     return [
-      "color","cantidad","tamano","velocidad","opacidad",
-      "popup-activo","popup-image","popup-link","popup-color",
-      "fecha-inicio","fecha-fin"
+      "color-hw","cantidad-hw","tamano-hw","velocidad-hw","opacidad-hw",
+      "popup-activo-hw","popup-image-hw","popup-link-hw","popup-color-hw",
+      "fecha-inicio-hw","fecha-fin-hw"
     ];
   }
 
@@ -289,28 +289,25 @@ class MenutechHalloween extends HTMLElement {
   }
 
   render() {
-    const color = this.getAttribute("color") || "#ff6600";
-    const cantidad = parseInt(this.getAttribute("cantidad")) || 60;
-    const tamano = parseFloat(this.getAttribute("tamano")) || 3;
-    const velocidad = parseFloat(this.getAttribute("velocidad")) || 1;
-    const opacidad = parseFloat(this.getAttribute("opacidad")) || 0.8;
-    const popupImage = this.getAttribute("popup-image") || "";
-    const popupLink = this.getAttribute("popup-link") || "";
-    const popupColor = this.getAttribute("popup-color") || "#ff6600";
-    const popupActivo =
-      this.getAttribute("popup-activo") === "true" ||
-      this.getAttribute("popup-activo") === "on";
+    const color = this.getAttribute("color-hw") || "#ff6600";
+    const cantidad = parseInt(this.getAttribute("cantidad-hw")) || 60;
+    const tamano = parseFloat(this.getAttribute("tamano-hw")) || 3;
+    const velocidad = parseFloat(this.getAttribute("velocidad-hw")) || 1;
+    const opacidad = parseFloat(this.getAttribute("opacidad-hw")) || 0.8;
+    const popupImage = this.getAttribute("popup-image-hw") || "";
+    const popupLink = this.getAttribute("popup-link-hw") || "";
+    const popupColor = this.getAttribute("popup-color-hw") || "#ff6600";
+    const popupActivo = this.getAttribute("popup-activo-hw") === "true";
 
-    const fechaInicio = this.getAttribute("fecha-inicio") || "2025-10-31";
-    const fechaFin = this.getAttribute("fecha-fin") || "2025-10-31";
+    const fechaInicio = this.getAttribute("fecha-inicio-hw") || "2025-10-31";
+    const fechaFin = this.getAttribute("fecha-fin-hw") || "2025-10-31";
+
     const hoy = new Date();
     const inicio = new Date(fechaInicio);
     const fin = new Date(fechaFin);
-    const halloween = new Date(hoy.getFullYear(), 9, 31);
-    const fechasPorDefecto =
-      fechaInicio === "2025-10-31" && fechaFin === "2025-10-31";
+    const halloween = new Date(hoy.getFullYear(), 9, 31); // Octubre = 9
+    const fechasPorDefecto = fechaInicio === "2025-10-31" && fechaFin === "2025-10-31";
 
-    // 🔥 Activar sólo si es Halloween o dentro del rango configurado
     let activo = false;
     if (fechasPorDefecto) {
       activo = hoy.toDateString() === halloween.toDateString();
@@ -318,17 +315,16 @@ class MenutechHalloween extends HTMLElement {
       activo = hoy >= inicio && hoy <= fin;
     }
 
-    // Si no está activo, no renderiza nada
     if (!activo) {
       this.shadowRoot.innerHTML = "";
       return;
     }
 
-    // === Partículas base (humo + copos) ===
+    // === Partículas base (copos/humo) ===
     const particleImages = [
-      "https://menutechdeveloper.github.io/libreria/snow1.png",
-      "https://menutechdeveloper.github.io/libreria/snow2.png",
-      "https://menutechdeveloper.github.io/libreria/snow3.png"
+      "https://menutechdeveloper.github.io/libreria/hw1.png",
+      "https://menutechdeveloper.github.io/libreria/hw2.png",
+      "https://menutechdeveloper.github.io/libreria/hw3.png"
     ];
     let dots = "";
     for (let i = 0; i < cantidad; i++) {
@@ -338,21 +334,23 @@ class MenutechHalloween extends HTMLElement {
       const dur = 4 + Math.random() * 3;
       const delay = Math.random() * 2;
       const img = particleImages[i % particleImages.length];
-      dots += `
-        <div class="flake" style="
-          left:${x}%;
-          top:${y}%;
-          width:${size * 2}px;
-          height:${size * 2}px;
-          animation-duration:${dur / velocidad}s;
-          animation-delay:${delay}s;
-          opacity:${opacidad};
-          background-image:url('${img}');
-        "></div>`;
+      dots += `<div class="flake" style="
+        left:${x}%;
+        top:${y}%;
+        width:${size*2}px;
+        height:${size*2}px;
+        animation-duration:${dur/velocidad}s;
+        animation-delay:${delay}s;
+        opacity:${opacidad};
+        background-image:url('${img}');
+        background-size:contain;
+        background-repeat:no-repeat;
+        background-position:center;
+      "></div>`;
     }
 
-    // === Calabazas luminosas aleatorias ===
-    const pumpkinImg = "https://menutechdeveloper.github.io/libreria/pumpkin-glow.png";
+    // === Calabazas luminosas ===
+    const pumpkinImg = "https://menutechdeveloper.github.io/libreria/calabaza.gif";
     const pumpkinCount = 8;
     let pumpkins = "";
     for (let i = 0; i < pumpkinCount; i++) {
@@ -361,18 +359,17 @@ class MenutechHalloween extends HTMLElement {
       const scale = 0.5 + Math.random() * 0.7;
       const duration = 3 + Math.random() * 5;
       const delay = Math.random() * 6;
-      pumpkins += `
-        <div class="pumpkin" style="
-          left:${x}%;
-          top:${y}%;
-          transform:scale(${scale});
-          animation-duration:${duration}s;
-          animation-delay:${delay}s;
-          background-image:url('${pumpkinImg}');
-        "></div>`;
+      pumpkins += `<div class="pumpkin" style="
+        left:${x}%;
+        top:${y}%;
+        transform:scale(${scale});
+        animation-duration:${duration}s;
+        animation-delay:${delay}s;
+        background-image:url('${pumpkinImg}');
+      "></div>`;
     }
 
-    // === Render principal ===
+    // === Render Shadow DOM ===
     this.shadowRoot.innerHTML = `
       <style>
         :host {
@@ -383,8 +380,6 @@ class MenutechHalloween extends HTMLElement {
           z-index:9999;
           overflow:hidden;
         }
-
-        /* 🌫️ Humo */
         .smoke-layer {
           position:absolute;
           inset:0;
@@ -398,8 +393,6 @@ class MenutechHalloween extends HTMLElement {
           0% { background-position:0 0; }
           100% { background-position:2000px 1000px; }
         }
-
-        /* ❄️ Partículas */
         .flake {
           position:absolute;
           background-size:contain;
@@ -411,12 +404,9 @@ class MenutechHalloween extends HTMLElement {
           0% { transform:translateY(0) rotate(0deg); opacity:1; }
           100% { transform:translateY(100vh) rotate(360deg); opacity:0; }
         }
-
-        /* 🎃 Calabazas */
         .pumpkin {
           position:absolute;
-          width:60px;
-          height:60px;
+          width:60px; height:60px;
           background-size:contain;
           background-repeat:no-repeat;
           background-position:center;
@@ -428,8 +418,6 @@ class MenutechHalloween extends HTMLElement {
           0%,100% { opacity:0; transform:scale(0.5) rotate(0deg); }
           40%,60% { opacity:1; transform:scale(1) rotate(10deg); }
         }
-
-        /* 💬 Popup */
         .popup-overlay {
           position:fixed;
           inset:0;
@@ -490,17 +478,18 @@ class MenutechHalloween extends HTMLElement {
       </div>
     `;
 
-    // Cerrar popup
+    // Lógica popup
     const overlay = this.shadowRoot.querySelector(".popup-overlay");
     const closeBtn = this.shadowRoot.querySelector(".popup-close");
     if (overlay && closeBtn) {
-      closeBtn.onclick = () => (overlay.style.display = "none");
-      overlay.onclick = (e) => { if (e.target === overlay) overlay.style.display = "none"; };
+      closeBtn.onclick = () => overlay.style.display = "none";
+      overlay.onclick = (e) => { if(e.target === overlay) overlay.style.display = "none"; };
     }
   }
 }
 
 customElements.define("menutech-halloween", MenutechHalloween);
+
 
 
 
@@ -1382,6 +1371,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
