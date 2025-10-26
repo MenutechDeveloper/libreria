@@ -270,7 +270,7 @@ class MenutechHalloween extends HTMLElement {
     return [
       "color-hw","cantidad-hw","tamano-hw","velocidad-hw","opacidad-hw",
       "popup-activo-hw","popup-image-hw","popup-link-hw","popup-color-hw",
-      "fecha-inicio-hw","fecha-fin-hw"
+      "fecha-inicio-hw","fecha-fin-hw", "tamano-pumpkin-hw"
     ];
   }
 
@@ -294,6 +294,7 @@ class MenutechHalloween extends HTMLElement {
     const popupLink = this.getAttribute("popup-link-hw") || "";
     const popupColor = this.getAttribute("popup-color-hw") || "#ff6600";
     const popupActivo = this.getAttribute("popup-activo-hw") === "true";
+    const tamanoPumpkin = parseFloat(this.getAttribute("tamano-pumpkin-hw")) || 60;
 
     const fechaInicio = this.getAttribute("fecha-inicio-hw") || "2025-10-31";
     const fechaFin = this.getAttribute("fecha-fin-hw") || "2025-10-31";
@@ -358,6 +359,8 @@ class MenutechHalloween extends HTMLElement {
       pumpkins += `<div class="pumpkin" style="
         left:${x}%;
         top:${y}%;
+        width:${tamanoPumpkin}px;
+        height:${tamanoPumpkin}px;
         transform:scale(${scale});
         animation-duration:${duration}s;
         animation-delay:${delay}s;
@@ -1403,6 +1406,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
