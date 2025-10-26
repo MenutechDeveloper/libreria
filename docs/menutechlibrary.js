@@ -65,7 +65,7 @@ class MenutechGradient extends HTMLElement {
 customElements.define("menutech-gradient", MenutechGradient);
 
 /******************************
- * MENUTECH EVENTS
+ * MENUTECH NAVIDAD
  ******************************/
 class MenutechNavidad extends HTMLElement {
   static get observedAttributes() {
@@ -262,7 +262,249 @@ customElements.define("menutech-navidad", MenutechNavidad);
 
 
 
+/******************************
+ * MENUTECH HALLOWEEN
+ ******************************/
+/* ================================
+   🎃 MENUTECH HALLOWEEN
+   Animación de Halloween con partículas, humo y calabazas luminosas
+   ================================ */
+class MenutechHalloween extends HTMLElement {
+  static get observedAttributes() {
+    return [
+      "color-hw","cantidad-hw","tamano-hw","velocidad-hw","opacidad-hw",
+      "popup-activo-hw","popup-image-hw","popup-link-hw","popup-color-hw",
+      "fecha-inicio-hw","fecha-fin-hw"
+    ];
+  }
 
+  constructor() {
+    super();
+    this.attachShadow({ mode: "open" });
+    this.renderHW();
+  }
+
+  attributeChangedCallback() {
+    this.renderHW();
+  }
+
+  renderHW() {
+    const color = this.getAttribute("color-hw") || "#ff6600";
+    const cantidad = parseInt(this.getAttribute("cantidad-hw")) || 60;
+    const tamano = parseFloat(this.getAttribute("tamano-hw")) || 3;
+    const velocidad = parseFloat(this.getAttribute("velocidad-hw")) || 1;
+    const opacidad = parseFloat(this.getAttribute("opacidad-hw")) || 0.8;
+    const popupActivo = this.getAttribute("popup-activo-hw") === "true";
+    const popupImage = this.getAttribute("popup-image-hw") || "";
+    const popupLink = this.getAttribute("popup-link-hw") || "";
+    const popupColor = this.getAttribute("popup-color-hw") || "#ff6600";
+    const fechaInicio = this.getAttribute("fecha-inicio-hw") || "2025-10-31";
+    const fechaFin = this.getAttribute("fecha-fin-hw") || "2025-10-31";
+
+    const hoy = new Date();
+    const inicio = new Date(fechaInicio);
+    const fin = new Date(fechaFin);
+    const halloween = new Date(hoy.getFullYear(), 9, 31);
+    const fechasPorDefecto = fechaInicio === "2025-10-31" && fechaFin === "2025-10-31";
+
+    let activo = false;
+    const enEditor = this.closest('.preview') !== null;
+    if (enEditor) {
+      activo = true;
+    } else if (fechasPorDefecto) {
+      activo = hoy.toDateString() === halloween.toDateString();
+    } else {
+      activo = hoy >= inicio && hoy <= fin;
+    }
+
+    // === Partículas base ===
+    let dots = "";
+    if (activo) {
+      const particleImages = [
+        "https://menutechdeveloper.github.io/libreria/snow1.png",
+        "https://menutechdeveloper.github.io/libreria/snow1.png",
+        "https://menutechdeveloper.github.io/libreria/snow1.png"
+      ];
+      for (let i = 0; i < cantidad; i++) {
+        const x = Math.random() * 100;
+        const y = Math.random() * 100;
+        const size = tamano + Math.random() * tamano;
+        const dur = 4 + Math.random() * 3;
+        const delay = Math.random() * 2;
+        const img = particleImages[i % particleImages.length];
+        dots += `
+          <div class="flake" style="
+            left:${x}%;
+            top:${y}%;
+            width:${size*2}px;
+            height:${size*2}px;
+            animation-duration:${dur / velocidad}s;
+            animation-delay:${delay}s;
+            opacity:${opacidad};
+            background-image:url('${img}');
+            background-size:contain;
+            background-repeat:no-repeat;
+            background-position:center;
+          "></div>`;
+      }
+    }
+
+    // === Calabazas luminosas random ===
+    let pumpkins = "";
+    if (activo) {
+      const pumpkinImg = "https://menutechdeveloper.github.io/libreria/pumpkin-glow.png";
+      const count = 8; // cantidad de calabazas visibles en distintas zonas
+      for (let i = 0; i < count; i++) {
+        const x = Math.random() * 100;
+        const y = Math.random() * 100;
+        const scale = 0.5 + Math.random() * 0.7;
+        const duration = 3 + Math.random() * 5;
+        const delay = Math.random() * 6;
+        pumpkins += `
+          <div class="pumpkin" style="
+            left:${x}%;
+            top:${y}%;
+            transform:scale(${scale});
+            animation-duration:${duration}s;
+            animation-delay:${delay}s;
+            background-image:url('${pumpkinImg}');
+          "></div>`;
+      }
+    }
+
+    this.shadowRoot.innerHTML = `
+      <style>
+        :host {
+          position:relative;
+          display:block;
+          width:100%;
+          height:100%;
+          overflow:hidden;
+          pointer-events:none;
+          z-index:1;
+          background:linear-gradient(180deg,#1a0f0f,#000);
+        }
+
+        /* Humo */
+        .smoke-layer {
+          position:absolute;
+          top:0; left:0;
+          width:100%; height:100%;
+          background-image:url("https://menutechdeveloper.github.io/libreria/smoke.png");
+          background-repeat:repeat;
+          background-size:cover;
+          opacity:0.25;
+          animation:moveSmoke 60s linear infinite;
+          filter:blur(4px);
+          z-index:0;
+        }
+        @keyframes moveSmoke {
+          0% { background-position:0 0; }
+          100% { background-position:2000px 1000px; }
+        }
+
+        /* Partículas */
+        .flake {
+          position:absolute;
+          animation:fall linear infinite;
+          will-change: transform, opacity;
+        }
+        @keyframes fall {
+          0% { transform:translateY(0) rotate(0deg); opacity:1; }
+          100% { transform:translateY(100%) rotate(360deg); opacity:0; }
+        }
+
+        /* Calabazas brillantes */
+        .pumpkin {
+          position:absolute;
+          width:60px;
+          height:60px;
+          background-size:contain;
+          background-repeat:no-repeat;
+          background-position:center;
+          opacity:0;
+          animation:fadePumpkin ease-in-out infinite;
+          filter:drop-shadow(0 0 8px #ff6600);
+          z-index:2;
+        }
+        @keyframes fadePumpkin {
+          0%, 100% { opacity:0; transform:scale(0.5) rotate(0deg); }
+          40%, 60% { opacity:1; transform:scale(1) rotate(10deg); }
+        }
+
+        /* Popup */
+        .popup-overlay {
+          position:fixed;
+          top:0; left:0;
+          width:100%; height:100%;
+          background:rgba(0,0,0,0.5);
+          display:${popupActivo && activo ? "flex" : "none"};
+          justify-content:center;
+          align-items:center;
+          pointer-events:auto;
+          z-index:10000;
+        }
+        .popup-content {
+          position:relative;
+          background:#fff;
+          max-width:90%;
+          max-height:80%;
+          border-radius:12px;
+          box-shadow:0 4px 20px rgba(0,0,0,0.3);
+          padding:20px;
+          text-align:center;
+          display:flex;
+          flex-direction:column;
+          gap:12px;
+          overflow:hidden;
+        }
+        .popup-content img {
+          max-width:100%;
+          max-height:60vh;
+          border-radius:8px;
+          object-fit:contain;
+        }
+        .popup-content button {
+          background:${popupColor};
+          color:#fff;
+          border:none;
+          padding:10px 16px;
+          border-radius:6px;
+          cursor:pointer;
+          font-size:1rem;
+        }
+        .popup-close {
+          position:absolute;
+          top:10px; right:10px;
+          background:transparent;
+          border:none;
+          font-size:1.5rem;
+          cursor:pointer;
+          color:#333;
+        }
+      </style>
+      ${activo ? `<div class="smoke-layer"></div>` : ""}
+      ${dots}
+      ${pumpkins}
+      <div class="popup-overlay">
+        <div class="popup-content">
+          <button class="popup-close">&times;</button>
+          ${popupImage ? `<img src="${popupImage}" alt="Promoción">` : ""}
+          ${popupLink ? `<button onclick="window.open('${popupLink}','_blank')">Ver promoción</button>` : ""}
+        </div>
+      </div>
+    `;
+
+    const overlay = this.shadowRoot.querySelector(".popup-overlay");
+    const closeBtn = this.shadowRoot.querySelector(".popup-close");
+    if (overlay && closeBtn) {
+      closeBtn.onclick = () => overlay.style.display = "none";
+      overlay.onclick = (e) => { if(e.target === overlay) overlay.style.display = "none"; };
+    }
+  }
+}
+
+customElements.define("menutech-halloween", MenutechHalloween);
 
 
 
@@ -1143,6 +1385,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
