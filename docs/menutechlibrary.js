@@ -265,10 +265,6 @@ customElements.define("menutech-navidad", MenutechNavidad);
 /******************************
  * MENUTECH HALLOWEEN
  ******************************/
-/* ================================
-   🎃 MENUTECH HALLOWEEN
-   Animación con partículas, humo y calabazas luminosas
-   ================================ */
 class MenutechHalloween extends HTMLElement {
   static get observedAttributes() {
     return [
@@ -305,7 +301,7 @@ class MenutechHalloween extends HTMLElement {
     const hoy = new Date();
     const inicio = new Date(fechaInicio);
     const fin = new Date(fechaFin);
-    const halloween = new Date(hoy.getFullYear(), 9, 31); // Octubre = 9
+    const halloween = new Date(hoy.getFullYear(), 9, 31);
     const fechasPorDefecto = fechaInicio === "2025-10-31" && fechaFin === "2025-10-31";
 
     let activo = false;
@@ -320,7 +316,7 @@ class MenutechHalloween extends HTMLElement {
       return;
     }
 
-    // === Partículas base (copos/humo) ===
+    // === Partículas base (hw1, hw2, hw3) ===
     const particleImages = [
       "https://menutechdeveloper.github.io/libreria/hw1.png",
       "https://menutechdeveloper.github.io/libreria/hw2.png",
@@ -369,6 +365,22 @@ class MenutechHalloween extends HTMLElement {
       "></div>`;
     }
 
+    // === Murciélagos GIF volando horizontalmente ===
+    const batGif = "https://menutechdeveloper.github.io/libreria/murcielago.gif";
+    const batCount = 6;
+    let bats = "";
+    for (let i = 0; i < batCount; i++) {
+      const y = Math.random() * 80; // posición vertical aleatoria
+      const duration = 5 + Math.random() * 5; // velocidad diferente
+      const delay = Math.random() * 5;
+      bats += `<div class="bat" style="
+        top:${y}%;
+        animation-duration:${duration}s;
+        animation-delay:${delay}s;
+        background-image:url('${batGif}');
+      "></div>`;
+    }
+
     // === Render Shadow DOM ===
     this.shadowRoot.innerHTML = `
       <style>
@@ -394,15 +406,17 @@ class MenutechHalloween extends HTMLElement {
           100% { background-position:2000px 1000px; }
         }
         .flake {
-          position:absolute;
-          background-size:contain;
-          background-repeat:no-repeat;
-          background-position:center;
-          animation:fall linear infinite;
+          position: absolute;
+          width: 20px; height: 20px;
+          background-size: contain;
+          background-repeat: no-repeat;
+          background-position: center;
+          animation: appearDisappear linear infinite;
+          opacity: 0;
         }
-        @keyframes fall {
-          0% { transform:translateY(0) rotate(0deg); opacity:1; }
-          100% { transform:translateY(100vh) rotate(360deg); opacity:0; }
+        @keyframes appearDisappear {
+          0%, 100% { opacity: 0; transform: scale(0.5) rotate(0deg); }
+          50% { opacity: 1; transform: scale(1) rotate(180deg); }
         }
         .pumpkin {
           position:absolute;
@@ -417,6 +431,18 @@ class MenutechHalloween extends HTMLElement {
         @keyframes fadePumpkin {
           0%,100% { opacity:0; transform:scale(0.5) rotate(0deg); }
           40%,60% { opacity:1; transform:scale(1) rotate(10deg); }
+        }
+        .bat {
+          position:absolute;
+          width:50px; height:50px;
+          background-size:contain;
+          background-repeat:no-repeat;
+          background-position:center;
+          animation:flyX linear infinite;
+        }
+        @keyframes flyX {
+          0% { left:-60px; }
+          100% { left:100vw; }
         }
         .popup-overlay {
           position:fixed;
@@ -469,6 +495,7 @@ class MenutechHalloween extends HTMLElement {
       <div class="smoke-layer"></div>
       ${dots}
       ${pumpkins}
+      ${bats}
       <div class="popup-overlay">
         <div class="popup-content">
           <button class="popup-close">&times;</button>
@@ -489,6 +516,8 @@ class MenutechHalloween extends HTMLElement {
 }
 
 customElements.define("menutech-halloween", MenutechHalloween);
+
+
 
 
 
@@ -1371,6 +1400,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
