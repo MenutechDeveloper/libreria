@@ -71,7 +71,8 @@ class MenutechNavidad extends HTMLElement {
   static get observedAttributes() {
     return [
       "color","cantidad","tamano","velocidad","opacidad",
-      "popup-activo","popup-image","popup-link"
+      "popup-activo","popup-image","popup-link",
+      "fecha-inicio","fecha-fin","santa-tamano","santa-velocidad"
     ];
   }
 
@@ -93,63 +94,57 @@ class MenutechNavidad extends HTMLElement {
     const opacidad = parseFloat(this.getAttribute("opacidad")) || 0.8;
     const popupImage = this.getAttribute("popup-image") || "";
     const popupLink = this.getAttribute("popup-link") || "";
+    const fechaInicio = this.getAttribute("fecha-inicio") || "2025-12-25";
+    const fechaFin = this.getAttribute("fecha-fin") || "2025-12-25";
+    const santaTamano = parseFloat(this.getAttribute("santa-tamano")) || 450;
+    const santaVelocidad = parseFloat(this.getAttribute("santa-velocidad")) || 3;
 
-    // === CONTROL DE FECHAS ===
-const fechaInicio = this.getAttribute("fecha-inicio") || "2025-12-25";
-const fechaFin = this.getAttribute("fecha-fin") || "2025-12-25";
+    const hoy = new Date();
+    const inicio = new Date(fechaInicio);
+    const fin = new Date(fechaFin);
+    const navidad = new Date(hoy.getFullYear(), 11, 25);
 
-const hoy = new Date();
-const inicio = new Date(fechaInicio);
-const fin = new Date(fechaFin);
-const navidad = new Date(hoy.getFullYear(), 11, 25); // diciembre = 11
+    const fechasPorDefecto =
+      fechaInicio === "2025-12-25" && fechaFin === "2025-12-25";
 
-// Detectar si las fechas están en el valor por defecto
-const fechasPorDefecto =
-  fechaInicio === "2025-12-25" && fechaFin === "2025-12-25";
+    let activo = false;
+    if (fechasPorDefecto) {
+      activo = hoy.toDateString() === navidad.toDateString();
+    } else {
+      activo = hoy >= inicio && hoy <= fin;
+    }
 
-// Activar solo si es navidad o dentro del rango configurado
-let activo = false;
-if (fechasPorDefecto) {
-  activo = hoy.toDateString() === navidad.toDateString();
-} else {
-  activo = hoy >= inicio && hoy <= fin;
-}
+    if (!activo) {
+      this.shadowRoot.innerHTML = "";
+      return;
+    }
 
-// Si no está activo, no renderizar nada
-if (!activo) {
-  this.shadowRoot.innerHTML = "";
-  return;
-}
-const popupActivo =
-  this.getAttribute("popup-activo") === "true" ||
-  this.getAttribute("popup-activo") === "on";
+    const popupActivo =
+      this.getAttribute("popup-activo") === "true" ||
+      this.getAttribute("popup-activo") === "on";
 
-
-
-
-    // Copos de nieve fijos
+    // === Copos de nieve ===
     const snowImages = [
       "https://menutechdeveloper.github.io/libreria/snow1.png",
       "https://menutechdeveloper.github.io/libreria/snow2.png",
       "https://menutechdeveloper.github.io/libreria/snow3.png"
     ];
 
-    // Generar copos
     let dots = "";
     for (let i = 0; i < cantidad; i++) {
       const x = Math.random() * 100;
       const y = Math.random() * 100;
       const size = tamano + Math.random() * tamano;
-      const dur = 4 + Math.random() * 3; // duración de la caída
-      const delay = Math.random() * 2;   // delay inicial
+      const dur = 4 + Math.random() * 3;
+      const delay = Math.random() * 2;
       const img = snowImages[i % snowImages.length];
 
       dots += `
         <div class="flake" style="
           left:${x}%;
           top:${y}%;
-          width:${size*2}px;
-          height:${size*2}px;
+          width:${size * 2}px;
+          height:${size * 2}px;
           animation-duration:${dur / velocidad}s;
           animation-delay:${delay}s;
           opacity:${opacidad};
@@ -230,6 +225,17 @@ const popupActivo =
           cursor:pointer;
           color:#333;
         }
+
+        /* Santa Claus */
+        #santa {
+          position: fixed;
+          width: ${santaTamano}px;
+          top: 50%;
+          left: -200px;
+          transform: translateY(-50%);
+          pointer-events: none;
+          z-index: 10001;
+        }
       </style>
 
       ${dots}
@@ -241,21 +247,58 @@ const popupActivo =
           ${popupLink ? `<button onclick="window.open('${popupLink}','_blank')">Ver promoción</button>` : ""}
         </div>
       </div>
+
+      <img id="santa" src="https://menutechdeveloper.github.io/libreria/santa.gif" alt="Santa volando">
     `;
 
-    // Lógica para cerrar popup
+    // ===== POPUP CLOSE =====
     const overlay = this.shadowRoot.querySelector(".popup-overlay");
     const closeBtn = this.shadowRoot.querySelector(".popup-close");
     if (overlay && closeBtn) {
-      closeBtn.onclick = () => overlay.style.display = "none";
+      closeBtn.onclick = () => (overlay.style.display = "none");
       overlay.onclick = (e) => {
         if (e.target === overlay) overlay.style.display = "none";
       };
+    }
+
+    // ===== ANIMACIÓN DE SANTA =====
+    const santa = this.shadowRoot.querySelector("#santa");
+    if (santa) {
+      if (santa._animFrame) cancelAnimationFrame(santa._animFrame);
+
+      let posX = -200;
+      let posY = window.innerHeight / 2;
+      let dirX = 1;
+      let dirY = Math.random() < 0.5 ? 1 : -1;
+      let vel = santaVelocidad;
+
+      function moverSanta() {
+        posX += dirX * vel;
+        posY += dirY * 0.5;
+
+        if (posY < 50 || posY > window.innerHeight - 150) dirY *= -1;
+        if (posX > window.innerWidth) {
+          dirX = -1;
+          santa.style.transform = "translateY(-50%) scaleX(-1)";
+        }
+        if (posX < -200) {
+          dirX = 1;
+          santa.style.transform = "translateY(-50%) scaleX(1)";
+        }
+
+        santa.style.left = `${posX}px`;
+        santa.style.top = `${posY}px`;
+
+        santa._animFrame = requestAnimationFrame(moverSanta);
+      }
+
+      moverSanta();
     }
   }
 }
 
 customElements.define("menutech-navidad", MenutechNavidad);
+
 
 
 
@@ -1414,6 +1457,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
