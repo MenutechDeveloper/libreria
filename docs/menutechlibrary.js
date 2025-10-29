@@ -39,10 +39,12 @@ class MenutechMenu extends HTMLElement {
       <link rel="stylesheet" href="https://menutech.biz/m10/assets/css/flipsolo.css">
       <style>
         :host {
-          display: block;
+          display: flex;
+          justify-content: center;
+          align-items: center;
           width: 100%;
-          max-width: 100vw;
           overflow: hidden;
+          position: relative;
         }
 
         .menu1 {
@@ -50,95 +52,75 @@ class MenutechMenu extends HTMLElement {
           justify-content: center;
           align-items: center;
           width: 100%;
-          background: #fff;
-          border-radius: 16px;
-          box-shadow: 0 6px 20px rgba(0,0,0,0.2);
-          padding: 20px 0;
-          box-sizing: border-box;
         }
 
         .flipbook-viewport {
-          width: 100%;
           display: flex;
           justify-content: center;
           align-items: center;
+          width: 100%;
           position: relative;
+          perspective: 2000px;
         }
 
         .flipbook {
-          width: 100%;
-          max-width: 800px;
-          aspect-ratio: 1.414 / 1;
+          position: relative;
+          width: 800px;  /* base size */
+          height: 566px; /* A4 proporción */
         }
 
         .flipbook img {
           width: 100%;
           height: 100%;
-          object-fit: contain;
-          display: block;
+          object-fit: cover;
         }
 
-        .spacer {
-          display: block;
-          height: var(--flipbook-height, 0px);
-          transition: height 0.3s ease;
-        }
-
-        @media (max-width: 768px) {
+        @media (max-width: 900px) {
           .flipbook {
-            max-width: 95vw;
-            aspect-ratio: 1 / 1.414;
+            width: 90vw;
+            height: calc(90vw / 1.414);
           }
         }
       </style>
 
       <div class="menu1">
         <div class="flipbook-viewport">
-          <div class="container">
-            <div class="flipbook">
-              ${imagesHTML}
-            </div>
+          <div class="flipbook">
+            ${imagesHTML}
           </div>
         </div>
       </div>
-      <div class="spacer"></div>
     `;
 
-    this.waitForImages().then(() => this.initFlipbook());
-  }
-
-  async waitForImages() {
-    const imgs = Array.from(this.shadow.querySelectorAll("img"));
-    await Promise.all(
-      imgs.map(img => new Promise(resolve => {
-        if (img.complete) resolve();
-        else {
-          img.onload = img.onerror = resolve;
-        }
-      }))
-    );
+    this.initFlipbook();
   }
 
   async initFlipbook() {
     await this.loadTurnJs();
     const flipbook = this.shadow.querySelector(".flipbook");
-    const spacer = this.shadow.querySelector(".spacer");
 
     if (window.$ && typeof $(flipbook).turn === "function") {
-      $(flipbook).turn({
-        width: flipbook.clientWidth,
-        height: flipbook.clientHeight,
-        autoCenter: true,
-      });
-
-      const updateSpacer = () => {
-        const height = flipbook.getBoundingClientRect().height || 600;
-        spacer.style.setProperty("--flipbook-height", `${height * 0.05 + 60}px`);
-        $(flipbook).turn("size", flipbook.clientWidth, flipbook.clientHeight);
+      const setSize = () => {
+        // calcular tamaño real según viewport
+        const maxWidth = Math.min(window.innerWidth * 0.9, 800);
+        const width = Math.max(320, maxWidth);
+        const height = width / 1.414; // proporción tipo A4
+        $(flipbook).turn("size", width, height);
+        flipbook.style.width = `${width}px`;
+        flipbook.style.height = `${height}px`;
       };
 
-      window.addEventListener("resize", updateSpacer);
-      updateSpacer();
+      $(flipbook).turn({
+        width: 800,
+        height: 566,
+        autoCenter: true,
+        acceleration: true,
+        gradients: true,
+        elevation: 50
+      });
+
+      setSize();
+      window.addEventListener("resize", setSize);
     } else {
       console.warn("turn.js no se cargó correctamente.");
     }
@@ -1635,6 +1617,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
