@@ -43,6 +43,8 @@ class MenutechMenu extends HTMLElement {
           width: 100%;
           max-width: 100vw;
           overflow: hidden;
+          position: relative;
+          z-index: 0;
         }
 
         .menu1 {
@@ -50,6 +52,8 @@ class MenutechMenu extends HTMLElement {
           justify-content: center;
           align-items: center;
           width: 100%;
+          position: relative;
+          z-index: 1;
         }
 
         .flipbook-viewport {
@@ -57,6 +61,9 @@ class MenutechMenu extends HTMLElement {
           display: flex;
           justify-content: center;
           align-items: center;
+          perspective: 2000px; /* mantiene aceleración 3D */
+          position: relative;
+          z-index: 1;
         }
 
         .flipbook {
@@ -64,15 +71,18 @@ class MenutechMenu extends HTMLElement {
           max-width: 800px;
           aspect-ratio: 1.414 / 1;
           position: relative;
+          transform: translateZ(0); /* fuerza uso de GPU */
+          will-change: transform;
         }
 
         .flipbook img {
           width: 100%;
           height: 100%;
           object-fit: contain;
+          backface-visibility: hidden;
+          transform: translateZ(0);
         }
 
-        /* Responsivo */
         @media (max-width: 768px) {
           .flipbook {
             max-width: 95vw;
@@ -80,26 +90,10 @@ class MenutechMenu extends HTMLElement {
           }
         }
 
-        /* === Corrección de capas y flujo === */
-        .flipbook,
-        .flipbook-viewport,
-        .container {
-          position: relative !important;
-          z-index: 1 !important;
-        }
-
+        /* corrige superposición y evita flotar sobre otros divs */
         .flipbook canvas,
         .flipbook .page {
-          position: relative !important;
-        }
-
-        .flipbook-viewport {
-          overflow: visible !important;
-        }
-
-        /* Evita que turn.js fuerce transformaciones 3D que rompen el flujo */
-        .flipbook {
-          transform: none !important;
+          position: absolute !important;
         }
       </style>
 
@@ -126,9 +120,10 @@ class MenutechMenu extends HTMLElement {
         width: flipbook.clientWidth,
         height: flipbook.clientHeight,
         autoCenter: true,
+        acceleration: true,
+        gradients: true,
       });
 
-      // Redimensionar dinámicamente
       window.addEventListener("resize", () => {
         $(flipbook).turn("size", flipbook.clientWidth, flipbook.clientHeight);
       });
@@ -158,6 +153,7 @@ class MenutechMenu extends HTMLElement {
 }
 
 customElements.define("menutech-menu", MenutechMenu);
+
 
 
 
@@ -1622,6 +1618,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
