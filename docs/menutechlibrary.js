@@ -39,18 +39,43 @@ class MenutechMenu extends HTMLElement {
       <link rel="stylesheet" href="https://menutech.biz/m10/assets/css/flipsolo.css">
       <style>
         :host {
-          display:block;
-          width:100%;
+          display: block;
+          width: 100%;
+          max-width: 100vw;
+          overflow: hidden;
         }
+
         .menu1 {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          width: 100%;
+        }
+
+        .flipbook-viewport {
           width: 100%;
           display: flex;
           justify-content: center;
           align-items: center;
         }
+
+        .flipbook {
+          width: 100%;
+          max-width: 800px;
+          aspect-ratio: 1.414 / 1; /* proporción tipo A4 */
+        }
+
         .flipbook img {
           width: 100%;
-          height: auto;
+          height: 100%;
+          object-fit: contain;
+        }
+
+        @media (max-width: 768px) {
+          .flipbook {
+            max-width: 95vw;
+            aspect-ratio: 1 / 1.414;
+          }
         }
       </style>
 
@@ -71,8 +96,18 @@ class MenutechMenu extends HTMLElement {
   async initFlipbook() {
     await this.loadTurnJs();
     const flipbook = this.shadow.querySelector(".flipbook");
+
     if (window.$ && typeof $(flipbook).turn === "function") {
-      $(flipbook).turn();
+      $(flipbook).turn({
+        width: flipbook.clientWidth,
+        height: flipbook.clientHeight,
+        autoCenter: true,
+      });
+
+      // Ajuste automático al cambiar el tamaño de pantalla
+      window.addEventListener("resize", () => {
+        $(flipbook).turn("size", flipbook.clientWidth, flipbook.clientHeight);
+      });
     } else {
       console.warn("turn.js no se cargó correctamente.");
     }
@@ -99,6 +134,7 @@ class MenutechMenu extends HTMLElement {
 }
 
 customElements.define("menutech-menu", MenutechMenu);
+
 
 
 
@@ -1561,6 +1597,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
