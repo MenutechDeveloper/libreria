@@ -48,11 +48,17 @@ class MenutechMenu extends HTMLElement {
         }
 
         .menu1 {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          width: 100%;
-        }
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+  padding: 40px 0;
+  margin-bottom: 80px; /* separación del siguiente div */
+}
+
 
         .flipbook-viewport {
           display: flex;
@@ -1614,6 +1620,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
