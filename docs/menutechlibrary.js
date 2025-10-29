@@ -54,6 +54,7 @@ class MenutechMenu extends HTMLElement {
           border-radius: 16px;
           box-shadow: 0 6px 20px rgba(0,0,0,0.2);
           padding: 20px 0;
+          box-sizing: border-box;
         }
 
         .flipbook-viewport {
@@ -74,6 +75,7 @@ class MenutechMenu extends HTMLElement {
           width: 100%;
           height: 100%;
           object-fit: contain;
+          display: block;
         }
 
         .spacer {
@@ -102,7 +104,19 @@ class MenutechMenu extends HTMLElement {
       <div class="spacer"></div>
     `;
 
-    this.initFlipbook();
+    this.waitForImages().then(() => this.initFlipbook());
+  }
+
+  async waitForImages() {
+    const imgs = Array.from(this.shadow.querySelectorAll("img"));
+    await Promise.all(
+      imgs.map(img => new Promise(resolve => {
+        if (img.complete) resolve();
+        else {
+          img.onload = img.onerror = resolve;
+        }
+      }))
+    );
   }
 
   async initFlipbook() {
@@ -117,10 +131,9 @@ class MenutechMenu extends HTMLElement {
         autoCenter: true,
       });
 
-      // Ajusta tamaño del espacio para que el div siguiente no se solape
       const updateSpacer = () => {
-        const height = flipbook.getBoundingClientRect().height;
-        spacer.style.setProperty("--flipbook-height", `${height * 0.05 + 40}px`);
+        const height = flipbook.getBoundingClientRect().height || 600;
+        spacer.style.setProperty("--flipbook-height", `${height * 0.05 + 60}px`);
         $(flipbook).turn("size", flipbook.clientWidth, flipbook.clientHeight);
       };
 
@@ -152,6 +165,7 @@ class MenutechMenu extends HTMLElement {
 }
 
 customElements.define("menutech-menu", MenutechMenu);
+
 
 
 
@@ -1620,6 +1634,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
