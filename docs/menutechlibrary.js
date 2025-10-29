@@ -1,4 +1,108 @@
 /******************************
+ * MENUTECH MENU
+ ******************************/
+class MenutechMenu extends HTMLElement {
+  static get observedAttributes() {
+    return ["images"];
+  }
+
+  constructor() {
+    super();
+    this.shadow = this.attachShadow({ mode: "open" });
+  }
+
+  connectedCallback() { this.render(); }
+  attributeChangedCallback() { this.render(); }
+
+  render() {
+    const imagesAttr = this.getAttribute("images");
+    const images = imagesAttr
+      ? imagesAttr.split(",").map(url => url.trim())
+      : [
+          "https://vikingantonio.github.io/cabanamenu/assets/img/1.jpg",
+          "https://vikingantonio.github.io/cabanamenu/assets/img/2.jpg",
+          "https://vikingantonio.github.io/cabanamenu/assets/img/3.jpg",
+          "https://vikingantonio.github.io/cabanamenu/assets/img/4.jpg",
+          "https://vikingantonio.github.io/cabanamenu/assets/img/5.jpg",
+          "https://vikingantonio.github.io/cabanamenu/assets/img/6.jpg",
+          "https://vikingantonio.github.io/cabanamenu/assets/img/7.jpg",
+          "https://vikingantonio.github.io/cabanamenu/assets/img/8.jpg",
+          "https://vikingantonio.github.io/cabanamenu/assets/img/9.jpg",
+          "https://vikingantonio.github.io/cabanamenu/assets/img/10.jpg",
+          "https://vikingantonio.github.io/cabanamenu/assets/img/11.jpg",
+          "https://vikingantonio.github.io/cabanamenu/assets/img/12.jpg"
+        ];
+
+    const imagesHTML = images.map(src => `<img src="${src}" />`).join("");
+
+    this.shadow.innerHTML = `
+      <link rel="stylesheet" href="https://menutech.biz/m10/assets/css/flipsolo.css">
+      <style>
+        :host {
+          display:block;
+          width:100%;
+        }
+        .menu1 {
+          width: 100%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+        .flipbook img {
+          width: 100%;
+          height: auto;
+        }
+      </style>
+
+      <div class="menu1">
+        <div class="flipbook-viewport">
+          <div class="container">
+            <div class="flipbook">
+              ${imagesHTML}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    this.initFlipbook();
+  }
+
+  async initFlipbook() {
+    await this.loadTurnJs();
+    const flipbook = this.shadow.querySelector(".flipbook");
+    if (window.$ && typeof $(flipbook).turn === "function") {
+      $(flipbook).turn();
+    } else {
+      console.warn("turn.js no se cargó correctamente.");
+    }
+  }
+
+  async loadTurnJs() {
+    if (!window.jQuery) {
+      await this.loadScript("https://code.jquery.com/jquery-3.7.1.min.js");
+    }
+    if (!window.$.fn.turn) {
+      await this.loadScript("https://menutech.biz/m10/assets/js/turn.js");
+    }
+  }
+
+  loadScript(src) {
+    return new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = src;
+      script.onload = resolve;
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+  }
+}
+
+customElements.define("menutech-menu", MenutechMenu);
+
+
+
+/******************************
  * MENUTECH GRADIENT
  ******************************/
 class MenutechGradient extends HTMLElement {
@@ -1457,6 +1561,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
