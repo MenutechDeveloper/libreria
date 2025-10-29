@@ -11,8 +11,13 @@ class MenutechMenu extends HTMLElement {
     this.shadow = this.attachShadow({ mode: "open" });
   }
 
-  connectedCallback() { this.render(); }
-  attributeChangedCallback() { this.render(); }
+  connectedCallback() {
+    this.render();
+  }
+
+  attributeChangedCallback() {
+    this.render();
+  }
 
   render() {
     const imagesAttr = this.getAttribute("images");
@@ -38,74 +43,51 @@ class MenutechMenu extends HTMLElement {
     this.shadow.innerHTML = `
       <link rel="stylesheet" href="https://menutech.biz/m10/assets/css/flipsolo.css">
       <style>
-        /* Contenedor raíz del componente */
         :host {
           display: flex;
           justify-content: center;
           align-items: center;
           width: 100%;
+          height: auto;
+          padding: 80px 0;
           box-sizing: border-box;
-          padding: 60px 0; /* separa visualmente de otros divs */
           background: transparent;
-          overflow: visible;
         }
 
-        /* Contenedor con perspectiva 3D */
         .flipbook-viewport {
+          position: relative;
+          width: 100%;
           display: flex;
           justify-content: center;
           align-items: center;
-          width: 100%;
           perspective: 2000px;
-          position: relative;
         }
 
-        /* Libro (flipbook) */
         .flipbook {
           position: relative;
-          width: 800px;
-          height: 566px; /* proporción A4 */
-          margin: 0 auto;
-          box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-          border-radius: 12px;
+          aspect-ratio: 1 / 1.414; /* proporción A4 */
+          width: clamp(320px, 85vw, 900px);
           background: #fff;
-          overflow: hidden;
-          transition: all 0.3s ease-in-out;
-          display: flex;
-          justify-content: center;
-          align-items: center;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+          border-radius: 0;
+          overflow: visible;
+          transform-origin: center center !important;
         }
 
         .flipbook img {
           width: 100%;
           height: 100%;
-          object-fit: cover;
-          border-radius: 12px;
+          object-fit: contain;
+          display: block;
+          border-radius: 0;
         }
 
-        /* === RESPONSIVE === */
-        @media (max-width: 1200px) {
-          .flipbook {
-            width: 70vw;
-            height: calc(70vw / 1.414);
+        @media (max-width: 768px) {
+          :host {
+            padding: 60px 0;
           }
-        }
-
-        @media (max-width: 900px) {
-          .flipbook {
-            width: 85vw;
-            height: calc(85vw / 1.414);
-          }
-        }
-
-        @media (max-width: 600px) {
           .flipbook {
             width: 95vw;
-            height: calc(95vw / 1.414);
-            border-radius: 8px;
-          }
-          :host {
-            padding: 40px 0;
           }
         }
       </style>
@@ -127,17 +109,15 @@ class MenutechMenu extends HTMLElement {
     if (window.$ && typeof $(flipbook).turn === "function") {
       const setSize = () => {
         const vw = window.innerWidth;
-        const maxWidth = Math.min(vw * 0.9, 800);
-        const width = Math.max(300, maxWidth);
-        const height = width / 1.414; // relación A4
+        const maxWidth = Math.min(vw * 0.9, 900);
+        const width = Math.max(320, maxWidth);
+        const height = width / 1.414; // proporción A4
         $(flipbook).turn("size", width, height);
         flipbook.style.width = `${width}px`;
         flipbook.style.height = `${height}px`;
       };
 
       $(flipbook).turn({
-        width: 800,
-        height: 566,
         autoCenter: true,
         acceleration: true,
         gradients: true,
@@ -172,6 +152,7 @@ class MenutechMenu extends HTMLElement {
 }
 
 customElements.define("menutech-menu", MenutechMenu);
+
 
 
 
@@ -1644,6 +1625,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
