@@ -38,63 +38,74 @@ class MenutechMenu extends HTMLElement {
     this.shadow.innerHTML = `
       <link rel="stylesheet" href="https://menutech.biz/m10/assets/css/flipsolo.css">
       <style>
+        /* --- Root host: keeps the component centered in page flow --- */
         :host {
-          display: flex;
-          justify-content: center;
-          align-items: center;
+          display: block;
           width: 100%;
-          min-height: 100vh;
           box-sizing: border-box;
+          padding: 60px 0; /* espacio arriba/abajo; si quieres 0, cambia aquí */
           background: transparent;
         }
 
-        .menu1 {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          width: 100%;
-          height: 100%;
-        }
-
+        /* --- viewport wrapper (tu estructura original) --- */
         .flipbook-viewport {
           width: 100%;
           display: flex;
+          justify-content: center; /* centro horizontal */
+          align-items: center;     /* centro vertical dentro del padding */
+          perspective: 2000px;
+          box-sizing: border-box;
+          overflow: visible; /* no ocultar transformaciones internas de turn.js */
+        }
+
+        .container {
+          display: flex;
           justify-content: center;
           align-items: center;
-          perspective: 2000px;
-          overflow: hidden;
-          padding: 40px 0;
+          width: 100%;
           box-sizing: border-box;
         }
 
+        /* --- flipbook: controlamos tamaño aquí para evitar distorsión --- */
         .flipbook {
           position: relative;
-          margin: 0 auto;
-          width: clamp(320px, 80vw, 900px);
-          height: calc(clamp(320px, 80vw, 900px) * 0.707);
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
-          border-radius: 8px;
+          /* single page width (each page) will be computed in JS.
+             Here we use clamp to provide a visual baseline for non-js rendering: */
+          width: clamp(320px, 40vw, 420px); /* this represents ONE page width visually */
+          height: calc(clamp(320px, 40vw, 420px) * 1.414); /* A4 portrait -> height = width * 1.414 */
+          box-shadow: 0 12px 36px rgba(0,0,0,0.18);
           background: #fff;
+          border-radius: 6px;
+          overflow: visible;
+          display: block;
         }
 
         .flipbook img {
           width: 100%;
           height: 100%;
-          object-fit: contain;
-          border-radius: 8px;
+          object-fit: contain; /* evita recortes / distorsión */
           display: block;
+          user-select: none;
+          -webkit-user-drag: none;
         }
 
-        @media (max-width: 768px) {
+        /* --- Responsive: on larger screens we'll rely on JS to size 2 pages total --- */
+        @media (min-width: 1000px) {
           .flipbook {
-            width: 95vw;
-            height: calc(95vw * 0.707);
+            width: 420px; /* baseline single page width on wide screens */
+            height: calc(420px * 1.414);
           }
+        }
+
+        /* --- On very small screens increase visual padding so it doesn't butt against other blocks --- */
+        @media (max-width: 480px) {
+          :host { padding: 40px 0; }
+          .flipbook { width: 95vw; height: calc(95vw * 1.414); border-radius: 4px; }
         }
       </style>
 
-      <div class="menu1">
-        <div class="flipbook-viewport">
+      <div class="flipbook-viewport">
+        <div class="container">
           <div class="flipbook">
             ${imagesHTML}
           </div>
@@ -110,28 +121,51 @@ class MenutechMenu extends HTMLElement {
     const flipbook = this.shadow.querySelector(".flipbook");
 
     if (window.$ && typeof $(flipbook).turn === "function") {
-      const setSize = () => {
-        const maxWidth = Math.min(window.innerWidth * 0.9, 900);
-        const width = Math.max(320, maxWidth);
-        const height = width * 0.707; // proporción tipo A4
-        $(flipbook).turn("size", width, height);
-        flipbook.style.width = `${width}px`;
-        flipbook.style.height = `${height}px`;
+      // IMPORTANT:
+      // turn.js treats the flipbook width as the TOTAL width of all visible pages.
+      // For a two-page view we must pass width = singlePageWidth * 2.
+      // We'll compute a singlePageWidth based on viewport, then set turn size accordingly.
+      const computeSizes = () => {
+        const vw = Math.max(document.documentElement.clientWidth || window.innerWidth, 320);
+        // decide single page width: a fraction of viewport, limited to a max
+        const singlePageWidth = Math.min(Math.max(vw * 0.32, 300), 420); // px
+        const totalWidth = singlePageWidth * 2; // turn.js expects full width for both pages
+        const totalHeight = Math.round(singlePageWidth * 1.414); // A4 ratio
+        return { singlePageWidth, totalWidth, totalHeight };
       };
 
+      const setSize = () => {
+        const { totalWidth, totalHeight, singlePageWidth } = computeSizes();
+        // tell turn.js the exact size it should render
+        try {
+          $(flipbook).turn("size", totalWidth, totalHeight);
+        } catch (e) {
+          // some versions require re-init; ignore if not ready
+        }
+        // but visually keep the flipbook element representing a *single page* width,
+        // and center it by using margin and transform applied by turn.js.
+        flipbook.style.width = `${singlePageWidth}px`;
+        flipbook.style.height = `${totalHeight}px`;
+      };
+
+      // initialize turn with default sizes; we'll immediately call setSize to correct
       $(flipbook).turn({
-        width: 900,
-        height: 636,
+        width: 600,  // placeholder, replaced by setSize()
+        height: 846, // placeholder, replaced by setSize()
         autoCenter: true,
         acceleration: true,
         gradients: true,
         elevation: 50
       });
 
-      setSize();
+      // run initial sizing AFTER a tiny delay so turn.js has created its internal pages
+      // (delay is tiny and safe; avoids measuring before DOM transforms)
+      setTimeout(setSize, 50);
+
+      // update on resize
       window.addEventListener("resize", setSize);
     } else {
-      console.warn("turn.js no se cargó correctamente.");
+      console.warn("turn.js no se cargó correctamente o jQuery falta.");
     }
   }
 
@@ -156,6 +190,7 @@ class MenutechMenu extends HTMLElement {
 }
 
 customElements.define("menutech-menu", MenutechMenu);
+
 
 
 
@@ -1631,6 +1666,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
