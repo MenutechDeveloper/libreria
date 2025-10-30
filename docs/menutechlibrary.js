@@ -6,17 +6,20 @@ class MenutechMenu extends HTMLElement {
 
   constructor() {
     super();
-    // NO shadow DOM para que turn.js funcione
   }
 
-  connectedCallback() { this.render(); }
-  attributeChangedCallback() { this.render(); }
+  connectedCallback() {
+    this.render();
+  }
+
+  attributeChangedCallback() {
+    this.render();
+  }
 
   render() {
-    // Limpiar antes de renderizar
     this.innerHTML = "";
 
-    // cargar flipsolo.css solo una vez
+    // CSS del flipbook (solo una vez)
     if (!document.querySelector('link[data-menutech="flipsolo"]')) {
       const link = document.createElement("link");
       link.rel = "stylesheet";
@@ -25,7 +28,7 @@ class MenutechMenu extends HTMLElement {
       document.head.appendChild(link);
     }
 
-    // obtener imágenes
+    // Imágenes
     const imagesAttr = this.getAttribute("images");
     const images = imagesAttr
       ? imagesAttr.split(",").map(u => u.trim())
@@ -44,11 +47,11 @@ class MenutechMenu extends HTMLElement {
           "https://vikingantonio.github.io/cabanamenu/assets/img/12.jpg"
         ];
 
-    // construir HTML
+    // Estructura del flipbook
     const wrapper = document.createElement("div");
     wrapper.className = "flipbook-viewport";
     wrapper.innerHTML = `
-      <div class="container">
+      <div class="flipbook-container">
         <div class="flipbook">
           ${images.map(s => `<img src="${s}" />`).join("")}
         </div>
@@ -56,103 +59,101 @@ class MenutechMenu extends HTMLElement {
     `;
     this.appendChild(wrapper);
 
-    // estilos adicionales para centrado/responsive
-    const styleId = "menutech-inline-style";
+    // Estilos simples para centrado y espacio propio
+    const styleId = "menutech-menu-style";
     if (!document.getElementById(styleId)) {
       const s = document.createElement("style");
       s.id = styleId;
       s.textContent = `
         menutech-menu {
+          display: block;
+          width: 100%;
+          position: relative;
+          padding: 60px 0;
+          box-sizing: border-box;
+        }
+        .flipbook-viewport {
           display: flex;
           justify-content: center;
           align-items: center;
           width: 100%;
-          overflow-x: hidden; /* evita scroll horizontal */
+          position: relative;
+          overflow: hidden;
         }
-        menutech-menu .flipbook-viewport {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          overflow-x: hidden;
+        .flipbook-container {
+          position: relative;
           width: 100%;
           max-width: 922px;
-          margin: auto;
+          height: auto;
+          margin: 0 auto;
         }
-        menutech-menu .container {
-          position: relative;
-          padding: 20px;
-          margin: auto;
-          text-align: center;
-          left: 0;
-          right: 0;
-        }
-        menutech-menu .flipbook {
+        .flipbook {
+          position: absolute;
+          top: 0;
+          left: 50%;
+          transform: translateX(-50%);
           width: 922px;
           height: 700px;
-          margin: 50px auto 0 auto;
         }
-        menutech-menu .flipbook img {
+        .flipbook img {
           width: 100%;
           height: auto;
           display: block;
           -webkit-user-select: none;
           user-select: none;
-          -webkit-user-drag: none;
         }
         @media (max-width: 992px) {
-          menutech-menu .flipbook {
+          .flipbook {
             width: 95%;
             height: auto;
-            margin-top: 10px;
+            left: auto;
+            transform: none;
+            right: 0;
           }
         }
       `;
       document.head.appendChild(s);
     }
 
-    // inicializar turn.js
     this.initFlipbook();
   }
 
   async initFlipbook() {
     try {
       await this.ensureJQueryAndTurn();
+
       const flipbook = this.querySelector(".flipbook");
       const imgs = Array.from(flipbook.querySelectorAll("img"));
 
-      // esperar a que todas las imágenes carguen
       await Promise.all(imgs.map(img => {
         if (img.complete && img.naturalWidth) return Promise.resolve();
-        return new Promise(res => { img.onload = img.onerror = () => res(); });
+        return new Promise(res => {
+          img.onload = res;
+          img.onerror = res;
+        });
       }));
 
       const $flip = window.jQuery(flipbook);
-      if ($flip.data && $flip.data("turn-initialized")) {
-        try { $flip.turn("destroy"); } catch(e){} 
-        $flip.data("turn-initialized", false);
-      }
+      try { $flip.turn("destroy"); } catch(e){}
 
       $flip.turn({
-        width: flipbook.clientWidth || 922,
-        height: flipbook.clientHeight || 700,
+        width: 922,
+        height: 700,
         autoCenter: true,
         acceleration: true,
         gradients: true,
         elevation: 50
       });
 
-      $flip.data("turn-initialized", true);
-
-      // resize responsivo
+      // Adaptar tamaño al redimensionar
       const onResize = () => {
-        const viewportWidth = Math.min(922, this.getBoundingClientRect().width || window.innerWidth);
-        const newW = Math.max(320, viewportWidth);
-        const newH = Math.round(newW * (700 / 922));
+        const viewportWidth = this.clientWidth;
+        const newW = Math.min(922, viewportWidth * 0.95);
+        const newH = newW * (700 / 922);
         flipbook.style.width = newW + "px";
         flipbook.style.height = newH + "px";
         try { $flip.turn("size", newW, newH); } catch(e){}
       };
-
       window.addEventListener("resize", onResize);
       onResize();
 
@@ -163,23 +164,21 @@ class MenutechMenu extends HTMLElement {
 
   ensureJQueryAndTurn() {
     return new Promise(async (resolve, reject) => {
-      if (!window.jQuery) {
+      if (!window.jQuery)
         await this.loadScriptOnce("https://code.jquery.com/jquery-3.7.1.min.js", "menutech-jquery");
-      }
-      if (!window.jQuery.fn.turn) {
+      if (!window.jQuery.fn.turn)
         await this.loadScriptOnce("https://menutech.biz/m10/assets/js/turn.js", "menutech-turn");
-      }
       setTimeout(resolve, 50);
     });
   }
 
   loadScriptOnce(src, id) {
     return new Promise((resolve, reject) => {
-      if (document.querySelector(`script[src="${src}"]`) || (id && document.getElementById(id))) return resolve();
+      if (document.getElementById(id)) return resolve();
       const s = document.createElement("script");
-      if (id) s.id = id;
+      s.id = id;
       s.src = src;
-      s.onload = () => resolve();
+      s.onload = resolve;
       s.onerror = () => reject(new Error("Failed to load " + src));
       document.head.appendChild(s);
     });
@@ -187,6 +186,7 @@ class MenutechMenu extends HTMLElement {
 }
 
 customElements.define("menutech-menu", MenutechMenu);
+
 
 
 
@@ -1665,6 +1665,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
