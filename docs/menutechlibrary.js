@@ -14,10 +14,9 @@ class MenutechMenu extends HTMLElement {
         :host {
           display: block;
           width: 100%;
-          height: 100%;
-          box-sizing: border-box;
+          height: 100vh;
+          background: #f0f0f0;
           overflow: hidden;
-          position: relative;
         }
 
         .flipbook-container {
@@ -25,41 +24,34 @@ class MenutechMenu extends HTMLElement {
           justify-content: center;
           align-items: center;
           width: 100%;
-          height: 100vh;
-          background: #f5f5f5;
-          box-sizing: border-box;
-          overflow: hidden;
+          height: 100%;
+          background: #f0f0f0;
         }
 
         .flipbook {
-          width: 90%;
-          max-width: 900px;
-          height: auto;
-          aspect-ratio: 3 / 2;
-          box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-          border-radius: 10px;
+          width: min(95vw, 700px);
+          height: 100%;
+          aspect-ratio: auto;
           overflow: hidden;
-          background: white;
+          box-shadow: 0 4px 25px rgba(0, 0, 0, 0.3);
+          border-radius: 12px;
+          background: #000;
         }
 
         .flipbook img {
           width: 100%;
           height: 100%;
           object-fit: cover;
+          display: block;
+          user-select: none;
+          -webkit-user-drag: none;
         }
 
-        /* Ajustes responsivos */
         @media (max-width: 768px) {
           .flipbook {
-            width: 100%;
-            max-width: 100%;
-            aspect-ratio: 4 / 3;
-          }
-        }
-
-        @media (max-width: 480px) {
-          .flipbook {
-            aspect-ratio: 1 / 1;
+            width: 100vw;
+            height: 100vh;
+            border-radius: 0;
           }
         }
       </style>
@@ -86,41 +78,51 @@ class MenutechMenu extends HTMLElement {
   }
 
   async initFlipbook() {
-    // Cargar jQuery y Turn.js dentro del shadow DOM
     const jquerySrc = "https://menutech.biz/m10/assets/js/jquery.js";
     const turnSrc = "https://menutech.biz/m10/assets/js/turn.js";
 
     const loadScript = (src) => new Promise((resolve, reject) => {
-      const script = document.createElement("script");
-      script.src = src;
-      script.onload = resolve;
-      script.onerror = reject;
-      this.shadowRoot.appendChild(script);
+      const s = document.createElement("script");
+      s.src = src;
+      s.onload = resolve;
+      s.onerror = reject;
+      this.shadowRoot.appendChild(s);
     });
 
     try {
       await loadScript(jquerySrc);
       await loadScript(turnSrc);
 
-      // Ejecutar turn.js cuando esté listo
-      const $ = this.shadowRoot.querySelector.bind(this.shadowRoot);
-      const flipbook = this.shadowRoot.querySelector(".flipbook");
-
-      // Espera a que jQuery se monte en el contexto global
+      // Esperar un instante y luego inicializar correctamente
       setTimeout(() => {
+        const flipbook = this.shadowRoot.querySelector(".flipbook");
+
+        // Solo mostrar una página a la vez
         window.jQuery(flipbook).turn({
-          width: flipbook.clientWidth,
-          height: flipbook.clientHeight,
-          autoCenter: true
+          display: 'single',
+          autoCenter: true,
+          acceleration: true,
+          gradients: true,
+          elevation: 50,
         });
-      }, 200);
-    } catch (err) {
-      console.error("Error cargando turn.js o jQuery:", err);
+
+        // Ajustar dinámicamente al cambiar tamaño
+        const resize = () => {
+          const w = flipbook.clientWidth;
+          const h = flipbook.clientHeight;
+          window.jQuery(flipbook).turn('size', w, h);
+        };
+        window.addEventListener("resize", resize);
+        resize();
+      }, 300);
+    } catch (e) {
+      console.error("Error cargando librerías:", e);
     }
   }
 }
 
 customElements.define("menutech-menu", MenutechMenu);
+
 
 
 
@@ -1600,6 +1602,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
