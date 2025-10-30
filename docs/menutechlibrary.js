@@ -48,7 +48,7 @@ class MenutechMenu extends HTMLElement {
           justify-content: center;
           align-items: center;
           width: 100%;
-         
+          min-height: 100vh;
           box-sizing: border-box;
           overflow: hidden;
           position: relative;
@@ -76,7 +76,7 @@ class MenutechMenu extends HTMLElement {
         .flipbook img {
           width: 100%;
           height: 100%;
-          object-fit: cover;
+          object-fit: contain;
           display: block;
         }
 
@@ -1634,6 +1634,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
