@@ -55,7 +55,6 @@ class MenutechMenu extends HTMLElement {
         }
 
         .flipbook-viewport {
-          position: relative;
           width: 100%;
           display: flex;
           justify-content: center;
@@ -64,14 +63,11 @@ class MenutechMenu extends HTMLElement {
         }
 
         .flipbook {
-          position: relative;
-          aspect-ratio: 1 / 1.414; /* proporción A4 */
-          width: clamp(320px, 85vw, 900px);
+          width: clamp(320px, 85vw, 800px);
+          height: calc(clamp(320px, 85vw, 800px) * 1.414); /* A4 proporción */
           background: #fff;
           box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-          border-radius: 0;
           overflow: visible;
-          transform-origin: center center !important;
         }
 
         .flipbook img {
@@ -79,7 +75,6 @@ class MenutechMenu extends HTMLElement {
           height: 100%;
           object-fit: contain;
           display: block;
-          border-radius: 0;
         }
 
         @media (max-width: 768px) {
@@ -88,6 +83,7 @@ class MenutechMenu extends HTMLElement {
           }
           .flipbook {
             width: 95vw;
+            height: calc(95vw * 1.414);
           }
         }
       </style>
@@ -109,9 +105,9 @@ class MenutechMenu extends HTMLElement {
     if (window.$ && typeof $(flipbook).turn === "function") {
       const setSize = () => {
         const vw = window.innerWidth;
-        const maxWidth = Math.min(vw * 0.9, 900);
-        const width = Math.max(320, maxWidth);
-        const height = width / 1.414; // proporción A4
+        const singlePageWidth = Math.min(vw * 0.42, 400); // una página ≈ 42% del ancho
+        const width = singlePageWidth * 2; // dos páginas abiertas
+        const height = singlePageWidth * 1.414; // proporción A4
         $(flipbook).turn("size", width, height);
         flipbook.style.width = `${width}px`;
         flipbook.style.height = `${height}px`;
@@ -152,6 +148,7 @@ class MenutechMenu extends HTMLElement {
 }
 
 customElements.define("menutech-menu", MenutechMenu);
+
 
 
 
@@ -1625,6 +1622,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
