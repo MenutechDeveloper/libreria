@@ -2,268 +2,122 @@
  * MENUTECH MENU
  ******************************/
 class MenutechMenu extends HTMLElement {
-  static get observedAttributes() {
-    return ["images"];
-  }
-
   constructor() {
     super();
     this.shadow = this.attachShadow({ mode: "open" });
-    this._globalStyleInjected = false;
-    this._resizeHandler = null;
   }
 
-  connectedCallback() { this.render(); }
-  attributeChangedCallback() { this.render(); }
+  connectedCallback() {
+    this.render();
+  }
 
   render() {
-    const imagesAttr = this.getAttribute("images");
-    const images = imagesAttr
-      ? imagesAttr.split(",").map(url => url.trim())
-      : [
-          "https://vikingantonio.github.io/cabanamenu/assets/img/1.jpg",
-          "https://vikingantonio.github.io/cabanamenu/assets/img/2.jpg",
-          "https://vikingantonio.github.io/cabanamenu/assets/img/3.jpg",
-          "https://vikingantonio.github.io/cabanamenu/assets/img/4.jpg",
-          "https://vikingantonio.github.io/cabanamenu/assets/img/5.jpg",
-          "https://vikingantonio.github.io/cabanamenu/assets/img/6.jpg",
-          "https://vikingantonio.github.io/cabanamenu/assets/img/7.jpg",
-          "https://vikingantonio.github.io/cabanamenu/assets/img/8.jpg",
-          "https://vikingantonio.github.io/cabanamenu/assets/img/9.jpg",
-          "https://vikingantonio.github.io/cabanamenu/assets/img/10.jpg",
-          "https://vikingantonio.github.io/cabanamenu/assets/img/11.jpg",
-          "https://vikingantonio.github.io/cabanamenu/assets/img/12.jpg"
-        ];
-
-    const imagesHTML = images.map(src => `<img src="${src}" alt="menu page" />`).join("");
-
-    // Inyectar estilo global mínimo una sola vez para evitar scroll-x no deseado.
-    if (!this._globalStyleInjected) {
-      const globalStyle = document.createElement("style");
-      globalStyle.id = "menutech-global-overflow-fix";
-      globalStyle.textContent = `
-        /* Evita scroll horizontal inesperado causado por el flipbook en móviles */
-        html, body {
-          overflow-x: hidden !important;
-        }
-      `;
-      document.head.appendChild(globalStyle);
-      this._globalStyleInjected = true;
-    }
-
     this.shadow.innerHTML = `
-      <link rel="stylesheet" href="https://menutech.biz/m10/assets/css/flipsolo.css">
       <style>
-        :host {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          width: 100%;
-          min-height: 100vh;
-          box-sizing: border-box;
-          /* ocultamos cualquier overflow horizontal dentro del componente */
-          overflow-x: hidden;
-          position: relative;
-        }
-
-        .menu1 {
-          width: 100%;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-        }
-
-        /* viewport del flipbook: centrado y recorte para evitar overflow visual */
         .flipbook-viewport {
+          overflow: hidden;
           width: 100%;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          perspective: 2000px;
-          padding: 12px;
-          box-sizing: border-box;
-          overflow: hidden; /* importante */
+          height: 100%;
         }
 
-        /* Flipbook base: usamos proporción A4 (1.414) */
-        .flipbook {
-          width: 922px;        /* tamaño base de desktop */
-          height: 700px;       /* proporción aproximada A4 */
-          max-width: 100%;
-          max-height: calc(100vh - 40px);
-          margin: 0 auto;
-          box-sizing: border-box;
-          display: block;
+        @media (max-width: 992px) {
+          .flipbook-viewport {
+            width: 90%;
+            height: 90%;
+          }
+        }
+
+        .flipbook-viewport .container {
+          position: absolute;
+          padding: 20px;
+          margin: auto;
+          text-align: center;
+        }
+
+        .flipbook-viewport .flipbook {
+          width: 922px;
+          height: 700px;
+          margin-top: 50px;
+        }
+
+        @media (max-width: 992px) {
+          .flipbook-viewport .flipbook {
+            width: 100%;
+            height: 400px;
+            margin-top: 10px;
+          }
+        }
+
+        .flipbook-viewport .page {
+          width: 461px;
+          height: 800px;
+          background-color: white;
+          background-repeat: no-repeat;
+          background-size: 100% 100%;
+          box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+        }
+
+        @media (max-width: 992px) {
+          .flipbook-viewport .page {
+            height: 400px;
+          }
+        }
+
+        .flipbook-viewport .page img {
+          user-select: none;
+          margin: 0;
         }
 
         .flipbook img {
           width: 100%;
-          height: 100%;
-          object-fit: cover; /* mantiene aspecto full page y recorta si hace falta */
-          display: block;
-          user-select: none;
-          -webkit-user-drag: none;
         }
 
-        /* Ajustes responsivos */
-        @media (max-width: 1200px) {
-          .flipbook { max-height: calc(100vh - 60px); }
-        }
-
-        @media (max-width: 992px) {
-          .flipbook {
-            width: 95vw;
-            height: calc(95vw / 1.414); /* mantiene proporción A4*/
-          }
-        }
-
-        @media (max-width: 600px) {
-          .flipbook {
-            width: 100vw;
-            height: calc(100vw / 1.414);
-            margin-left: 0;
-            margin-right: 0;
-          }
-        }
-
-        /* landscape phones (evitar que se quede más alto que la pantalla) */
-        @media (orientation: landscape) and (max-width: 800px) {
-          .flipbook {
-            height: calc(80vh);
-            width: calc(80vh * 1.414);
-            max-width: 100%;
-          }
+        .flipbook-viewport .shadow {
+          box-shadow: 0 0 20px #ccc;
+          transition: box-shadow 0.5s;
         }
       </style>
 
-      <div class="menu1">
-        <div class="flipbook-viewport">
+      <div class="flipbook-viewport">
+        <div class="container">
           <div class="flipbook">
-            ${imagesHTML}
+            <img src="https://vikingantonio.github.io/cabanamenu/assets/img/1.jpg"/>
+            <img src="https://vikingantonio.github.io/cabanamenu/assets/img/2.jpg"/>
+            <img src="https://vikingantonio.github.io/cabanamenu/assets/img/3.jpg"/>
+            <img src="https://vikingantonio.github.io/cabanamenu/assets/img/4.jpg"/>
+            <img src="https://vikingantonio.github.io/cabanamenu/assets/img/5.jpg"/>
+            <img src="https://vikingantonio.github.io/cabanamenu/assets/img/6.jpg"/>
+            <img src="https://vikingantonio.github.io/cabanamenu/assets/img/7.jpg"/>
+            <img src="https://vikingantonio.github.io/cabanamenu/assets/img/8.jpg"/>
+            <img src="https://vikingantonio.github.io/cabanamenu/assets/img/9.jpg"/>
+            <img src="https://vikingantonio.github.io/cabanamenu/assets/img/10.jpg"/>
+            <img src="https://vikingantonio.github.io/cabanamenu/assets/img/11.jpg"/>
+            <img src="https://vikingantonio.github.io/cabanamenu/assets/img/12.jpg"/>
           </div>
         </div>
       </div>
+
+      <script src="https://menutech.biz/m10/assets/js/jquery.js"></script>
+      <script src="https://menutech.biz/m10/assets/js/turn.js"></script>
     `;
 
-    this.initFlipbook();
-  }
-
-  async initFlipbook() {
-    await this.loadTurnJs();
-    const flipbook = this.shadow.querySelector(".flipbook");
-
-    if (!window.$ || typeof $(flipbook).turn !== "function") {
-      // Si turn.js no está listo, no hacemos nada.
-      console.warn("turn.js no se cargó correctamente o jQuery falta.");
-      return;
-    }
-
-    // función que calcula medidas estables respetando A4 y límites de viewport
-    const setSize = () => {
-      const vw = Math.max(document.documentElement.clientWidth || window.innerWidth, 320);
-      const vh = Math.max(document.documentElement.clientHeight || window.innerHeight, 240);
-
-      // Calculamos ancho ideal (un poco de margen lateral)
-      let width = Math.min(vw * 0.95, 922);
-      let height = width / 1.414; // proporción A4
-
-      // Si excede la altura de la ventana, ajustamos por altura
-      if (height > vh * 0.88) {
-        height = vh * 0.88;
-        width = height * 1.414;
+    // Inicializa el flipbook cuando jQuery y Turn.js estén listos
+    const checkReady = () => {
+      const $ = this.shadow.querySelector
+        ? window.jQuery
+        : null;
+      if ($ && typeof $.fn.turn === "function") {
+        $(this.shadow.querySelector(".flipbook")).turn();
+      } else {
+        setTimeout(checkReady, 200);
       }
-
-      // Nunca dejamos menos que un mínimo viable
-      width = Math.max(width, 320);
-      height = Math.max(height, 220);
-
-      try {
-        $(flipbook).turn("size", Math.round(width), Math.round(height));
-      } catch (e) {
-        // en caso de error con turn, al menos ajustamos el css del contenedor
-        console.warn("Error al setear size en turn.js:", e);
-      }
-
-      flipbook.style.width = `${Math.round(width)}px`;
-      flipbook.style.height = `${Math.round(height)}px`;
     };
-
-    // Inicializamos turn con tamaños base razonables
-    $(flipbook).turn({
-      width: 922,
-      height: 700,
-      autoCenter: true,
-      acceleration: true,
-      gradients: true,
-      elevation: 50
-    });
-
-    // Handler de resize/orientation para recalcular tamaño
-    if (this._resizeHandler) {
-      window.removeEventListener("resize", this._resizeHandler);
-      window.removeEventListener("orientationchange", this._resizeHandler);
-    }
-    this._resizeHandler = () => {
-      // small delay para dejar que el navegador estabilice layout
-      setTimeout(() => setSize(), 40);
-    };
-
-    window.addEventListener("resize", this._resizeHandler);
-    window.addEventListener("orientationchange", this._resizeHandler);
-
-    // Reajuste inicial
-    setSize();
-
-    // Reajustamos también cuando Turn.js empieza a girar páginas y después de girar
-    // Esto evita efecto de "encogimiento" o desplazamiento al hacer page flip.
-    $(flipbook).bind("turning", (e, page, view) => {
-      // fuerza un recálculo rápido
-      setTimeout(setSize, 30);
-    });
-    $(flipbook).bind("turned", (e, page, view) => {
-      setTimeout(setSize, 30);
-      // re-centra si fuera necesario
-      try { $(flipbook).turn("center"); } catch (err) { /* noop */ }
-    });
-
-    // También un fallback: si el usuario hace scroll horizontal por algún motivo, lo bloqueamos dentro del componente
-    flipbook.addEventListener("touchmove", (ev) => {
-      // evita desplazamiento lateral dentro del flipbook
-      if (Math.abs(ev.touches[0].clientX - (ev.touches[0].clientX || 0)) > 5) {
-        ev.stopPropagation();
-      }
-    }, {passive: false});
-  }
-
-  async loadTurnJs() {
-    if (!window.jQuery) {
-      await this.loadScript("https://code.jquery.com/jquery-3.7.1.min.js");
-    }
-    if (!window.$.fn.turn) {
-      await this.loadScript("https://menutech.biz/m10/assets/js/turn.js");
-    }
-  }
-
-  loadScript(src) {
-    return new Promise((resolve, reject) => {
-      // si ya existe el script con la misma src no lo cargamos doble
-      const exists = Array.from(document.scripts).some(s => s.src && s.src.indexOf(src) !== -1);
-      if (exists) return resolve();
-
-      const script = document.createElement("script");
-      script.src = src;
-      script.async = false;
-      script.onload = () => resolve();
-      script.onerror = (e) => {
-        console.error("Error cargando script", src, e);
-        reject(e);
-      };
-      document.head.appendChild(script);
-    });
+    checkReady();
   }
 }
 
 customElements.define("menutech-menu", MenutechMenu);
+
 
 
 
@@ -1748,6 +1602,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
