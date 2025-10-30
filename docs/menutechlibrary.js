@@ -8,95 +8,73 @@ class MenutechMenu extends HTMLElement {
   }
 
   async connectedCallback() {
-    await this.ensureLibraries();
+    await this.loadLibs();
     this.render();
   }
 
-  async ensureLibraries() {
-    // Carga un script externo si no existe
-    const loadScript = (src) =>
-      new Promise((resolve, reject) => {
+  // Carga jQuery y turn.js si no existen
+  async loadLibs() {
+    const load = (src) =>
+      new Promise((resolve) => {
         if (document.querySelector(`script[src="${src}"]`)) return resolve();
         const s = document.createElement("script");
         s.src = src;
         s.onload = resolve;
-        s.onerror = reject;
         document.head.appendChild(s);
       });
 
-    // Cargar jQuery y Turn.js si no existen
-    if (!window.jQuery) {
-      await loadScript("https://menutech.biz/m10/assets/js/jquery.js");
-    }
-    if (!window.jQuery.fn.turn) {
-      await loadScript("https://menutech.biz/m10/assets/js/turn.js");
-    }
+    if (!window.jQuery) await load("https://menutech.biz/m10/assets/js/jquery.js");
+    if (!window.jQuery.fn.turn) await load("https://menutech.biz/m10/assets/js/turn.js");
   }
 
   render() {
     this.shadow.innerHTML = `
       <style>
+        :host {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          width: 100%;
+          height: auto;
+        }
+
         .flipbook-viewport {
           overflow: hidden;
           width: 100%;
-          height: 100%;
-        }
-
-        @media (max-width: 992px) {
-          .flipbook-viewport {
-            width: 90%;
-            height: 90%;
-          }
-        }
-
-        .flipbook-viewport .container {
-          position: absolute;
-          padding: 20px;
+          max-width: 922px;
           margin: auto;
           text-align: center;
         }
 
-        .flipbook-viewport .flipbook {
-          width: 922px;
-          height: 700px;
-          margin-top: 50px;
+        .container {
+          position: relative;
+          padding: 20px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
         }
 
-        @media (max-width: 992px) {
-          .flipbook-viewport .flipbook {
-            width: 100%;
-            height: 400px;
-            margin-top: 10px;
-          }
-        }
-
-        .flipbook-viewport .page {
-          width: 461px;
-          height: 800px;
-          background-color: white;
-          background-repeat: no-repeat;
-          background-size: 100% 100%;
-          box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
-        }
-
-        @media (max-width: 992px) {
-          .flipbook-viewport .page {
-            height: 400px;
-          }
-        }
-
-        .flipbook-viewport .page img {
-          user-select: none;
-          margin: 0;
+        .flipbook {
+          width: 100%;
+          height: auto;
+          aspect-ratio: 922 / 700;
+          margin: auto;
+          box-shadow: 0 0 20px rgba(0,0,0,0.2);
         }
 
         .flipbook img {
           width: 100%;
+          height: auto;
+          display: block;
         }
 
-        .flipbook-viewport .shadow {
-          box-shadow: 0 0 20px #ccc;
-          transition: box-shadow 0.5s;
+        @media (max-width: 992px) {
+          .flipbook {
+            width: 100%;
+            height: auto;
+            aspect-ratio: 922 / 700;
+            margin-top: 10px;
+          }
         }
       </style>
 
@@ -120,16 +98,12 @@ class MenutechMenu extends HTMLElement {
       </div>
     `;
 
-    // Inicializar flipbook una vez renderizado
     const $ = window.jQuery;
     $(this.shadow.querySelector(".flipbook")).turn();
   }
 }
 
 customElements.define("menutech-menu", MenutechMenu);
-
-
-
 
 
 
@@ -1610,6 +1584,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
