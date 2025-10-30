@@ -12,70 +12,35 @@ class MenutechMenu extends HTMLElement {
     this.render();
   }
 
-  // Carga jQuery y turn.js si no existen
   async loadLibs() {
     const load = (src) =>
-      new Promise((resolve) => {
+      new Promise((resolve, reject) => {
         if (document.querySelector(`script[src="${src}"]`)) return resolve();
         const s = document.createElement("script");
         s.src = src;
         s.onload = resolve;
+        s.onerror = reject;
         document.head.appendChild(s);
       });
 
     if (!window.jQuery) await load("https://menutech.biz/m10/assets/js/jquery.js");
-    if (!window.jQuery.fn.turn) await load("https://menutech.biz/m10/assets/js/turn.js");
+    // Turn.js puede depender de jQuery.fn.turn
+    if (!window.jQuery || !window.jQuery.fn || !window.jQuery.fn.turn) {
+      await load("https://menutech.biz/m10/assets/js/turn.js");
+    }
   }
 
   render() {
+    // mantengo tus estilos y estructura lo más igual posible
     this.shadow.innerHTML = `
       <style>
-        :host {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          width: 100%;
-          height: auto;
-        }
-
-        .flipbook-viewport {
-          overflow: hidden;
-          width: 100%;
-          max-width: 922px;
-          margin: auto;
-          text-align: center;
-        }
-
-        .container {
-          position: relative;
-          padding: 20px;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-        }
-
-        .flipbook {
-          width: 100%;
-          height: auto;
-          aspect-ratio: 922 / 700;
-          margin: auto;
-          box-shadow: 0 0 20px rgba(0,0,0,0.2);
-        }
-
-        .flipbook img {
-          width: 100%;
-          height: auto;
-          display: block;
-        }
-
-        @media (max-width: 992px) {
-          .flipbook {
-            width: 100%;
-            height: auto;
-            aspect-ratio: 922 / 700;
-            margin-top: 10px;
-          }
-        }
+        :host { display:flex; justify-content:center; align-items:center; width:100%; }
+        .flipbook-viewport { overflow: hidden; width: 100%; max-width: 922px; margin:auto; height: auto; }
+        @media (max-width: 992px) { .flipbook-viewport { width: 90%; height: 90%; } }
+        .container { position: absolute; padding: 20px; margin: auto; text-align: center; left:0; right:0; }
+        .flipbook { width: 100%; height: auto; margin-top: 50px; display:block; }
+        @media (max-width: 992px) { .flipbook { margin-top: 10px; } }
+        .flipbook img { width:100%; height:auto; display:block; -webkit-user-select:none; user-select:none; }
       </style>
 
       <div class="flipbook-viewport">
@@ -98,17 +63,75 @@ class MenutechMenu extends HTMLElement {
       </div>
     `;
 
-    const $ = window.jQuery;
-    $(this.shadow.querySelector(".flipbook")).turn();
+    // inicialización: esperar a que las imágenes carguen y pasar dimensiones correctas a turn()
+    const flipbookEl = this.shadow.querySelector(".flipbook");
+    const imgs = Array.from(flipbookEl.querySelectorAll("img"));
+
+    const loadAllImages = (images) => {
+      return Promise.all(images.map(img => {
+        if (img.complete && img.naturalWidth) return Promise.resolve();
+        return new Promise((res) => {
+          img.onload = () => res();
+          img.onerror = () => res(); // no romper si falla una imagen
+        });
+      }));
+    };
+
+    loadAllImages(imgs).then(() => {
+      // calcula ancho disponible (el ancho real que ocupará el "flipbook-viewport")
+      // usamos el host width (max 922 según tu css) para que sea responsive
+      const viewport = this.shadow.querySelector(".flipbook-viewport");
+      const computedWidth = Math.min(922, viewport.getBoundingClientRect().width || 922);
+
+      // calcula altura basada en la proporción original 922x700 (tu CSS original)
+      const aspectRatio = 700 / 922;
+      const computedHeight = Math.round(computedWidth * aspectRatio);
+
+      // aplica tamaño fijo al contenedor usado por turn.js para que calcule correctamente
+      flipbookEl.style.width = computedWidth + "px";
+      flipbookEl.style.height = computedHeight + "px";
+
+      // Si quieres ver 2 páginas a la vez (ancho total 922 en tu diseño original),
+      // pasa width = computedWidth (ya es el total) y height = computedHeight.
+      // Número de páginas = cantidad de imgs
+      const $ = window.jQuery;
+      // Aseguramos que el plugin esté listado y no reiniciamos si ya está inicializado
+      if ($ && typeof $.fn.turn === "function" && !$(flipbookEl).data("turn-initialized")) {
+        $(flipbookEl).turn({
+          width: computedWidth,
+          height: computedHeight,
+          autoCenter: true
+        });
+        // marca inicializado para evitar doble init
+        $(flipbookEl).data("turn-initialized", true);
+      } else {
+        // fallback: si el plugin no existe, dejamos las imágenes visibles (ya cargadas)
+        console.warn("turn.js no está disponible o ya inicializado");
+      }
+
+      // manejamos resize para que sea responsive: recalcula y actualiza turn()
+      const onResize = () => {
+        const newW = Math.min(922, viewport.getBoundingClientRect().width || 922);
+        const newH = Math.round(newW * aspectRatio);
+        flipbookEl.style.width = newW + "px";
+        flipbookEl.style.height = newH + "px";
+        if ($ && typeof $.fn.turn === "function") {
+          // actualiza dimensiones del flipbook
+          $(flipbookEl).turn("size", newW, newH);
+        }
+      };
+
+      // Debounce simple del resize
+      let rt;
+      window.addEventListener("resize", () => {
+        clearTimeout(rt);
+        rt = setTimeout(onResize, 120);
+      });
+    });
   }
 }
 
 customElements.define("menutech-menu", MenutechMenu);
-
-
-
-
-
 
 
 
@@ -1584,6 +1607,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
