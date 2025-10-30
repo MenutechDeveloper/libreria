@@ -75,9 +75,7 @@ class MenutechMenu extends HTMLElement {
 
         .flipbook img {
           width: 100%;
-          height: 100%;
-          object-fit: contain;
-          display: block;
+          
         }
 
         @media (max-width: 900px) {
@@ -1634,6 +1632,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
