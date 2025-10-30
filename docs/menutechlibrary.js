@@ -205,6 +205,7 @@ customElements.define("menutech-menu", MenutechMenu);
 
 
 
+
 /******************************
  * MENUTECH GRADIENT
  ******************************/
@@ -1664,6 +1665,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
