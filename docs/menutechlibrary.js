@@ -45,7 +45,8 @@ class MenutechMenu extends HTMLElement {
           width: 100%;
           box-sizing: border-box;
           overflow: hidden;
-          padding: 20px 0;
+          padding: 30px 0;
+          background: transparent;
         }
 
         .flipbook-viewport {
@@ -53,6 +54,7 @@ class MenutechMenu extends HTMLElement {
           justify-content: center;
           align-items: center;
           width: 100%;
+          max-width: 100%;
           overflow: hidden;
           perspective: 2000px;
         }
@@ -62,15 +64,18 @@ class MenutechMenu extends HTMLElement {
           justify-content: center;
           align-items: center;
           width: 100%;
+          max-width: 100%;
         }
 
         .flipbook {
           width: 800px;
-          height: 566px; /* proporción tipo A4 */
+          height: 566px; /* proporción A4 */
+          background: #fff;
           box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
           border-radius: 10px;
           overflow: hidden;
-          background: #fff;
+          margin: 0 auto;
+          transition: all 0.3s ease;
         }
 
         .flipbook img {
@@ -80,7 +85,7 @@ class MenutechMenu extends HTMLElement {
           display: block;
         }
 
-        @media (max-width: 900px) {
+        @media (max-width: 1200px) {
           .flipbook {
             width: 90vw;
             height: calc(90vw / 1.414);
@@ -91,6 +96,7 @@ class MenutechMenu extends HTMLElement {
           .flipbook {
             width: 95vw;
             height: calc(95vw / 1.414);
+            border-radius: 8px;
           }
         }
       </style>
@@ -1616,6 +1622,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
