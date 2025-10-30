@@ -2,131 +2,165 @@
  * MENUTECH MENU
  ******************************/
 class MenutechMenu extends HTMLElement {
+  static get observedAttributes() { return ["images"]; }
+
   constructor() {
     super();
-    this.shadow = this.attachShadow({ mode: "open" });
+    // NO shadow DOM para el flipbook (lo dejamos en light DOM para que turn.js funcione igual que siempre)
   }
 
-  async connectedCallback() {
-    await this.loadLibs();
+  connectedCallback() {
     this.render();
   }
 
-  async loadLibs() {
-    const load = (src) =>
-      new Promise((resolve, reject) => {
-        if (document.querySelector(`script[src="${src}"]`)) return resolve();
-        const s = document.createElement("script");
-        s.src = src;
-        s.onload = resolve;
-        s.onerror = reject;
-        document.head.appendChild(s);
-      });
-
-    if (!window.jQuery) await load("https://menutech.biz/m10/assets/js/jquery.js");
-    // Turn.js puede depender de jQuery.fn.turn
-    if (!window.jQuery || !window.jQuery.fn || !window.jQuery.fn.turn) {
-      await load("https://menutech.biz/m10/assets/js/turn.js");
-    }
+  attributeChangedCallback() {
+    this.render();
   }
 
   render() {
-    // mantengo tus estilos y estructura lo más igual posible
-    this.shadow.innerHTML = `
-      <style>
-        :host { display:flex; justify-content:center; align-items:center; width:100%; }
-        .flipbook-viewport { overflow: hidden; width: 100%; max-width: 922px; margin:auto; height: auto; }
-        @media (max-width: 992px) { .flipbook-viewport { width: 90%; height: 90%; } }
-        .container { position: absolute; padding: 20px; margin: auto; text-align: center; left:0; right:0; }
-        .flipbook { width: 100%; height: auto; margin-top: 50px; display:block; }
-        @media (max-width: 992px) { .flipbook { margin-top: 10px; } }
-        .flipbook img { width:100%; height:auto; display:block; -webkit-user-select:none; user-select:none; }
-      </style>
+    // Si ya renderizamos una vez, limpiamos antes
+    this.innerHTML = "";
 
-      <div class="flipbook-viewport">
-        <div class="container">
-          <div class="flipbook">
-            <img src="https://vikingantonio.github.io/cabanamenu/assets/img/1.jpg"/>
-            <img src="https://vikingantonio.github.io/cabanamenu/assets/img/2.jpg"/>
-            <img src="https://vikingantonio.github.io/cabanamenu/assets/img/3.jpg"/>
-            <img src="https://vikingantonio.github.io/cabanamenu/assets/img/4.jpg"/>
-            <img src="https://vikingantonio.github.io/cabanamenu/assets/img/5.jpg"/>
-            <img src="https://vikingantonio.github.io/cabanamenu/assets/img/6.jpg"/>
-            <img src="https://vikingantonio.github.io/cabanamenu/assets/img/7.jpg"/>
-            <img src="https://vikingantonio.github.io/cabanamenu/assets/img/8.jpg"/>
-            <img src="https://vikingantonio.github.io/cabanamenu/assets/img/9.jpg"/>
-            <img src="https://vikingantonio.github.io/cabanamenu/assets/img/10.jpg"/>
-            <img src="https://vikingantonio.github.io/cabanamenu/assets/img/11.jpg"/>
-            <img src="https://vikingantonio.github.io/cabanamenu/assets/img/12.jpg"/>
-          </div>
+    // asegúrate de tener el CSS global de turn.js (solo una vez)
+    if (!document.querySelector('link[data-menutech="flipsolo"]')) {
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = "https://menutech.biz/m10/assets/css/flipsolo.css";
+      link.setAttribute("data-menutech", "flipsolo");
+      document.head.appendChild(link);
+    }
+
+    // obtener imágenes desde atributo o usar por defecto
+    const imagesAttr = this.getAttribute("images");
+    const images = imagesAttr
+      ? imagesAttr.split(",").map(u => u.trim())
+      : [
+          "https://vikingantonio.github.io/cabanamenu/assets/img/1.jpg",
+          "https://vikingantonio.github.io/cabanamenu/assets/img/2.jpg",
+          "https://vikingantonio.github.io/cabanamenu/assets/img/3.jpg",
+          "https://vikingantonio.github.io/cabanamenu/assets/img/4.jpg",
+          "https://vikingantonio.github.io/cabanamenu/assets/img/5.jpg",
+          "https://vikingantonio.github.io/cabanamenu/assets/img/6.jpg",
+          "https://vikingantonio.github.io/cabanamenu/assets/img/7.jpg",
+          "https://vikingantonio.github.io/cabanamenu/assets/img/8.jpg",
+          "https://vikingantonio.github.io/cabanamenu/assets/img/9.jpg",
+          "https://vikingantonio.github.io/cabanamenu/assets/img/10.jpg",
+          "https://vikingantonio.github.io/cabanamenu/assets/img/11.jpg",
+          "https://vikingantonio.github.io/cabanamenu/assets/img/12.jpg"
+        ];
+
+    // Construye HTML exactamente como tenías (en light DOM)
+    const wrapper = document.createElement("div");
+    wrapper.className = "flipbook-viewport";
+    wrapper.innerHTML = `
+      <div class="container">
+        <div class="flipbook">
+          ${images.map(s => `<img src="${s}" />`).join("")}
         </div>
       </div>
     `;
+    // añade el wrapper dentro de <menutech-menu> (light DOM)
+    this.appendChild(wrapper);
 
-    // inicialización: esperar a que las imágenes carguen y pasar dimensiones correctas a turn()
-    const flipbookEl = this.shadow.querySelector(".flipbook");
-    const imgs = Array.from(flipbookEl.querySelectorAll("img"));
+    // aplicar estilos mínimos para mantener centrado/responsive (no reemplaza tu CSS original)
+    const styleId = "menutech-inline-style";
+    if (!document.getElementById(styleId)) {
+      const s = document.createElement("style");
+      s.id = styleId;
+      s.textContent = `
+        menutech-menu { display:flex; justify-content:center; align-items:center; width:100%; }
+        .flipbook-viewport { overflow:hidden; width:100%; max-width:922px; margin:auto; }
+        .container { position:relative; padding:20px; margin:auto; text-align:center; left:0; right:0; }
+        .flipbook { width:922px; height:700px; margin-top:50px; }
+        .flipbook img { width:100%; height:auto; display:block; -webkit-user-select:none; user-select:none; }
+        @media (max-width:992px) {
+          .flipbook { width:100%; height:auto; margin-top:10px; }
+        }
+      `;
+      document.head.appendChild(s);
+    }
 
-    const loadAllImages = (images) => {
-      return Promise.all(images.map(img => {
+    // iniciar flipbook (asegurando librerías y esperando imágenes)
+    this.initFlipbook();
+  }
+
+  async initFlipbook() {
+    try {
+      await this.ensureJQueryAndTurn();
+
+      const flipbook = this.querySelector(".flipbook");
+      const imgs = Array.from(flipbook.querySelectorAll("img"));
+
+      await Promise.all(imgs.map(img => {
         if (img.complete && img.naturalWidth) return Promise.resolve();
-        return new Promise((res) => {
+        return new Promise(res => {
           img.onload = () => res();
-          img.onerror = () => res(); // no romper si falla una imagen
+          img.onerror = () => res();
         });
       }));
-    };
 
-    loadAllImages(imgs).then(() => {
-      // calcula ancho disponible (el ancho real que ocupará el "flipbook-viewport")
-      // usamos el host width (max 922 según tu css) para que sea responsive
-      const viewport = this.shadow.querySelector(".flipbook-viewport");
-      const computedWidth = Math.min(922, viewport.getBoundingClientRect().width || 922);
-
-      // calcula altura basada en la proporción original 922x700 (tu CSS original)
-      const aspectRatio = 700 / 922;
-      const computedHeight = Math.round(computedWidth * aspectRatio);
-
-      // aplica tamaño fijo al contenedor usado por turn.js para que calcule correctamente
-      flipbookEl.style.width = computedWidth + "px";
-      flipbookEl.style.height = computedHeight + "px";
-
-      // Si quieres ver 2 páginas a la vez (ancho total 922 en tu diseño original),
-      // pasa width = computedWidth (ya es el total) y height = computedHeight.
-      // Número de páginas = cantidad de imgs
-      const $ = window.jQuery;
-      // Aseguramos que el plugin esté listado y no reiniciamos si ya está inicializado
-      if ($ && typeof $.fn.turn === "function" && !$(flipbookEl).data("turn-initialized")) {
-        $(flipbookEl).turn({
-          width: computedWidth,
-          height: computedHeight,
-          autoCenter: true
-        });
-        // marca inicializado para evitar doble init
-        $(flipbookEl).data("turn-initialized", true);
-      } else {
-        // fallback: si el plugin no existe, dejamos las imágenes visibles (ya cargadas)
-        console.warn("turn.js no está disponible o ya inicializado");
+      // si ya está inicializado, destruimos antes (evita doble init en hot-reload)
+      const $flip = window.jQuery(flipbook);
+      if ($flip.data && $flip.data("turn-initialized")) {
+        try { $flip.turn("destroy"); } catch(e){/* ignorar */ }
+        $flip.data("turn-initialized", false);
       }
 
-      // manejamos resize para que sea responsive: recalcula y actualiza turn()
+      // inicializa turn exactamente como lo usabas (no modifico opciones)
+      $flip.turn({
+        width: flipbook.clientWidth || 922,
+        height: flipbook.clientHeight || 700,
+        autoCenter: true,
+        acceleration: true,
+        gradients: true,
+        elevation: 50
+      });
+
+      $flip.data("turn-initialized", true);
+
+      // resize responsivo: recalcula tamaño con la misma lógica que tu CSS (simple)
       const onResize = () => {
-        const newW = Math.min(922, viewport.getBoundingClientRect().width || 922);
-        const newH = Math.round(newW * aspectRatio);
-        flipbookEl.style.width = newW + "px";
-        flipbookEl.style.height = newH + "px";
-        if ($ && typeof $.fn.turn === "function") {
-          // actualiza dimensiones del flipbook
-          $(flipbookEl).turn("size", newW, newH);
-        }
+        const viewportWidth = Math.min(922, this.getBoundingClientRect().width || window.innerWidth);
+        // mantener proporción original 922:700
+        const newW = Math.max(320, viewportWidth);
+        const newH = Math.round(newW * (700 / 922));
+        flipbook.style.width = newW + "px";
+        flipbook.style.height = newH + "px";
+        try { $flip.turn("size", newW, newH); } catch(e){/* ignore */ }
       };
 
-      // Debounce simple del resize
-      let rt;
-      window.addEventListener("resize", () => {
-        clearTimeout(rt);
-        rt = setTimeout(onResize, 120);
-      });
+      window.addEventListener("resize", onResize);
+      onResize();
+
+    } catch (err) {
+      console.error("MenutechMenu init error:", err);
+    }
+  }
+
+  ensureJQueryAndTurn() {
+    return new Promise(async (resolve, reject) => {
+      // si jQuery no existe, carga desde CDN (solo una vez)
+      if (!window.jQuery) {
+        await this.loadScriptOnce("https://code.jquery.com/jquery-3.7.1.min.js", "menutech-jquery");
+      }
+      // luego carga turn.js si no existe
+      if (!window.jQuery.fn.turn) {
+        await this.loadScriptOnce("https://menutech.biz/m10/assets/js/turn.js", "menutech-turn");
+      }
+      // un pequeño delay para asegurar que el plugin se registre
+      setTimeout(resolve, 50);
+    });
+  }
+
+  loadScriptOnce(src, id) {
+    return new Promise((resolve, reject) => {
+      if (document.querySelector(`script[src="${src}"]`) || (id && document.getElementById(id))) return resolve();
+      const s = document.createElement("script");
+      if (id) s.id = id;
+      s.src = src;
+      s.onload = () => resolve();
+      s.onerror = () => reject(new Error("Failed to load " + src));
+      document.head.appendChild(s);
     });
   }
 }
@@ -1607,6 +1641,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
