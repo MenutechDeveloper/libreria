@@ -65,14 +65,12 @@ class MenutechMenu extends HTMLElement {
 
         .flipbook {
           position: relative;
-          width: 800px;  /* base size */
-          height: 566px; /* A4 proporción */
+          width: 922px;  /* base size */
+          height: 700px; /* A4 proporción */
         }
 
         .flipbook img {
           width: 100%;
-          height: 100%;
-          object-fit: cover;
         }
 
         @media (max-width: 900px) {
@@ -1630,6 +1628,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
