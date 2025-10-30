@@ -2,213 +2,85 @@
  * MENUTECH MENU
  ******************************/
 class MenutechMenu extends HTMLElement {
-  static get observedAttributes() { return ["images"]; }
-
   constructor() {
     super();
-    // NO shadow DOM para el flipbook (lo dejamos en light DOM para que turn.js funcione igual que siempre)
+    this.attachShadow({ mode: "open" });
   }
 
   connectedCallback() {
-    this.render();
-  }
+    // Estructura HTML del flipbook
+    this.shadowRoot.innerHTML = `
+      <link rel="stylesheet" href="https://menutech.biz/m10/assets/css/flipsolo.css">
+      <style>
+        /* Asegura aislamiento visual y centrado */
+        :host {
+          display: block;
+          width: 100%;
+          height: auto;
+          overflow: hidden;
+          text-align: center;
+        }
+        .flipbook-viewport {
+          margin: auto;
+        }
+      </style>
 
-  attributeChangedCallback() {
-    this.render();
-  }
-
-  render() {
-    // Si ya renderizamos una vez, limpiamos antes
-    this.innerHTML = "";
-
-    // asegúrate de tener el CSS global de turn.js (solo una vez)
-    if (!document.querySelector('link[data-menutech="flipsolo"]')) {
-      const link = document.createElement("link");
-      link.rel = "stylesheet";
-      link.href = "https://menutech.biz/m10/assets/css/flipsolo.css";
-      link.setAttribute("data-menutech", "flipsolo");
-      document.head.appendChild(link);
-    }
-
-    // obtener imágenes desde atributo o usar por defecto
-    const imagesAttr = this.getAttribute("images");
-    const images = imagesAttr
-      ? imagesAttr.split(",").map(u => u.trim())
-      : [
-          "https://vikingantonio.github.io/cabanamenu/assets/img/1.jpg",
-          "https://vikingantonio.github.io/cabanamenu/assets/img/2.jpg",
-          "https://vikingantonio.github.io/cabanamenu/assets/img/3.jpg",
-          "https://vikingantonio.github.io/cabanamenu/assets/img/4.jpg",
-          "https://vikingantonio.github.io/cabanamenu/assets/img/5.jpg",
-          "https://vikingantonio.github.io/cabanamenu/assets/img/6.jpg",
-          "https://vikingantonio.github.io/cabanamenu/assets/img/7.jpg",
-          "https://vikingantonio.github.io/cabanamenu/assets/img/8.jpg",
-          "https://vikingantonio.github.io/cabanamenu/assets/img/9.jpg",
-          "https://vikingantonio.github.io/cabanamenu/assets/img/10.jpg",
-          "https://vikingantonio.github.io/cabanamenu/assets/img/11.jpg",
-          "https://vikingantonio.github.io/cabanamenu/assets/img/12.jpg"
-        ];
-
-    // Construye HTML exactamente como tenías (en light DOM)
-    const wrapper = document.createElement("div");
-    wrapper.className = "flipbook-viewport";
-    wrapper.innerHTML = `
-      <div class="container">
-        <div class="flipbook">
-          ${images.map(s => `<img src="${s}" />`).join("")}
+      <div class="flipbook-viewport">
+        <div class="container">
+          <div class="flipbook">
+            <img src="https://vikingantonio.github.io/cabanamenu/assets/img/1.jpg"/>
+            <img src="https://vikingantonio.github.io/cabanamenu/assets/img/2.jpg"/>
+            <img src="https://vikingantonio.github.io/cabanamenu/assets/img/3.jpg"/>
+            <img src="https://vikingantonio.github.io/cabanamenu/assets/img/4.jpg"/>
+            <img src="https://vikingantonio.github.io/cabanamenu/assets/img/5.jpg"/>
+            <img src="https://vikingantonio.github.io/cabanamenu/assets/img/6.jpg"/>
+            <img src="https://vikingantonio.github.io/cabanamenu/assets/img/7.jpg"/>
+            <img src="https://vikingantonio.github.io/cabanamenu/assets/img/8.jpg"/>
+            <img src="https://vikingantonio.github.io/cabanamenu/assets/img/9.jpg"/>
+            <img src="https://vikingantonio.github.io/cabanamenu/assets/img/10.jpg"/>
+            <img src="https://vikingantonio.github.io/cabanamenu/assets/img/11.jpg"/>
+            <img src="https://vikingantonio.github.io/cabanamenu/assets/img/12.jpg"/>
+          </div>
         </div>
       </div>
     `;
-    // añade el wrapper dentro de <menutech-menu> (light DOM)
-    this.appendChild(wrapper);
 
-    // aplicar estilos mínimos para mantener centrado/responsive (no reemplaza tu CSS original)
-    const styleId = "menutech-inline-style";
-    if (!document.getElementById(styleId)) {
-      const s = document.createElement("style");
-      s.id = styleId;
-      s.textContent = `
-        menutech-menu {
-          display: block;
-          position: relative;
-          width: 100%;
-          padding: 60px 0;
-          box-sizing: border-box;
-        }
-
-        .flipbook-viewport {
-          position: relative;
-          width: 100%;
-          max-width: 922px;
-          margin: 0 auto;
-          overflow: hidden;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-        }
-
-        .flipbook-viewport .container {
-          position: relative;
-          width: 100%;
-          text-align: center;
-          padding: 20px;
-          margin: auto;
-        }
-
-        .flipbook {
-          position: absolute;
-          top: 0;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 922px;
-          height: 700px;
-        }
-
-        .flipbook img {
-          width: 100%;
-          height: auto;
-          display: block;
-          -webkit-user-select: none;
-          user-select: none;
-        }
-
-        @media (max-width: 992px) {
-          .flipbook {
-            width: 95%;
-            height: auto;
-            left: auto;
-            right: 0;
-            transform: none;
-          }
-        }
-      `;
-      document.head.appendChild(s);
-    }
-
-    // iniciar flipbook (asegurando librerías y esperando imágenes)
-    this.initFlipbook();
+    this.loadScripts();
   }
 
-  async initFlipbook() {
-    try {
-      await this.ensureJQueryAndTurn();
+  async loadScripts() {
+    // Evita conflictos si jQuery o turn.js ya existen
+    const load = src => new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = src;
+      script.onload = resolve;
+      script.onerror = reject;
+      this.shadowRoot.appendChild(script);
+    });
 
-      const flipbook = this.querySelector(".flipbook");
-      const imgs = Array.from(flipbook.querySelectorAll("img"));
+    // Carga jQuery y turn.js dentro del shadow DOM
+    await load("https://code.jquery.com/jquery-3.6.0.min.js");
+    await load("https://menutech.biz/m10/assets/js/turn.js");
 
-      await Promise.all(imgs.map(img => {
-        if (img.complete && img.naturalWidth) return Promise.resolve();
-        return new Promise(res => {
-          img.onload = () => res();
-          img.onerror = () => res();
-        });
-      }));
+    // Inicializa flipbook
+    const $ = this.shadowRoot.querySelector("script[src*='jquery']")
+      ? this.shadowRoot.querySelector("script[src*='jquery']").ownerDocument.defaultView.jQuery
+      : window.jQuery;
 
-      // si ya está inicializado, destruimos antes (evita doble init en hot-reload)
-      const $flip = window.jQuery(flipbook);
-      if ($flip.data && $flip.data("turn-initialized")) {
-        try { $flip.turn("destroy"); } catch(e){/* ignorar */ }
-        $flip.data("turn-initialized", false);
-      }
+    const flipbook = this.shadowRoot.querySelector(".flipbook");
 
-      // inicializa turn exactamente como lo usabas (no modifico opciones)
-      $flip.turn({
-        width: flipbook.clientWidth || 922,
-        height: flipbook.clientHeight || 700,
-        autoCenter: true,
-        acceleration: true,
-        gradients: true,
-        elevation: 50
+    if (flipbook && $) {
+      $(flipbook).turn({
+        width: 922,
+        height: 700,
+        autoCenter: true
       });
-
-      $flip.data("turn-initialized", true);
-
-      // resize responsivo
-      const onResize = () => {
-        const viewportWidth = Math.min(922, this.getBoundingClientRect().width || window.innerWidth);
-        const newW = Math.max(320, viewportWidth);
-        const newH = Math.round(newW * (700 / 922));
-        flipbook.style.width = newW + "px";
-        flipbook.style.height = newH + "px";
-        try { $flip.turn("size", newW, newH); } catch(e){/* ignore */ }
-      };
-
-      window.addEventListener("resize", onResize);
-      onResize();
-
-    } catch (err) {
-      console.error("MenutechMenu init error:", err);
     }
-  }
-
-  ensureJQueryAndTurn() {
-    return new Promise(async (resolve, reject) => {
-      // si jQuery no existe, carga desde CDN (solo una vez)
-      if (!window.jQuery) {
-        await this.loadScriptOnce("https://code.jquery.com/jquery-3.7.1.min.js", "menutech-jquery");
-      }
-      // luego carga turn.js si no existe
-      if (!window.jQuery.fn.turn) {
-        await this.loadScriptOnce("https://menutech.biz/m10/assets/js/turn.js", "menutech-turn");
-      }
-      setTimeout(resolve, 50);
-    });
-  }
-
-  loadScriptOnce(src, id) {
-    return new Promise((resolve, reject) => {
-      if (document.querySelector(`script[src="${src}"]`) || (id && document.getElementById(id))) return resolve();
-      const s = document.createElement("script");
-      if (id) s.id = id;
-      s.src = src;
-      s.onload = () => resolve();
-      s.onerror = () => reject(new Error("Failed to load " + src));
-      document.head.appendChild(s);
-    });
   }
 }
 
 customElements.define("menutech-menu", MenutechMenu);
+
 
 
 
@@ -1689,6 +1561,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
