@@ -2,22 +2,17 @@
  * MENUTECH MENU
  ******************************/
 class MenutechMenu extends HTMLElement {
+  static get observedAttributes() {
+    return ["images"];
+  }
+
   constructor() {
     super();
     this.shadow = this.attachShadow({ mode: "open" });
   }
 
-  static get observedAttributes() {
-    return ["images"];
-  }
-
-  connectedCallback() {
-    this.render();
-  }
-
-  attributeChangedCallback() {
-    this.render();
-  }
+  connectedCallback() { this.render(); }
+  attributeChangedCallback() { this.render(); }
 
   render() {
     const imagesAttr = this.getAttribute("images");
@@ -48,12 +43,16 @@ class MenutechMenu extends HTMLElement {
           justify-content: center;
           align-items: center;
           width: 100%;
-          min-height: 100vh;
-          box-sizing: border-box;
+           min-height: 100vh;
           overflow: hidden;
           position: relative;
-          padding: 20px;
-          background: transparent;
+        }
+
+        .menu1 {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          width: 100%;
         }
 
         .flipbook-viewport {
@@ -61,27 +60,23 @@ class MenutechMenu extends HTMLElement {
           justify-content: center;
           align-items: center;
           width: 100%;
-          height: 100%;
           position: relative;
           perspective: 2000px;
-          overflow: hidden;
         }
 
         .flipbook {
           position: relative;
-          width: 800px;   /* base size */
-          height: 700px;  /* A4 proporción */
+          width: 800px;  /* base size */
+          height: 566px; /* A4 proporción */
         }
 
         .flipbook img {
           width: 100%;
-          
+          height: 100%;
+          object-fit: cover;
         }
 
         @media (max-width: 900px) {
-          :host {
-            padding: 10px;
-          }
           .flipbook {
             width: 90vw;
             height: calc(90vw / 1.414);
@@ -89,9 +84,11 @@ class MenutechMenu extends HTMLElement {
         }
       </style>
 
-      <div class="flipbook-viewport">
-        <div class="flipbook">
-          ${imagesHTML}
+      <div class="menu1">
+        <div class="flipbook-viewport">
+          <div class="flipbook">
+            ${imagesHTML}
+          </div>
         </div>
       </div>
     `;
@@ -105,9 +102,10 @@ class MenutechMenu extends HTMLElement {
 
     if (window.$ && typeof $(flipbook).turn === "function") {
       const setSize = () => {
+        // calcular tamaño real según viewport
         const maxWidth = Math.min(window.innerWidth * 0.9, 800);
         const width = Math.max(320, maxWidth);
-        const height = width / 1.414;
+        const height = width / 1.414; // proporción tipo A4
         $(flipbook).turn("size", width, height);
         flipbook.style.width = `${width}px`;
         flipbook.style.height = `${height}px`;
@@ -150,6 +148,7 @@ class MenutechMenu extends HTMLElement {
 }
 
 customElements.define("menutech-menu", MenutechMenu);
+
 
 
 
@@ -1632,6 +1631,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
