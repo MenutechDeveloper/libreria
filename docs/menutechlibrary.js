@@ -9,6 +9,8 @@ class MenutechMenu extends HTMLElement {
   constructor() {
     super();
     this.shadow = this.attachShadow({ mode: "open" });
+    this._globalStyleInjected = false;
+    this._resizeHandler = null;
   }
 
   connectedCallback() { this.render(); }
@@ -33,11 +35,24 @@ class MenutechMenu extends HTMLElement {
           "https://vikingantonio.github.io/cabanamenu/assets/img/12.jpg"
         ];
 
-    const imagesHTML = images.map(src => `<img src="${src}" />`).join("");
+    const imagesHTML = images.map(src => `<img src="${src}" alt="menu page" />`).join("");
+
+    // Inyectar estilo global mínimo una sola vez para evitar scroll-x no deseado.
+    if (!this._globalStyleInjected) {
+      const globalStyle = document.createElement("style");
+      globalStyle.id = "menutech-global-overflow-fix";
+      globalStyle.textContent = `
+        /* Evita scroll horizontal inesperado causado por el flipbook en móviles */
+        html, body {
+          overflow-x: hidden !important;
+        }
+      `;
+      document.head.appendChild(globalStyle);
+      this._globalStyleInjected = true;
+    }
 
     this.shadow.innerHTML = `
       <link rel="stylesheet" href="https://menutech.biz/m10/assets/css/flipsolo.css">
-      
       <style>
         :host {
           display: flex;
@@ -45,7 +60,9 @@ class MenutechMenu extends HTMLElement {
           align-items: center;
           width: 100%;
           min-height: 100vh;
-          overflow: hidden;
+          box-sizing: border-box;
+          /* ocultamos cualquier overflow horizontal dentro del componente */
+          overflow-x: hidden;
           position: relative;
         }
 
@@ -56,35 +73,47 @@ class MenutechMenu extends HTMLElement {
           align-items: center;
         }
 
+        /* viewport del flipbook: centrado y recorte para evitar overflow visual */
         .flipbook-viewport {
           width: 100%;
           display: flex;
           justify-content: center;
           align-items: center;
           perspective: 2000px;
-          padding: 20px;
+          padding: 12px;
           box-sizing: border-box;
+          overflow: hidden; /* importante */
         }
 
+        /* Flipbook base: usamos proporción A4 (1.414) */
         .flipbook {
-          width: 922px;
-          height: 700px;
+          width: 922px;        /* tamaño base de desktop */
+          height: 700px;       /* proporción aproximada A4 */
           max-width: 100%;
           max-height: calc(100vh - 40px);
+          margin: 0 auto;
+          box-sizing: border-box;
+          display: block;
         }
 
         .flipbook img {
           width: 100%;
           height: 100%;
-          object-fit: cover;
+          object-fit: cover; /* mantiene aspecto full page y recorta si hace falta */
+          display: block;
+          user-select: none;
+          -webkit-user-drag: none;
         }
 
-        /* ✅ Mejoras responsivas */
+        /* Ajustes responsivos */
+        @media (max-width: 1200px) {
+          .flipbook { max-height: calc(100vh - 60px); }
+        }
+
         @media (max-width: 992px) {
           .flipbook {
             width: 95vw;
-            height: calc(95vw / 1.414);
-            margin-top: 0;
+            height: calc(95vw / 1.414); /* mantiene proporción A4*/
           }
         }
 
@@ -92,14 +121,17 @@ class MenutechMenu extends HTMLElement {
           .flipbook {
             width: 100vw;
             height: calc(100vw / 1.414);
+            margin-left: 0;
+            margin-right: 0;
           }
         }
 
-        @media (orientation: landscape) and (max-width: 800px){
+        /* landscape phones (evitar que se quede más alto que la pantalla) */
+        @media (orientation: landscape) and (max-width: 800px) {
           .flipbook {
-            max-height: 80vh;
-            width: auto;
-            height: auto;
+            height: calc(80vh);
+            width: calc(80vh * 1.414);
+            max-width: 100%;
           }
         }
       </style>
@@ -120,36 +152,87 @@ class MenutechMenu extends HTMLElement {
     await this.loadTurnJs();
     const flipbook = this.shadow.querySelector(".flipbook");
 
-    if (window.$ && typeof $(flipbook).turn === "function") {
-      const setSize = () => {
-        const vw = window.innerWidth;
-        const vh = window.innerHeight;
-
-        let width = Math.min(vw * 0.95, 922);
-        let height = width / 1.414;
-
-        if (height > vh * 0.85) {
-          height = vh * 0.85;
-          width = height * 1.414;
-        }
-
-        $(flipbook).turn("size", width, height);
-        flipbook.style.width = `${width}px`;
-        flipbook.style.height = `${height}px`;
-      };
-
-      $(flipbook).turn({
-        width: 922,
-        height: 700,
-        autoCenter: true,
-        acceleration: true,
-        gradients: true,
-        elevation: 50
-      });
-
-      setSize();
-      window.addEventListener("resize", setSize);
+    if (!window.$ || typeof $(flipbook).turn !== "function") {
+      // Si turn.js no está listo, no hacemos nada.
+      console.warn("turn.js no se cargó correctamente o jQuery falta.");
+      return;
     }
+
+    // función que calcula medidas estables respetando A4 y límites de viewport
+    const setSize = () => {
+      const vw = Math.max(document.documentElement.clientWidth || window.innerWidth, 320);
+      const vh = Math.max(document.documentElement.clientHeight || window.innerHeight, 240);
+
+      // Calculamos ancho ideal (un poco de margen lateral)
+      let width = Math.min(vw * 0.95, 922);
+      let height = width / 1.414; // proporción A4
+
+      // Si excede la altura de la ventana, ajustamos por altura
+      if (height > vh * 0.88) {
+        height = vh * 0.88;
+        width = height * 1.414;
+      }
+
+      // Nunca dejamos menos que un mínimo viable
+      width = Math.max(width, 320);
+      height = Math.max(height, 220);
+
+      try {
+        $(flipbook).turn("size", Math.round(width), Math.round(height));
+      } catch (e) {
+        // en caso de error con turn, al menos ajustamos el css del contenedor
+        console.warn("Error al setear size en turn.js:", e);
+      }
+
+      flipbook.style.width = `${Math.round(width)}px`;
+      flipbook.style.height = `${Math.round(height)}px`;
+    };
+
+    // Inicializamos turn con tamaños base razonables
+    $(flipbook).turn({
+      width: 922,
+      height: 700,
+      autoCenter: true,
+      acceleration: true,
+      gradients: true,
+      elevation: 50
+    });
+
+    // Handler de resize/orientation para recalcular tamaño
+    if (this._resizeHandler) {
+      window.removeEventListener("resize", this._resizeHandler);
+      window.removeEventListener("orientationchange", this._resizeHandler);
+    }
+    this._resizeHandler = () => {
+      // small delay para dejar que el navegador estabilice layout
+      setTimeout(() => setSize(), 40);
+    };
+
+    window.addEventListener("resize", this._resizeHandler);
+    window.addEventListener("orientationchange", this._resizeHandler);
+
+    // Reajuste inicial
+    setSize();
+
+    // Reajustamos también cuando Turn.js empieza a girar páginas y después de girar
+    // Esto evita efecto de "encogimiento" o desplazamiento al hacer page flip.
+    $(flipbook).bind("turning", (e, page, view) => {
+      // fuerza un recálculo rápido
+      setTimeout(setSize, 30);
+    });
+    $(flipbook).bind("turned", (e, page, view) => {
+      setTimeout(setSize, 30);
+      // re-centra si fuera necesario
+      try { $(flipbook).turn("center"); } catch (err) { /* noop */ }
+    });
+
+    // También un fallback: si el usuario hace scroll horizontal por algún motivo, lo bloqueamos dentro del componente
+    flipbook.addEventListener("touchmove", (ev) => {
+      // evita desplazamiento lateral dentro del flipbook
+      if (Math.abs(ev.touches[0].clientX - (ev.touches[0].clientX || 0)) > 5) {
+        ev.stopPropagation();
+      }
+    }, {passive: false});
   }
 
   async loadTurnJs() {
@@ -163,16 +246,25 @@ class MenutechMenu extends HTMLElement {
 
   loadScript(src) {
     return new Promise((resolve, reject) => {
+      // si ya existe el script con la misma src no lo cargamos doble
+      const exists = Array.from(document.scripts).some(s => s.src && s.src.indexOf(src) !== -1);
+      if (exists) return resolve();
+
       const script = document.createElement("script");
       script.src = src;
-      script.onload = resolve;
-      script.onerror = reject;
+      script.async = false;
+      script.onload = () => resolve();
+      script.onerror = (e) => {
+        console.error("Error cargando script", src, e);
+        reject(e);
+      };
       document.head.appendChild(script);
     });
   }
 }
 
 customElements.define("menutech-menu", MenutechMenu);
+
 
 
 
@@ -1656,6 +1748,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
