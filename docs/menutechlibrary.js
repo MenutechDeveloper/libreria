@@ -6,16 +6,17 @@ class MenutechMenu extends HTMLElement {
 
   constructor() {
     super();
-    // NO shadow DOM para el flipbook
+    // NO shadow DOM para que turn.js funcione
   }
 
   connectedCallback() { this.render(); }
   attributeChangedCallback() { this.render(); }
 
   render() {
+    // Limpiar antes de renderizar
     this.innerHTML = "";
 
-    // cargar CSS flipsolo solo una vez
+    // cargar flipsolo.css solo una vez
     if (!document.querySelector('link[data-menutech="flipsolo"]')) {
       const link = document.createElement("link");
       link.rel = "stylesheet";
@@ -24,6 +25,7 @@ class MenutechMenu extends HTMLElement {
       document.head.appendChild(link);
     }
 
+    // obtener imágenes
     const imagesAttr = this.getAttribute("images");
     const images = imagesAttr
       ? imagesAttr.split(",").map(u => u.trim())
@@ -33,9 +35,16 @@ class MenutechMenu extends HTMLElement {
           "https://vikingantonio.github.io/cabanamenu/assets/img/3.jpg",
           "https://vikingantonio.github.io/cabanamenu/assets/img/4.jpg",
           "https://vikingantonio.github.io/cabanamenu/assets/img/5.jpg",
-          "https://vikingantonio.github.io/cabanamenu/assets/img/6.jpg"
+          "https://vikingantonio.github.io/cabanamenu/assets/img/6.jpg",
+          "https://vikingantonio.github.io/cabanamenu/assets/img/7.jpg",
+          "https://vikingantonio.github.io/cabanamenu/assets/img/8.jpg",
+          "https://vikingantonio.github.io/cabanamenu/assets/img/9.jpg",
+          "https://vikingantonio.github.io/cabanamenu/assets/img/10.jpg",
+          "https://vikingantonio.github.io/cabanamenu/assets/img/11.jpg",
+          "https://vikingantonio.github.io/cabanamenu/assets/img/12.jpg"
         ];
 
+    // construir HTML
     const wrapper = document.createElement("div");
     wrapper.className = "flipbook-viewport";
     wrapper.innerHTML = `
@@ -47,58 +56,61 @@ class MenutechMenu extends HTMLElement {
     `;
     this.appendChild(wrapper);
 
-    // estilos mínimos para centrado y responsive
+    // estilos adicionales para centrado/responsive
     const styleId = "menutech-inline-style";
     if (!document.getElementById(styleId)) {
       const s = document.createElement("style");
       s.id = styleId;
       s.textContent = `
-        menutech-menu { 
-          display:flex; 
-          justify-content:center; 
-          align-items:center; 
-          width:100%; 
-          overflow-x:hidden; 
+        menutech-menu {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          width: 100%;
+          overflow-x: hidden; /* evita scroll horizontal */
         }
-        .flipbook-viewport { 
-          overflow:hidden; 
-          width:100%; 
-          max-width:922px; 
-          margin:auto; 
+        menutech-menu .flipbook-viewport {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          overflow-x: hidden;
+          width: 100%;
+          max-width: 922px;
+          margin: auto;
         }
-        .container { 
-          position:relative; 
-          padding:20px; 
-          margin:auto; 
-          text-align:center; 
-          left:0; 
-          right:0; 
+        menutech-menu .container {
+          position: relative;
+          padding: 20px;
+          margin: auto;
+          text-align: center;
+          left: 0;
+          right: 0;
         }
-        .flipbook { 
-          width:922px; 
-          height:700px; 
-          margin-top:50px; 
-          margin-left:auto; 
-          margin-right:auto; 
+        menutech-menu .flipbook {
+          width: 922px;
+          height: 700px;
+          margin: 50px auto 0 auto;
         }
-        .flipbook img { 
-          width:100%; 
-          height:auto; 
-          display:block; 
-          -webkit-user-select:none; 
-          user-select:none; 
+        menutech-menu .flipbook img {
+          width: 100%;
+          height: auto;
+          display: block;
+          -webkit-user-select: none;
+          user-select: none;
+          -webkit-user-drag: none;
         }
-        @media (max-width:992px) {
-          .flipbook { 
-            width:95%; 
-            height:auto; 
-            margin-top:10px; 
+        @media (max-width: 992px) {
+          menutech-menu .flipbook {
+            width: 95%;
+            height: auto;
+            margin-top: 10px;
           }
         }
       `;
       document.head.appendChild(s);
     }
 
+    // inicializar turn.js
     this.initFlipbook();
   }
 
@@ -108,6 +120,7 @@ class MenutechMenu extends HTMLElement {
       const flipbook = this.querySelector(".flipbook");
       const imgs = Array.from(flipbook.querySelectorAll("img"));
 
+      // esperar a que todas las imágenes carguen
       await Promise.all(imgs.map(img => {
         if (img.complete && img.naturalWidth) return Promise.resolve();
         return new Promise(res => { img.onload = img.onerror = () => res(); });
@@ -130,6 +143,7 @@ class MenutechMenu extends HTMLElement {
 
       $flip.data("turn-initialized", true);
 
+      // resize responsivo
       const onResize = () => {
         const viewportWidth = Math.min(922, this.getBoundingClientRect().width || window.innerWidth);
         const newW = Math.max(320, viewportWidth);
@@ -173,6 +187,7 @@ class MenutechMenu extends HTMLElement {
 }
 
 customElements.define("menutech-menu", MenutechMenu);
+
 
 
 
@@ -1649,6 +1664,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
