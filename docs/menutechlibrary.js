@@ -61,6 +61,7 @@ class MenutechMenu extends HTMLElement {
           justify-content: center;
           align-items: center;
           width: 100%;
+          height: 100%;
           position: relative;
           perspective: 2000px;
           overflow: hidden;
@@ -1633,6 +1634,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
