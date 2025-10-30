@@ -39,77 +39,59 @@ class MenutechMenu extends HTMLElement {
       <link rel="stylesheet" href="https://menutech.biz/m10/assets/css/flipsolo.css">
       <style>
         :host {
-          display: block;
-          width: 100%;
-          box-sizing: border-box;
-          padding: 60px 0; /* separacion arriba/abajo, ajusta si quieres 0 */
-          background: transparent;
-        }
-
-        /* estructura que pediste: .flipbook-viewport > .container > .flipbook */
-        .flipbook-viewport {
-          width: 100%;
           display: flex;
           justify-content: center;
           align-items: center;
+          width: 100%;
           box-sizing: border-box;
+          overflow: hidden;
+          padding: 20px 0;
+        }
+
+        .flipbook-viewport {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          width: 100%;
+          overflow: hidden;
           perspective: 2000px;
-          overflow: visible; /* importante: no ocultar canvas internos de turn.js */
         }
 
         .container {
-          width: 100%;
           display: flex;
           justify-content: center;
           align-items: center;
+          width: 100%;
         }
 
-        /* visual baseline: esta representa el ancho de UNA PAGINA (single) */
         .flipbook {
-          position: relative;
-          width: clamp(300px, 45vw, 420px); /* ancho de UNA página */
-          height: calc(clamp(300px, 45vw, 420px) * 1.414); /* A4 portrait ratio */
-          margin: 0 auto;
+          width: 800px;
+          height: 566px; /* proporción tipo A4 */
+          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+          border-radius: 10px;
+          overflow: hidden;
           background: #fff;
-          box-shadow: 0 12px 36px rgba(0,0,0,0.18);
-          border-radius: 6px;
-          overflow: visible;
         }
 
         .flipbook img {
           width: 100%;
           height: 100%;
-          object-fit: contain; /* evita distorsión */
+          object-fit: contain;
           display: block;
-          user-select: none;
-          -webkit-user-drag: none;
-          border-radius: 6px;
         }
 
-        /* Forzar que las páginas que genera turn.js no se posicionen fuera del flujo */
-        .flipbook .page,
-        .flipbook .page-wrapper,
-        .flipbook .turn-page,
-        .flipbook canvas {
-          position: relative !important;
-          left: auto !important;
-          top: auto !important;
-          transform: none !important;
-          width: 100% !important;
-          height: 100% !important;
-          box-sizing: border-box !important;
-        }
-
-        /* Responsive breakpoints */
         @media (max-width: 900px) {
           .flipbook {
             width: 90vw;
-            height: calc(90vw * 1.414);
+            height: calc(90vw / 1.414);
           }
         }
-        @media (max-width: 480px) {
-          :host { padding: 40px 0; }
-          .flipbook { width: 95vw; height: calc(95vw * 1.414); border-radius:4px; }
+
+        @media (max-width: 600px) {
+          .flipbook {
+            width: 95vw;
+            height: calc(95vw / 1.414);
+          }
         }
       </style>
 
@@ -128,46 +110,10 @@ class MenutechMenu extends HTMLElement {
   async initFlipbook() {
     await this.loadTurnJs();
     const flipbook = this.shadow.querySelector(".flipbook");
-
     if (window.$ && typeof $(flipbook).turn === "function") {
-      const computeSingleSize = () => {
-        const vw = Math.max(document.documentElement.clientWidth || window.innerWidth, 320);
-        // decide ancho de una página (single). Limítalo para que no sea gigante.
-        const singlePageWidth = Math.min(Math.max(vw * 0.45, 300), 420);
-        const height = Math.round(singlePageWidth * 1.414);
-        return { singlePageWidth, height };
-      };
-
-      const setSizeSingle = () => {
-        const { singlePageWidth, height } = computeSingleSize();
-        // turn.js en modo 'single' espera width = ancho de UNA pagina
-        try {
-          $(flipbook).turn("size", singlePageWidth, height);
-        } catch (e) {
-          // ignore si aún no está listo
-        }
-        flipbook.style.width = `${singlePageWidth}px`;
-        flipbook.style.height = `${height}px`;
-      };
-
-      // inicializar en modo single (una sola página visible) — evita doble-ancho
-      $(flipbook).turn({
-        width: 400,  // placeholder, lo reemplazamos con setSizeSingle()
-        height: 566,
-        display: "single",       // <- clave: mostrar SOLO 1 página
-        autoCenter: true,
-        acceleration: true,
-        gradients: true,
-        elevation: 50
-      });
-
-      // espera corto para asegurar que turn.js haya creado su estructura interna
-      setTimeout(setSizeSingle, 40);
-
-      // re-ajustar en resize
-      window.addEventListener("resize", setSizeSingle);
+      $(flipbook).turn();
     } else {
-      console.warn("turn.js no se cargó correctamente o falta jQuery.");
+      console.warn("turn.js no se cargó correctamente.");
     }
   }
 
@@ -182,16 +128,17 @@ class MenutechMenu extends HTMLElement {
 
   loadScript(src) {
     return new Promise((resolve, reject) => {
-      const s = document.createElement("script");
-      s.src = src;
-      s.onload = resolve;
-      s.onerror = reject;
-      document.head.appendChild(s);
+      const script = document.createElement("script");
+      script.src = src;
+      script.onload = resolve;
+      script.onerror = reject;
+      document.head.appendChild(script);
     });
   }
 }
 
 customElements.define("menutech-menu", MenutechMenu);
+
 
 
 
@@ -1669,6 +1616,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
