@@ -7,8 +7,30 @@ class MenutechMenu extends HTMLElement {
     this.shadow = this.attachShadow({ mode: "open" });
   }
 
-  connectedCallback() {
+  async connectedCallback() {
+    await this.ensureLibraries();
     this.render();
+  }
+
+  async ensureLibraries() {
+    // Carga un script externo si no existe
+    const loadScript = (src) =>
+      new Promise((resolve, reject) => {
+        if (document.querySelector(`script[src="${src}"]`)) return resolve();
+        const s = document.createElement("script");
+        s.src = src;
+        s.onload = resolve;
+        s.onerror = reject;
+        document.head.appendChild(s);
+      });
+
+    // Cargar jQuery y Turn.js si no existen
+    if (!window.jQuery) {
+      await loadScript("https://menutech.biz/m10/assets/js/jquery.js");
+    }
+    if (!window.jQuery.fn.turn) {
+      await loadScript("https://menutech.biz/m10/assets/js/turn.js");
+    }
   }
 
   render() {
@@ -96,29 +118,15 @@ class MenutechMenu extends HTMLElement {
           </div>
         </div>
       </div>
-
-      <script src="https://menutech.biz/m10/assets/js/jquery.js"></script>
-      <script src="https://menutech.biz/m10/assets/js/turn.js"></script>
     `;
 
-    // Inicializa el flipbook cuando jQuery y Turn.js estén listos
-    const checkReady = () => {
-      const $ = this.shadow.querySelector
-        ? window.jQuery
-        : null;
-      if ($ && typeof $.fn.turn === "function") {
-        $(this.shadow.querySelector(".flipbook")).turn();
-      } else {
-        setTimeout(checkReady, 200);
-      }
-    };
-    checkReady();
+    // Inicializar flipbook una vez renderizado
+    const $ = window.jQuery;
+    $(this.shadow.querySelector(".flipbook")).turn();
   }
 }
 
 customElements.define("menutech-menu", MenutechMenu);
-
-
 
 
 
@@ -1602,6 +1610,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
