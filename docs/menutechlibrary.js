@@ -1230,6 +1230,7 @@ class MenuTechCarrusel extends HTMLElement {
   }
 
   connectedCallback() {
+    // ====== ESTRUCTURA HTML ======
     if (!this.querySelector('.menus')) {
       const container = document.createElement('div');
       container.classList.add('menus');
@@ -1255,6 +1256,7 @@ class MenuTechCarrusel extends HTMLElement {
       this.appendChild(popup);
     }
 
+    // ====== ESTILOS ======
     if (!document.getElementById('menutech-carrusel-style')) {
       const style = document.createElement('style');
       style.id = 'menutech-carrusel-style';
@@ -1267,7 +1269,9 @@ class MenuTechCarrusel extends HTMLElement {
           height: auto;
           box-sizing: border-box;
           padding: 40px 0;
+          overflow-x: hidden; /* 🔥 evita scroll lateral */
         }
+
         .swiper-container {
           width: 100%;
           max-width: 1000px;
@@ -1276,10 +1280,13 @@ class MenuTechCarrusel extends HTMLElement {
           justify-content: center;
           align-items: center;
         }
+
         .swiper-wrapper {
           display: flex;
           align-items: center;
+          overflow: hidden; /* 🔥 evita desbordamiento */
         }
+
         .swiper-slide {
           background-position: center;
           background-size: cover;
@@ -1287,13 +1294,19 @@ class MenuTechCarrusel extends HTMLElement {
           justify-content: center;
           align-items: center;
           transition: transform 0.5s ease;
+          max-width: 90vw; /* 🔥 adapta al ancho de pantalla */
+          box-sizing: border-box;
         }
+
         .menus img {
           width: 100%;
+          height: auto;
           cursor: pointer;
           display: block;
           border-radius: 10px;
         }
+
+        /* ===== POPUP ===== */
         .popup {
           display: none;
           position: fixed;
@@ -1307,6 +1320,7 @@ class MenuTechCarrusel extends HTMLElement {
           align-items: center;
           overflow: hidden;
         }
+
         .popup-content {
           background: #fff;
           width: 80%;
@@ -1320,6 +1334,7 @@ class MenuTechCarrusel extends HTMLElement {
           align-items: center;
           flex-direction: column;
         }
+
         .popup-content iframe {
           width: 100%;
           max-width: 700px;
@@ -1328,6 +1343,7 @@ class MenuTechCarrusel extends HTMLElement {
           margin: auto;
           display: block;
         }
+
         .close {
           position: absolute;
           top: 8px;
@@ -1338,9 +1354,37 @@ class MenuTechCarrusel extends HTMLElement {
           cursor: pointer;
           z-index: 10;
         }
+
+        /* ===== MÓVIL ===== */
+        @media (max-width: 600px) {
+          menutech-carrusel {
+            padding: 20px 0;
+          }
+
+          .swiper-slide {
+            width: 80vw !important;
+            height: auto !important;
+            transform: none !important;
+          }
+
+          .swiper-container {
+            max-width: 100%;
+          }
+
+          .popup-content {
+            width: 95%;
+            height: 75%;
+          }
+
+          .popup-content iframe {
+            max-width: 100%;
+          }
+        }
       `;
       document.head.appendChild(style);
     }
+
+    // ====== SWIPER ======
     const loadSwiper = () => new Promise((resolve) => {
       if (window.Swiper) return resolve();
 
@@ -1354,6 +1398,7 @@ class MenuTechCarrusel extends HTMLElement {
       script.onload = () => resolve();
       document.head.appendChild(script);
     });
+
     const wrapper = this.querySelector('.swiper-wrapper');
     const imagesAttr = this.getAttribute('images');
     const width = this.getAttribute('slide-width') || '300px';
@@ -1371,9 +1416,14 @@ class MenuTechCarrusel extends HTMLElement {
       div.classList.add('swiper-slide');
       div.style.width = width;
       div.style.height = height;
+      div.style.maxWidth = "90vw";
+      div.style.maxHeight = "80vh";
+      div.style.boxSizing = "border-box";
       div.innerHTML = `<img src="${slide.src}" data-url="${slide.url || ''}">`;
       wrapper.appendChild(div);
     });
+
+    // ====== INICIALIZA SWIPER ======
     loadSwiper().then(() => {
       const container = this.querySelector('.swiper-container');
       const imgs = container.querySelectorAll('img');
@@ -1411,6 +1461,7 @@ class MenuTechCarrusel extends HTMLElement {
       });
     });
 
+    // ====== POPUP ======
     const popup = this.querySelector('#popup');
     const popupFrame = this.querySelector('#popupFrame');
     const closeBtn = this.querySelector('.close');
@@ -1449,6 +1500,7 @@ class MenuTechCarrusel extends HTMLElement {
 }
 
 customElements.define('menutech-carrusel', MenuTechCarrusel);
+
 
 
 
@@ -1653,6 +1705,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
