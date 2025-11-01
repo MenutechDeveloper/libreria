@@ -1223,14 +1223,12 @@ customElements.define('menutech-neomorphism', MenutechNeomorphism);
 // ==========================================================================
 // Menutech Carrusel
 // ==========================================================================
-
 class MenuTechCarrusel extends HTMLElement {
   constructor() {
     super();
   }
 
   connectedCallback() {
-    // ====== ESTRUCTURA HTML ======
     if (!this.querySelector('.menus')) {
       const container = document.createElement('div');
       container.classList.add('menus');
@@ -1256,7 +1254,6 @@ class MenuTechCarrusel extends HTMLElement {
       this.appendChild(popup);
     }
 
-    // ====== ESTILOS ======
     if (!document.getElementById('menutech-carrusel-style')) {
       const style = document.createElement('style');
       style.id = 'menutech-carrusel-style';
@@ -1284,7 +1281,6 @@ class MenuTechCarrusel extends HTMLElement {
         .swiper-wrapper {
           display: flex;
           align-items: center;
-          overflow: hidden; /* 🔥 evita desbordamiento */
         }
 
         .swiper-slide {
@@ -1294,19 +1290,16 @@ class MenuTechCarrusel extends HTMLElement {
           justify-content: center;
           align-items: center;
           transition: transform 0.5s ease;
-          max-width: 90vw; /* 🔥 adapta al ancho de pantalla */
-          box-sizing: border-box;
         }
 
         .menus img {
           width: 100%;
-          height: auto;
+          height: auto; /* 🔥 evita distorsión en móvil */
           cursor: pointer;
           display: block;
           border-radius: 10px;
         }
 
-        /* ===== POPUP ===== */
         .popup {
           display: none;
           position: fixed;
@@ -1355,36 +1348,33 @@ class MenuTechCarrusel extends HTMLElement {
           z-index: 10;
         }
 
-        /* ===== MÓVIL ===== */
-        @media (max-width: 600px) {
+        /* 🔥 Ajustes solo para móviles */
+        @media (max-width: 768px) {
           menutech-carrusel {
-            padding: 20px 0;
-          }
-
-          .swiper-slide {
-            width: 80vw !important;
-            height: auto !important;
-            transform: none !important;
+            overflow-x: hidden;
           }
 
           .swiper-container {
+            width: 100%;
             max-width: 100%;
+            overflow: hidden;
           }
 
-          .popup-content {
-            width: 95%;
-            height: 75%;
+          .swiper-slide {
+            max-width: 90vw;
+            height: auto !important;
           }
 
-          .popup-content iframe {
-            max-width: 100%;
+          .menus img {
+            width: 100%;
+            height: auto;
+            object-fit: contain; /* 🔥 asegura proporciones */
           }
         }
       `;
       document.head.appendChild(style);
     }
 
-    // ====== SWIPER ======
     const loadSwiper = () => new Promise((resolve) => {
       if (window.Swiper) return resolve();
 
@@ -1416,14 +1406,10 @@ class MenuTechCarrusel extends HTMLElement {
       div.classList.add('swiper-slide');
       div.style.width = width;
       div.style.height = height;
-      div.style.maxWidth = "90vw";
-      div.style.maxHeight = "80vh";
-      div.style.boxSizing = "border-box";
       div.innerHTML = `<img src="${slide.src}" data-url="${slide.url || ''}">`;
       wrapper.appendChild(div);
     });
 
-    // ====== INICIALIZA SWIPER ======
     loadSwiper().then(() => {
       const container = this.querySelector('.swiper-container');
       const imgs = container.querySelectorAll('img');
@@ -1461,7 +1447,6 @@ class MenuTechCarrusel extends HTMLElement {
       });
     });
 
-    // ====== POPUP ======
     const popup = this.querySelector('#popup');
     const popupFrame = this.querySelector('#popupFrame');
     const closeBtn = this.querySelector('.close');
@@ -1500,6 +1485,8 @@ class MenuTechCarrusel extends HTMLElement {
 }
 
 customElements.define('menutech-carrusel', MenuTechCarrusel);
+
+
 
 
 
@@ -1705,6 +1692,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
