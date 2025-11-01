@@ -10,13 +10,14 @@ class MenutechMenu extends HTMLElement {
     super();
     this.attachShadow({ mode: "open" });
 
+
     // ===== CSS =====
     const style = document.createElement("style");
     style.textContent = `
       :host {
         display: block;
         width: 100%;
-        margin: 40px 0;
+        margin: 40px 0; /* espacio con otros elementos */
         position: relative;
       }
 
@@ -28,6 +29,14 @@ class MenutechMenu extends HTMLElement {
         justify-content: center;
         align-items: center;
         position: relative; /* antes era absolute, ahora ya no */
+      }
+
+      @media (max-width: 992px) {
+        .flipbook-viewport {
+          width: 90%;
+          height: 90%;
+          display: block;
+        }
       }
 
       .flipbook-viewport .container {
@@ -44,6 +53,14 @@ class MenutechMenu extends HTMLElement {
         display: block;
       }
 
+      @media (max-width: 992px) {
+        .flipbook {
+          width: 100%;
+          height: 400px;
+          margin-top: 10px;
+        }
+      }
+
       .flipbook .page {
         box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
       }
@@ -52,21 +69,6 @@ class MenutechMenu extends HTMLElement {
         width: 100%;
         user-select: none;
         -webkit-user-select: none;
-      }
-
-      /* === Ajustes por resolución === */
-      @media (max-width: 992px) {
-        .flipbook-viewport {
-          width: 90%;
-          height: auto;
-          display: block;
-        }
-
-        .flipbook {
-          width: 100%;
-          height: auto;
-          margin-top: 10px;
-        }
       }
 
       /* Centrado para PC */
@@ -83,6 +85,7 @@ class MenutechMenu extends HTMLElement {
         }
       }
     `;
+
 
     // ===== HTML inicial =====
     const wrapper = document.createElement("div");
@@ -1642,6 +1645,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
