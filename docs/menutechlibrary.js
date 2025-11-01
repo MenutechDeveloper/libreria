@@ -1418,11 +1418,11 @@ class MenuTechCarrusel extends HTMLElement {
           loop: true,
           autoplay: { delay: 2500, disableOnInteraction: false },
           coverflowEffect: {
-            rotate: 40,
+             rotate: 15,
             stretch: 0,
-            depth: 150,
-            modifier: 1.5,
-            slideShadows: true,
+            depth: 100,
+            modifier: 1,
+            slideShadows: false,
           },
           pagination: {
             el: this.querySelector('.swiper-pagination'),
@@ -1683,6 +1683,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
