@@ -3,20 +3,20 @@
  ******************************/
 class MenutechMenu extends HTMLElement {
   static get observedAttributes() {
-    return ["imagenes", "flip-width", "flip-height"];
+    return ["imagenes"];
   }
 
   constructor() {
     super();
-    this.shadow = this.attachShadow({ mode: "open" });
+    const shadow = this.attachShadow({ mode: "open" });
 
-    // ===== CSS =====
+    // ===== CSS original (mantiene el responsive correcto) =====
     const style = document.createElement("style");
     style.textContent = `
       :host {
         display: block;
         width: 100%;
-        margin: 40px 0; /* espacio con otros elementos */
+        margin: 40px 0;
         position: relative;
       }
 
@@ -27,13 +27,13 @@ class MenutechMenu extends HTMLElement {
         display: flex;
         justify-content: center;
         align-items: center;
-        position: relative; /* antes era absolute, ahora ya no */
+        position: relative;
       }
 
       @media (max-width: 992px) {
         .flipbook-viewport {
           width: 90%;
-          height: 90%;
+          height: auto;
           display: block;
         }
       }
@@ -70,7 +70,6 @@ class MenutechMenu extends HTMLElement {
         -webkit-user-select: none;
       }
 
-      /* Centrado para PC */
       @media (min-width: 992px) {
         .flipbook-viewport {
           justify-content: center;
@@ -85,17 +84,17 @@ class MenutechMenu extends HTMLElement {
       }
     `;
 
-    // ===== HTML base =====
-    this.container = document.createElement("div");
-    this.container.classList.add("flipbook-viewport");
-    this.container.innerHTML = `
+    // ===== Estructura HTML =====
+    const container = document.createElement("div");
+    container.classList.add("flipbook-viewport");
+    container.innerHTML = `
       <div class="container">
         <div class="flipbook"></div>
       </div>
     `;
 
-    this.shadow.appendChild(style);
-    this.shadow.appendChild(this.container);
+    shadow.appendChild(style);
+    shadow.appendChild(container);
   }
 
   connectedCallback() {
@@ -108,15 +107,18 @@ class MenutechMenu extends HTMLElement {
   }
 
   render() {
-    const flipbook = this.shadow.querySelector(".flipbook");
+    const flipbook = this.shadowRoot.querySelector(".flipbook");
     if (!flipbook) return;
 
-    // Obtener atributos
-    const urls = (this.getAttribute("imagenes") || "").split(",").map(u => u.trim()).filter(Boolean);
-    const width = this.getAttribute("flip-width") || 922;
-    const height = this.getAttribute("flip-height") || 700;
+    // Obtener imágenes del atributo o usar predeterminadas
+    let urls = [];
+    try {
+      urls = JSON.parse(this.getAttribute("imagenes") || "[]");
+    } catch {
+      const raw = this.getAttribute("imagenes");
+      if (raw) urls = raw.split(",").map(u => u.trim());
+    }
 
-    // Si no hay imágenes personalizadas, usar las predeterminadas
     const imagesToUse = urls.length ? urls : [
       "https://vikingantonio.github.io/cabanamenu/assets/img/1.jpg",
       "https://vikingantonio.github.io/cabanamenu/assets/img/2.jpg",
@@ -132,43 +134,40 @@ class MenutechMenu extends HTMLElement {
       "https://vikingantonio.github.io/cabanamenu/assets/img/12.jpg"
     ];
 
-    // Asignar tamaño
-    flipbook.style.width = `${width}px`;
-    flipbook.style.height = `${height}px`;
-
-    // Renderizar las páginas (imágenes)
+    // Renderizar las imágenes
     flipbook.innerHTML = imagesToUse
       .map(src => `<img class="page" src="${src}" alt="page">`)
       .join("");
 
-    // Reiniciar el flipbook si turn.js ya está cargado
+    // Reiniciar flipbook si Turn.js ya está cargado
     if (window.jQuery && jQuery.fn.turn) {
-      jQuery(flipbook).turn("destroy").turn({ width, height });
+      jQuery(flipbook).turn("destroy").turn();
     }
   }
 
   ensureTurnJS() {
-    const loadTurn = () => {
+    const init = () => {
       if (window.jQuery && jQuery.fn.turn) {
-        const flipbook = this.shadow.querySelector(".flipbook");
+        const flipbook = this.shadowRoot.querySelector(".flipbook");
         jQuery(flipbook).turn();
       } else if (!window.jQuery) {
         const jq = document.createElement("script");
         jq.src = "https://code.jquery.com/jquery-3.6.0.min.js";
-        jq.onload = loadTurn;
+        jq.onload = init;
         document.head.appendChild(jq);
       } else {
         const turn = document.createElement("script");
         turn.src = "https://menutech.biz/m10/assets/js/turn.js";
-        turn.onload = loadTurn;
+        turn.onload = init;
         document.head.appendChild(turn);
       }
     };
-    loadTurn();
+    init();
   }
 }
 
 customElements.define("menutech-menu", MenutechMenu);
+
 
 
 
@@ -1654,6 +1653,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
