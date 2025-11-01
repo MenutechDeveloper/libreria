@@ -9,30 +9,43 @@ class MenutechMenu extends HTMLElement {
     // ===== CSS =====
     const style = document.createElement("style");
     style.textContent = `
+      :host {
+        display: block;
+        width: 100%;
+        margin: 40px 0; /* espacio con otros elementos */
+        position: relative;
+      }
+
       .flipbook-viewport {
         overflow: hidden;
         width: 100%;
         height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative; /* antes era absolute, ahora ya no */
       }
 
       @media (max-width: 992px) {
         .flipbook-viewport {
           width: 90%;
           height: 90%;
+          display: block;
         }
       }
 
       .flipbook-viewport .container {
-        position: absolute;
         padding: 20px;
-        margin: auto;
         text-align: center;
+        position: relative;
+        margin: 0 auto;
       }
 
       .flipbook {
         width: 922px;
         height: 700px;
-        margin-top: 50px;
+        margin: 0 auto;
+        display: block;
       }
 
       @media (max-width: 992px) {
@@ -43,20 +56,6 @@ class MenutechMenu extends HTMLElement {
         }
       }
 
-      .flipbook-viewport .page {
-        width: 461px;
-        height: 800px;
-        background-color: white;
-        background-repeat: no-repeat;
-        background-size: 100% 100%;
-      }
-
-      @media (max-width: 992px) {
-        .flipbook-viewport .page {
-          height: 400px;
-        }
-      }
-
       .flipbook .page {
         box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
       }
@@ -64,63 +63,20 @@ class MenutechMenu extends HTMLElement {
       .flipbook img {
         width: 100%;
         user-select: none;
+        -webkit-user-select: none;
       }
 
-      .menu1 {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-      }
-
-      @media (max-width: 992px) {
-        .menu1 {
-          display: block;
-          height: 400px;
+      /* Centrado para PC */
+      @media (min-width: 992px) {
+        .flipbook-viewport {
+          justify-content: center;
+          align-items: center;
         }
-      }
 
-      .misMenus {
-        display: flex;
-        flex-direction: row;
-      }
-
-      @media (max-width: 992px) {
-        .misMenus {
-          flex-direction: column;
-        }
-      }
-
-      .menu1 .mk {
-        text-align: center;
-        margin: auto;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-      }
-
-      .menu1 .flipbook-viewport {
-        width: 50%;
-      }
-
-      #modelo3d {
-        width: 100%;
-        height: 800px;
-        display: flex;
-        justify-content: space-evenly;
-        align-items: center;
-        flex-direction: row;
-        margin: auto;
-        background: #ffa500;
-        position: relative;
-      }
-
-      #modelo3d .flipbook-viewport {
-        width: 50%;
-      }
-
-      @media (max-width: 992px) {
-        #modelo3d {
-          flex-direction: column;
+        .container {
+          display: flex;
+          justify-content: center;
+          align-items: center;
         }
       }
     `;
@@ -152,20 +108,17 @@ class MenutechMenu extends HTMLElement {
   }
 
   connectedCallback() {
-    // Asegura que jQuery y turn.js estén disponibles
     const ensureTurnJS = () => {
       if (window.jQuery && jQuery.fn.turn) {
         const flipbook = this.shadowRoot.querySelector(".flipbook");
         jQuery(flipbook).turn();
       } else {
-        // Cargar jQuery si no está
         if (!window.jQuery) {
           const jq = document.createElement("script");
           jq.src = "https://code.jquery.com/jquery-3.6.0.min.js";
           jq.onload = ensureTurnJS;
           document.head.appendChild(jq);
         } else {
-          // Cargar turn.js si no está
           const turn = document.createElement("script");
           turn.src = "https://menutech.biz/m10/assets/js/turn.js";
           turn.onload = ensureTurnJS;
@@ -178,6 +131,7 @@ class MenutechMenu extends HTMLElement {
 }
 
 customElements.define("menutech-menu", MenutechMenu);
+
 
 
 
@@ -1660,6 +1614,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
