@@ -8,8 +8,7 @@ class MenutechMenu extends HTMLElement {
 
   constructor() {
     super();
-    this.attachShadow({ mode: "open" });
-
+    this.shadow = this.attachShadow({ mode: "open" });
 
     // ===== CSS =====
     const style = document.createElement("style");
@@ -86,76 +85,86 @@ class MenutechMenu extends HTMLElement {
       }
     `;
 
-
-    // ===== HTML inicial =====
-    const wrapper = document.createElement("div");
-    wrapper.classList.add("flipbook-viewport");
-    wrapper.innerHTML = `
+    // ===== HTML base =====
+    this.container = document.createElement("div");
+    this.container.classList.add("flipbook-viewport");
+    this.container.innerHTML = `
       <div class="container">
         <div class="flipbook"></div>
       </div>
     `;
 
-    this.shadowRoot.append(style, wrapper);
+    this.shadow.appendChild(style);
+    this.shadow.appendChild(this.container);
   }
 
   connectedCallback() {
-    this.updateFlipbook();
+    this.render();
+    this.ensureTurnJS();
   }
 
   attributeChangedCallback() {
-    this.updateFlipbook();
+    this.render();
   }
 
-  updateFlipbook() {
-    const flipbook = this.shadowRoot.querySelector(".flipbook");
+  render() {
+    const flipbook = this.shadow.querySelector(".flipbook");
     if (!flipbook) return;
 
-    // Obtener imágenes del atributo
-    const imgsAttr = this.getAttribute("imagenes");
-    let imagenes = [];
-    try {
-      imagenes = imgsAttr ? JSON.parse(imgsAttr) : [];
-    } catch {
-      imagenes = [];
-    }
+    // Obtener atributos
+    const urls = (this.getAttribute("imagenes") || "").split(",").map(u => u.trim()).filter(Boolean);
+    const width = this.getAttribute("flip-width") || 922;
+    const height = this.getAttribute("flip-height") || 700;
 
-    // Si no hay imágenes, mostrar algo por defecto
-    if (imagenes.length === 0) {
-      imagenes = [
-        "https://vikingantonio.github.io/cabanamenu/assets/img/1.jpg",
-        "https://vikingantonio.github.io/cabanamenu/assets/img/2.jpg",
-        "https://vikingantonio.github.io/cabanamenu/assets/img/3.jpg",
-      ];
-    }
+    // Si no hay imágenes personalizadas, usar las predeterminadas
+    const imagesToUse = urls.length ? urls : [
+      "https://vikingantonio.github.io/cabanamenu/assets/img/1.jpg",
+      "https://vikingantonio.github.io/cabanamenu/assets/img/2.jpg",
+      "https://vikingantonio.github.io/cabanamenu/assets/img/3.jpg",
+      "https://vikingantonio.github.io/cabanamenu/assets/img/4.jpg",
+      "https://vikingantonio.github.io/cabanamenu/assets/img/5.jpg",
+      "https://vikingantonio.github.io/cabanamenu/assets/img/6.jpg",
+      "https://vikingantonio.github.io/cabanamenu/assets/img/7.jpg",
+      "https://vikingantonio.github.io/cabanamenu/assets/img/8.jpg",
+      "https://vikingantonio.github.io/cabanamenu/assets/img/9.jpg",
+      "https://vikingantonio.github.io/cabanamenu/assets/img/10.jpg",
+      "https://vikingantonio.github.io/cabanamenu/assets/img/11.jpg",
+      "https://vikingantonio.github.io/cabanamenu/assets/img/12.jpg"
+    ];
 
-    // Crear las páginas
-    flipbook.innerHTML = imagenes
-      .map((url) => `<img class="page" src="${url}">`)
+    // Asignar tamaño
+    flipbook.style.width = `${width}px`;
+    flipbook.style.height = `${height}px`;
+
+    // Renderizar las páginas (imágenes)
+    flipbook.innerHTML = imagesToUse
+      .map(src => `<img class="page" src="${src}" alt="page">`)
       .join("");
 
-    // Reinicializar turn.js
-    const ensureTurnJS = () => {
+    // Reiniciar el flipbook si turn.js ya está cargado
+    if (window.jQuery && jQuery.fn.turn) {
+      jQuery(flipbook).turn("destroy").turn({ width, height });
+    }
+  }
+
+  ensureTurnJS() {
+    const loadTurn = () => {
       if (window.jQuery && jQuery.fn.turn) {
-        if (jQuery(flipbook).data("turn")) {
-          jQuery(flipbook).turn("destroy");
-        }
+        const flipbook = this.shadow.querySelector(".flipbook");
         jQuery(flipbook).turn();
+      } else if (!window.jQuery) {
+        const jq = document.createElement("script");
+        jq.src = "https://code.jquery.com/jquery-3.6.0.min.js";
+        jq.onload = loadTurn;
+        document.head.appendChild(jq);
       } else {
-        if (!window.jQuery) {
-          const jq = document.createElement("script");
-          jq.src = "https://code.jquery.com/jquery-3.6.0.min.js";
-          jq.onload = ensureTurnJS;
-          document.head.appendChild(jq);
-        } else {
-          const turn = document.createElement("script");
-          turn.src = "https://menutech.biz/m10/assets/js/turn.js";
-          turn.onload = ensureTurnJS;
-          document.head.appendChild(turn);
-        }
+        const turn = document.createElement("script");
+        turn.src = "https://menutech.biz/m10/assets/js/turn.js";
+        turn.onload = loadTurn;
+        document.head.appendChild(turn);
       }
     };
-    ensureTurnJS();
+    loadTurn();
   }
 }
 
@@ -1645,6 +1654,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
