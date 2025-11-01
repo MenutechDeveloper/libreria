@@ -1266,9 +1266,7 @@ class MenuTechCarrusel extends HTMLElement {
           height: auto;
           box-sizing: border-box;
           padding: 40px 0;
-          overflow-x: hidden; /* 🔥 evita scroll lateral */
         }
-
         .swiper-container {
           width: 100%;
           max-width: 1000px;
@@ -1277,12 +1275,10 @@ class MenuTechCarrusel extends HTMLElement {
           justify-content: center;
           align-items: center;
         }
-
         .swiper-wrapper {
           display: flex;
           align-items: center;
         }
-
         .swiper-slide {
           background-position: center;
           background-size: cover;
@@ -1291,15 +1287,12 @@ class MenuTechCarrusel extends HTMLElement {
           align-items: center;
           transition: transform 0.5s ease;
         }
-
         .menus img {
           width: 100%;
-          height: auto; /* 🔥 evita distorsión en móvil */
           cursor: pointer;
           display: block;
           border-radius: 10px;
         }
-
         .popup {
           display: none;
           position: fixed;
@@ -1313,7 +1306,6 @@ class MenuTechCarrusel extends HTMLElement {
           align-items: center;
           overflow: hidden;
         }
-
         .popup-content {
           background: #fff;
           width: 80%;
@@ -1327,7 +1319,6 @@ class MenuTechCarrusel extends HTMLElement {
           align-items: center;
           flex-direction: column;
         }
-
         .popup-content iframe {
           width: 100%;
           max-width: 700px;
@@ -1336,7 +1327,6 @@ class MenuTechCarrusel extends HTMLElement {
           margin: auto;
           display: block;
         }
-
         .close {
           position: absolute;
           top: 8px;
@@ -1348,27 +1338,27 @@ class MenuTechCarrusel extends HTMLElement {
           z-index: 10;
         }
 
-        /* 🔥 Ajustes solo para móviles */
+        /* 🔹 Correcciones solo para móviles */
         @media (max-width: 768px) {
-          menutech-carrusel {
+          html, body {
             overflow-x: hidden;
           }
-
+          menutech-carrusel {
+            padding: 20px 0;
+            overflow-x: hidden;
+          }
           .swiper-container {
-            width: 100%;
             max-width: 100%;
             overflow: hidden;
           }
-
           .swiper-slide {
-            max-width: 90vw;
+            width: 80% !important;
             height: auto !important;
           }
-
           .menus img {
             width: 100%;
             height: auto;
-            object-fit: contain; /* 🔥 asegura proporciones */
+            object-fit: contain;
           }
         }
       `;
@@ -1485,6 +1475,7 @@ class MenuTechCarrusel extends HTMLElement {
 }
 
 customElements.define('menutech-carrusel', MenuTechCarrusel);
+
 
 
 
@@ -1692,6 +1683,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
