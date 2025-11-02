@@ -1,105 +1,25 @@
 /******************************
  * MENUTECH MENU
  ******************************/
-class MenutechMenu extends HTMLElement {
+class MenuTechHero extends HTMLElement {
   static get observedAttributes() {
-    return ["imagenes"];
+    return [
+      "background",
+      "overlay-color",
+      "overlay-opacity",
+      "title",
+      "subtitle",
+      "custom-code"
+    ];
   }
 
   constructor() {
     super();
-    const shadow = this.attachShadow({ mode: "open" });
-
-    // ===== CSS original (mantiene el responsive correcto) =====
-    const style = document.createElement("style");
-    style.textContent = `
-      :host {
-        display: block;
-        width: 100%;
-        margin: 40px 0;
-        position: relative;
-      }
-
-      .flipbook-viewport {
-        overflow: hidden;
-        width: 100%;
-        height: 100%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        position: relative;
-      }
-
-      @media (max-width: 992px) {
-        .flipbook-viewport {
-          width: 90%;
-          height: auto;
-          display: block;
-        }
-      }
-
-      .flipbook-viewport .container {
-        padding: 20px;
-        text-align: center;
-        position: relative;
-        margin: 0 auto;
-      }
-
-      .flipbook {
-        width: 922px;
-        height: 700px;
-        margin: 0 auto;
-        display: block;
-      }
-
-      @media (max-width: 992px) {
-        .flipbook {
-          width: 100%;
-          height: 400px;
-          margin-top: 10px;
-        }
-      }
-
-      .flipbook .page {
-        box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
-      }
-
-      .flipbook img {
-        width: 100%;
-        user-select: none;
-        -webkit-user-select: none;
-      }
-
-      @media (min-width: 992px) {
-        .flipbook-viewport {
-          justify-content: center;
-          align-items: center;
-        }
-
-        .container {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-        }
-      }
-    `;
-
-    // ===== Estructura HTML =====
-    const container = document.createElement("div");
-    container.classList.add("flipbook-viewport");
-    container.innerHTML = `
-      <div class="container">
-        <div class="flipbook"></div>
-      </div>
-    `;
-
-    shadow.appendChild(style);
-    shadow.appendChild(container);
+    this.attachShadow({ mode: "open" });
   }
 
   connectedCallback() {
     this.render();
-    this.ensureTurnJS();
   }
 
   attributeChangedCallback() {
@@ -107,66 +27,115 @@ class MenutechMenu extends HTMLElement {
   }
 
   render() {
-    const flipbook = this.shadowRoot.querySelector(".flipbook");
-    if (!flipbook) return;
+    const background = this.getAttribute("background") || "https://picsum.photos/1200/600";
+    const overlayColor = this.getAttribute("overlay-color") || "#000";
+    const overlayOpacity = parseFloat(this.getAttribute("overlay-opacity")) || 0.7;
+    const title = this.getAttribute("title") || "Impulsa tu negocio al siguiente nivel";
+    const subtitle = this.getAttribute("subtitle") || "Descubre cómo nuestra plataforma puede ayudarte a crecer, conectar con más clientes y aumentar tus ventas.";
 
-    // Obtener imágenes del atributo o usar predeterminadas
-    let urls = [];
-    try {
-      urls = JSON.parse(this.getAttribute("imagenes") || "[]");
-    } catch {
-      const raw = this.getAttribute("imagenes");
-      if (raw) urls = raw.split(",").map(u => u.trim());
-    }
+    // 🔹 Bloque custom-code, reemplazable desde el editor
+    const customCode = this.getAttribute("custom-code")?.trim() || `
+      <span class="glf-button"
+        data-glf-cuid="af65ce46-dd1a-4bc2-8461-df278b715ca2"
+        data-glf-ruid="4a27439a-e98e-441e-a2db-477113814476"
+        id="glfButton0">See MENU &amp; Order</span>
 
-    const imagesToUse = urls.length ? urls : [
-      "https://vikingantonio.github.io/cabanamenu/assets/img/1.jpg",
-      "https://vikingantonio.github.io/cabanamenu/assets/img/2.jpg",
-      "https://vikingantonio.github.io/cabanamenu/assets/img/3.jpg",
-      "https://vikingantonio.github.io/cabanamenu/assets/img/4.jpg",
-      "https://vikingantonio.github.io/cabanamenu/assets/img/5.jpg",
-      "https://vikingantonio.github.io/cabanamenu/assets/img/6.jpg",
-      "https://vikingantonio.github.io/cabanamenu/assets/img/7.jpg",
-      "https://vikingantonio.github.io/cabanamenu/assets/img/8.jpg",
-      "https://vikingantonio.github.io/cabanamenu/assets/img/9.jpg",
-      "https://vikingantonio.github.io/cabanamenu/assets/img/10.jpg",
-      "https://vikingantonio.github.io/cabanamenu/assets/img/11.jpg",
-      "https://vikingantonio.github.io/cabanamenu/assets/img/12.jpg"
-    ];
+      <span class="glf-reservation"
+        data-glf-cuid="c6f6fcc9-ebb9-4575-b513-3f3d9ea55da0"
+        data-glf-ruid="1e45b55d-4e3a-4866-a22b-30601bde9f8a"
+        data-glf-reservation="true"
+        id="glfButton1">Table Reservation</span>
 
-    // Renderizar las imágenes
-    flipbook.innerHTML = imagesToUse
-      .map(src => `<img class="page" src="${src}" alt="page">`)
-      .join("");
+      <script src="https://www.fbgcdn.com/embedder/js/ewm2.js" defer async></script>
+    `;
 
-    // Reiniciar flipbook si Turn.js ya está cargado
-    if (window.jQuery && jQuery.fn.turn) {
-      jQuery(flipbook).turn("destroy").turn();
-    }
-  }
+    this.shadowRoot.innerHTML = `
+      <style>
+        :host {
+          display: block;
+        }
 
-  ensureTurnJS() {
-    const init = () => {
-      if (window.jQuery && jQuery.fn.turn) {
-        const flipbook = this.shadowRoot.querySelector(".flipbook");
-        jQuery(flipbook).turn();
-      } else if (!window.jQuery) {
-        const jq = document.createElement("script");
-        jq.src = "https://code.jquery.com/jquery-3.6.0.min.js";
-        jq.onload = init;
-        document.head.appendChild(jq);
-      } else {
-        const turn = document.createElement("script");
-        turn.src = "https://menutech.biz/m10/assets/js/turn.js";
-        turn.onload = init;
-        document.head.appendChild(turn);
-      }
-    };
-    init();
+        section.hero {
+          position: relative;
+          width: 100%;
+          height: 100vh;
+          background: url('${background}') center/cover no-repeat;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          text-align: center;
+          overflow: hidden;
+        }
+
+        .hero-overlay {
+          position: absolute;
+          inset: 0;
+          background: ${overlayColor};
+          opacity: ${overlayOpacity};
+          z-index: 0;
+        }
+
+        .hero-content {
+          position: relative;
+          z-index: 1;
+          max-width: 800px;
+          padding: 20px;
+          animation: fadeInUp 1s ease-out;
+        }
+
+        .hero h1 {
+          font-size: 3rem;
+          font-weight: 700;
+          margin-bottom: 1rem;
+          line-height: 1.2;
+        }
+
+        .hero p {
+          font-size: 1.2rem;
+          margin-bottom: 2rem;
+          opacity: 0.9;
+        }
+
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+          .hero { height: 60vh; }
+          .hero h1 { font-size: 2.2rem; }
+          .hero p { font-size: 1rem; }
+        }
+      </style>
+
+      <section class="hero">
+        <div class="hero-overlay"></div>
+
+        <div class="hero-content">
+          <h1>${title}</h1>
+          <p>${subtitle}</p>
+          <div class="custom-slot"></div>
+        </div>
+      </section>
+    `;
+
+    // 🔹 Inserta el bloque custom tal cual (sin sanitizar) para respetar HTML + scripts
+    const slot = this.shadowRoot.querySelector(".custom-slot");
+    slot.innerHTML = customCode;
+
+    // 🔹 Reinyecta <script> para que se ejecute correctamente dentro del Shadow DOM
+    slot.querySelectorAll("script").forEach(oldScript => {
+      const newScript = document.createElement("script");
+      [...oldScript.attributes].forEach(attr => newScript.setAttribute(attr.name, attr.value));
+      newScript.textContent = oldScript.textContent;
+      oldScript.replaceWith(newScript);
+    });
   }
 }
 
-customElements.define("menutech-menu", MenutechMenu);
+customElements.define("menutech-hero", MenuTechHero);
+
 
 
 
@@ -1843,6 +1812,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
