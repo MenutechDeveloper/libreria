@@ -1,25 +1,105 @@
 /******************************
  * MENUTECH MENU
  ******************************/
-class MenuTechHero extends HTMLElement {
+class MenutechMenu extends HTMLElement {
   static get observedAttributes() {
-    return [
-      "background",
-      "overlay-color",
-      "overlay-opacity",
-      "title",
-      "subtitle",
-      "custom-code"
-    ];
+    return ["imagenes"];
   }
 
   constructor() {
     super();
-    this.attachShadow({ mode: "open" });
+    const shadow = this.attachShadow({ mode: "open" });
+
+    // ===== CSS original (mantiene el responsive correcto) =====
+    const style = document.createElement("style");
+    style.textContent = `
+      :host {
+        display: block;
+        width: 100%;
+        margin: 40px 0;
+        position: relative;
+      }
+
+      .flipbook-viewport {
+        overflow: hidden;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+      }
+
+      @media (max-width: 992px) {
+        .flipbook-viewport {
+          width: 90%;
+          height: auto;
+          display: block;
+        }
+      }
+
+      .flipbook-viewport .container {
+        padding: 20px;
+        text-align: center;
+        position: relative;
+        margin: 0 auto;
+      }
+
+      .flipbook {
+        width: 922px;
+        height: 700px;
+        margin: 0 auto;
+        display: block;
+      }
+
+      @media (max-width: 992px) {
+        .flipbook {
+          width: 100%;
+          height: 400px;
+          margin-top: 10px;
+        }
+      }
+
+      .flipbook .page {
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+      }
+
+      .flipbook img {
+        width: 100%;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+
+      @media (min-width: 992px) {
+        .flipbook-viewport {
+          justify-content: center;
+          align-items: center;
+        }
+
+        .container {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+      }
+    `;
+
+    // ===== Estructura HTML =====
+    const container = document.createElement("div");
+    container.classList.add("flipbook-viewport");
+    container.innerHTML = `
+      <div class="container">
+        <div class="flipbook"></div>
+      </div>
+    `;
+
+    shadow.appendChild(style);
+    shadow.appendChild(container);
   }
 
   connectedCallback() {
     this.render();
+    this.ensureTurnJS();
   }
 
   attributeChangedCallback() {
@@ -27,114 +107,66 @@ class MenuTechHero extends HTMLElement {
   }
 
   render() {
-    const background = this.getAttribute("background") || "https://picsum.photos/1200/600";
-    const overlayColor = this.getAttribute("overlay-color") || "#000";
-    const overlayOpacity = parseFloat(this.getAttribute("overlay-opacity")) || 0.7;
-    const title = this.getAttribute("title") || "Impulsa tu negocio al siguiente nivel";
-    const subtitle = this.getAttribute("subtitle") || "Descubre cómo nuestra plataforma puede ayudarte a crecer, conectar con más clientes y aumentar tus ventas.";
+    const flipbook = this.shadowRoot.querySelector(".flipbook");
+    if (!flipbook) return;
 
-    // 🔹 Bloque custom-code, reemplazable desde el editor
-    const customCode = this.getAttribute("custom-code")?.trim() || `
-      <span class="glf-button"
-        data-glf-cuid="af65ce46-dd1a-4bc2-8461-df278b715ca2"
-        data-glf-ruid="4a27439a-e98e-441e-a2db-477113814476"
-        id="glfButton0">See MENU &amp; Order</span>
+    // Obtener imágenes del atributo o usar predeterminadas
+    let urls = [];
+    try {
+      urls = JSON.parse(this.getAttribute("imagenes") || "[]");
+    } catch {
+      const raw = this.getAttribute("imagenes");
+      if (raw) urls = raw.split(",").map(u => u.trim());
+    }
 
-      <span class="glf-reservation"
-        data-glf-cuid="c6f6fcc9-ebb9-4575-b513-3f3d9ea55da0"
-        data-glf-ruid="1e45b55d-4e3a-4866-a22b-30601bde9f8a"
-        data-glf-reservation="true"
-        id="glfButton1">Table Reservation</span>
+    const imagesToUse = urls.length ? urls : [
+      "https://vikingantonio.github.io/cabanamenu/assets/img/1.jpg",
+      "https://vikingantonio.github.io/cabanamenu/assets/img/2.jpg",
+      "https://vikingantonio.github.io/cabanamenu/assets/img/3.jpg",
+      "https://vikingantonio.github.io/cabanamenu/assets/img/4.jpg",
+      "https://vikingantonio.github.io/cabanamenu/assets/img/5.jpg",
+      "https://vikingantonio.github.io/cabanamenu/assets/img/6.jpg",
+      "https://vikingantonio.github.io/cabanamenu/assets/img/7.jpg",
+      "https://vikingantonio.github.io/cabanamenu/assets/img/8.jpg",
+      "https://vikingantonio.github.io/cabanamenu/assets/img/9.jpg",
+      "https://vikingantonio.github.io/cabanamenu/assets/img/10.jpg",
+      "https://vikingantonio.github.io/cabanamenu/assets/img/11.jpg",
+      "https://vikingantonio.github.io/cabanamenu/assets/img/12.jpg"
+    ];
 
-      <script src="https://www.fbgcdn.com/embedder/js/ewm2.js" defer async></script>
-    `;
+    // Renderizar las imágenes
+    flipbook.innerHTML = imagesToUse
+      .map(src => `<img class="page" src="${src}" alt="page">`)
+      .join("");
 
-    this.shadowRoot.innerHTML = `
-      <style>
-        :host {
-          display: block;
-        }
+    // Reiniciar flipbook si Turn.js ya está cargado
+    if (window.jQuery && jQuery.fn.turn) {
+      jQuery(flipbook).turn("destroy").turn();
+    }
+  }
 
-        section.hero {
-          position: relative;
-          width: 100%;
-          height: 100vh;
-          background: url('${background}') center/cover no-repeat;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          text-align: center;
-          overflow: hidden;
-        }
-
-        .hero-overlay {
-          position: absolute;
-          inset: 0;
-          background: ${overlayColor};
-          opacity: ${overlayOpacity};
-          z-index: 0;
-        }
-
-        .hero-content {
-          position: relative;
-          z-index: 1;
-          max-width: 800px;
-          padding: 20px;
-          animation: fadeInUp 1s ease-out;
-        }
-
-        .hero h1 {
-          font-size: 3rem;
-          font-weight: 700;
-          margin-bottom: 1rem;
-          line-height: 1.2;
-        }
-
-        .hero p {
-          font-size: 1.2rem;
-          margin-bottom: 2rem;
-          opacity: 0.9;
-        }
-
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-
-        @media (max-width: 768px) {
-          .hero { height: 60vh; }
-          .hero h1 { font-size: 2.2rem; }
-          .hero p { font-size: 1rem; }
-        }
-      </style>
-
-      <section class="hero">
-        <div class="hero-overlay"></div>
-
-        <div class="hero-content">
-          <h1>${title}</h1>
-          <p>${subtitle}</p>
-          <div class="custom-slot"></div>
-        </div>
-      </section>
-    `;
-
-    // 🔹 Inserta el bloque custom tal cual (sin sanitizar) para respetar HTML + scripts
-    const slot = this.shadowRoot.querySelector(".custom-slot");
-    slot.innerHTML = customCode;
-
-    // 🔹 Reinyecta <script> para que se ejecute correctamente dentro del Shadow DOM
-    slot.querySelectorAll("script").forEach(oldScript => {
-      const newScript = document.createElement("script");
-      [...oldScript.attributes].forEach(attr => newScript.setAttribute(attr.name, attr.value));
-      newScript.textContent = oldScript.textContent;
-      oldScript.replaceWith(newScript);
-    });
+  ensureTurnJS() {
+    const init = () => {
+      if (window.jQuery && jQuery.fn.turn) {
+        const flipbook = this.shadowRoot.querySelector(".flipbook");
+        jQuery(flipbook).turn();
+      } else if (!window.jQuery) {
+        const jq = document.createElement("script");
+        jq.src = "https://code.jquery.com/jquery-3.6.0.min.js";
+        jq.onload = init;
+        document.head.appendChild(jq);
+      } else {
+        const turn = document.createElement("script");
+        turn.src = "https://menutech.biz/m10/assets/js/turn.js";
+        turn.onload = init;
+        document.head.appendChild(turn);
+      }
+    };
+    init();
   }
 }
 
-customElements.define("menutech-hero", MenuTechHero);
+customElements.define("menutech-menu", MenutechMenu);
 
 
 
@@ -866,55 +898,93 @@ customElements.define("menutech-particles", MenutechParticles);
 // ========================================================================
 // Menutech hero
 // ========================================================================
-class MenutechHero extends HTMLElement {
+class MenuTechHero extends HTMLElement {
   static get observedAttributes() {
     return [
       "background",
       "overlay-color",
       "overlay-opacity",
       "title",
-      "subtitle",
-      "buttons"
+      "subtitle"
+      // NOTE: ya no usamos attribute 'custom-code' para almacenar HTML bruto
     ];
   }
 
   constructor() {
     super();
-    this.shadow = this.attachShadow({ mode: "open" });
+    this.attachShadow({ mode: "open" });
+
+    // observer para detectar cambios en nodos hijos (editor actualiza script/template)
+    this._mo = new MutationObserver(() => this.render());
   }
 
-  connectedCallback() { this.render(); }
-  attributeChangedCallback() { this.render(); }
+  connectedCallback() {
+    // observar cambios en hijos (añadir/editar <template> o <script type="text/plain">)
+    this._mo.observe(this, { childList: true, characterData: true, subtree: true });
+    this.render();
+  }
+
+  disconnectedCallback() {
+    this._mo.disconnect();
+  }
+
+  attributeChangedCallback() {
+    this.render();
+  }
+
+  // lee el custom code considerando:
+  // 1) <template class="custom-code"> ... </template>
+  // 2) <script type="text/plain" class="custom-code"> ... </script>
+  // 3) fallback: atributo data-custom-code (si lo tienes por compat)
+  _readCustomCode() {
+    // prefer template
+    const tpl = this.querySelector('template.custom-code');
+    if (tpl) return tpl.innerHTML.trim();
+
+    const s = this.querySelector('script[type="text/plain"].custom-code');
+    if (s) return s.textContent.trim();
+
+    // atributo por compatibilidad (html-escaped), evita si puede
+    const attr = this.getAttribute('custom-code');
+    if (attr) return attr.trim();
+
+    // default
+    return `
+      <span class="glf-button"
+        data-glf-cuid="af65ce46-dd1a-4bc2-8461-df278b715ca2"
+        data-glf-ruid="4a27439a-e98e-441e-a2db-477113814476">See MENU &amp; Order</span>
+
+      <span class="glf-reservation"
+        data-glf-cuid="c6f6fcc9-ebb9-4575-b513-3f3d9ea55da0"
+        data-glf-ruid="1e45b55d-4e3a-4866-a22b-30601bde9f8a"
+        data-glf-reservation="true">Table Reservation</span>
+
+      <script src="https://www.fbgcdn.com/embedder/js/ewm2.js" defer async></script>
+    `;
+  }
 
   render() {
-    // 🔹 Propiedades con valores por defecto
     const background = this.getAttribute("background") || "https://picsum.photos/1200/600";
     const overlayColor = this.getAttribute("overlay-color") || "rgba(0,0,0,0.9)";
     const overlayOpacity = parseFloat(this.getAttribute("overlay-opacity")) || 0.7;
     const title = this.getAttribute("title") || "Impulsa tu negocio al siguiente nivel";
     const subtitle = this.getAttribute("subtitle") || "Descubre cómo nuestra plataforma puede ayudarte a crecer, conectar con más clientes y aumentar tus ventas.";
-    const buttons = this.getAttribute("buttons") || `
-      <span class="glf-button" data-glf-cuid="af65ce46-dd1a-4bc2-8461-df278b715ca2" data-glf-ruid="4a27439a-e98e-441e-a2db-477113814476">See MENU & Order</span>
-      <span class="glf-reservation" data-glf-cuid="c6f6fcc9-ebb9-4575-b513-3f3d9ea55da0" data-glf-ruid="1e45b55d-4e3a-4866-a22b-30601bde9f8a" data-glf-reservation="true">Table Reservation</span>
-      <script src="https://www.fbgcdn.com/embedder/js/ewm2.js" defer async></script>
-    `;
 
     const isVideo = /\.(mp4|webm|ogg)(\?.*)?$/i.test(background);
 
-    this.shadow.innerHTML = `
-      <style>
-        :host {
-          display: block;
-          width: 100%;
-          height: 100%;
-        }
+    // el custom code se lee desde nodos hijos (template/script) o atributo como fallback
+    const customCode = this._readCustomCode();
 
+    // render HTML en shadow
+    this.shadowRoot.innerHTML = `
+      <style>
+        :host { display:block; width:100%; height:100%; }
         section.hero {
           position: relative;
           width: 100%;
-          height: 100vh; /* Pantalla completa en web */
-          min-height: 300px; /* Altura mínima en editor */
-          background: ${!isVideo ? `url('${background}') center/cover no-repeat` : "none"};
+          height: 100vh;
+          min-height: 300px;
+          ${!isVideo ? `background: url('${background}') center/cover no-repeat;` : ""}
           display: flex;
           align-items: center;
           justify-content: center;
@@ -923,108 +993,50 @@ class MenutechHero extends HTMLElement {
           overflow: hidden;
           border-radius: 12px;
         }
-
-        .hero-overlay {
-          position: absolute;
-          inset: 0;
-          background: ${overlayColor};
-          opacity: ${overlayOpacity};
-          z-index: 0;
-        }
-
-        video.hero-bg {
-          position: absolute;
-          inset: 0;
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          z-index: -1;
-        }
-
-        .hero-content {
-          position: relative;
-          z-index: 1;
-          max-width: 800px;
-          padding: 20px;
-          animation: fadeInUp 1s ease-out;
-        }
-
-        h1 {
-          font-size: 3rem;
-          font-weight: 700;
-          margin-bottom: 1rem;
-          line-height: 1.2;
-        }
-
-        p {
-          font-size: 1.2rem;
-          margin-bottom: 2rem;
-          opacity: 0.9;
-        }
-
-        .hero-buttons span {
-          display: inline-block;
-          background: #00bcd4;
-          color: white;
-          text-decoration: none;
-          padding: 14px 28px;
-          border-radius: 8px;
-          font-weight: 600;
-          font-size: 1.1rem;
-          margin: 5px;
-          cursor: pointer;
-          transition: all 0.3s ease;
-        }
-
-        .hero-buttons span:hover {
-          background: #0198a7;
-          transform: translateY(-2px);
-        }
-
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-
-        @media (max-width: 768px) {
-          section.hero {
-            height: 60vh;
-            background-position: center;
-          }
-
-          h1 { font-size: 2.2rem; }
-          p { font-size: 1rem; }
-
-          .hero-buttons span {
-            padding: 12px 24px;
-            font-size: 1rem;
-          }
-        }
+        .hero-overlay { position:absolute; inset:0; background: ${overlayColor}; opacity: ${overlayOpacity}; z-index:0; }
+        video.hero-bg { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:-1; }
+        .hero-content { position:relative; z-index:1; max-width:800px; padding:20px; animation: fadeInUp 1s ease-out; }
+        h1{ font-size:3rem; margin:0 0 1rem; font-weight:700; line-height:1.2; }
+        p{ font-size:1.2rem; margin:0 0 2rem; opacity:0.9; }
+        @keyframes fadeInUp{ from{opacity:0; transform:translateY(20px);} to{opacity:1; transform:none;} }
+        @media (max-width:768px){ section.hero{height:60vh;} h1{font-size:2.2rem;} p{font-size:1rem;} }
       </style>
 
       <section class="hero">
-        ${isVideo ? `<video class="hero-bg" src="${background}" autoplay muted loop playsinline></video>` : ""}
+        ${isVideo ? `<video class="hero-bg" src="${background}" autoplay muted loop playsinline></video>` : ''}
         <div class="hero-overlay"></div>
         <div class="hero-content">
           <h1>${title}</h1>
           <p>${subtitle}</p>
-          <div class="hero-buttons">${buttons}</div>
+          <div class="custom-slot"></div>
         </div>
       </section>
     `;
 
-    // 🔹 ejecutamos scripts embebidos dentro del atributo "buttons"
-    const scripts = this.shadow.querySelectorAll("script");
-    scripts.forEach(s => {
-      const newScript = document.createElement("script");
-      Array.from(s.attributes).forEach(a => newScript.setAttribute(a.name, a.value));
-      newScript.textContent = s.textContent;
-      document.head.appendChild(newScript);
-    });
+    // insertar custom code tal cual dentro del shadow (sin envolver ni estilizar)
+    const slot = this.shadowRoot.querySelector('.custom-slot');
+    if (slot) {
+      slot.innerHTML = customCode;
+
+      // reinyectar scripts para que se ejecuten (convertimos los script-tags de slot en scripts reales)
+      slot.querySelectorAll('script').forEach(oldScript => {
+        const newScript = document.createElement('script');
+        // copiar atributos (src, async, defer, etc)
+        for (let i = 0; i < oldScript.attributes.length; i++) {
+          const attr = oldScript.attributes[i];
+          newScript.setAttribute(attr.name, attr.value);
+        }
+        // transferir contenido inline
+        newScript.text = oldScript.textContent;
+        // reemplazar en DOM (esto hará que el script se ejecute)
+        oldScript.parentNode.replaceChild(newScript, oldScript);
+      });
+    }
   }
 }
 
-customElements.define("menutech-hero", MenutechHero);
+customElements.define('menutech-hero', MenuTechHero);
+
 
 
 
@@ -1812,6 +1824,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
