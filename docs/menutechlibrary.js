@@ -897,6 +897,130 @@ customElements.define("menutech-particles", MenutechParticles);
 // ========================================================================
 // Menutech hero
 // ========================================================================
+class MenutechHero extends HTMLElement {
+  static get observedAttributes() {
+    return [
+      "background",
+      "overlay-color",
+      "overlay-opacity",
+      "title",
+      "subtitle",
+      "buttons"
+    ];
+  }
+
+  constructor() {
+    super();
+    this.shadow = this.attachShadow({ mode: "open" });
+  }
+
+  connectedCallback() { this.render(); }
+  attributeChangedCallback() { this.render(); }
+
+  render() {
+    const background = this.getAttribute("background") || "https://picsum.photos/1200/600";
+    const overlayColor = this.getAttribute("overlay-color") || "#000000";
+    const overlayOpacity = parseFloat(this.getAttribute("overlay-opacity")) || 0.7;
+    const title = this.getAttribute("title") || "Impulsa tu negocio al siguiente nivel";
+    const subtitle = this.getAttribute("subtitle") || "Descubre cómo nuestra plataforma puede ayudarte a crecer, conectar con más clientes y aumentar tus ventas.";
+    const buttons = this.getAttribute("buttons") || `
+      <span class="glf-button" data-glf-cuid="af65ce46-dd1a-4bc2-8461-df278b715ca2" data-glf-ruid="4a27439a-e98e-441e-a2db-477113814476">See MENU & Order</span>
+      <span class="glf-reservation" data-glf-cuid="c6f6fcc9-ebb9-4575-b513-3f3d9ea55da0" data-glf-ruid="1e45b55d-4e3a-4866-a22b-30601bde9f8a" data-glf-reservation="true">Table Reservation</span>
+    `;
+
+    const isVideo = /\.(mp4|webm|ogg)(\?.*)?$/i.test(background);
+
+    this.shadow.innerHTML = `
+      <style>
+        :host {
+          display: block;
+          width: 100%;
+          height: auto;
+          position: relative;
+          overflow: hidden;
+        }
+
+        section.hero {
+          position: relative;
+          width: 100%;
+          min-height: 400px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          text-align: center;
+          border-radius: 12px;
+          overflow: hidden;
+          ${!isVideo ? `background: url('${background}') center/cover no-repeat;` : ""}
+        }
+
+        .hero-overlay {
+          position: absolute;
+          inset: 0;
+          background: ${overlayColor};
+          opacity: ${overlayOpacity};
+          z-index: 0;
+        }
+
+        video.hero-bg {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          z-index: -1;
+        }
+
+        .hero-content {
+          position: relative;
+          z-index: 1;
+          max-width: 700px;
+          padding: 2rem;
+          animation: fadeInUp 1s ease-out;
+        }
+
+        .hero h1 {
+          font-size: 2.2rem;
+          font-weight: 700;
+          margin-bottom: 1rem;
+          line-height: 1.2;
+        }
+
+        .hero p {
+          font-size: 1rem;
+          margin-bottom: 1.5rem;
+          opacity: 0.9;
+        }
+
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 600px) {
+          .hero h1 { font-size: 1.6rem; }
+          .hero p { font-size: 0.95rem; }
+        }
+      </style>
+
+      <section class="hero">
+        ${isVideo ? `<video class="hero-bg" src="${background}" autoplay muted loop playsinline></video>` : ""}
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+          <h1>${title}</h1>
+          <p>${subtitle}</p>
+          <div class="hero-buttons"></div>
+        </div>
+      </section>
+    `;
+
+    const btnContainer = this.shadow.querySelector(".hero-buttons");
+    if (btnContainer) btnContainer.innerHTML = buttons;
+  }
+}
+
+customElements.define("menutech-hero", MenutechHero);
 
 
 
@@ -1683,6 +1807,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
