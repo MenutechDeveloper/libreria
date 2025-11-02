@@ -918,14 +918,16 @@ class MenutechHero extends HTMLElement {
   attributeChangedCallback() { this.render(); }
 
   render() {
+    // 🔹 Propiedades con valores por defecto
     const background = this.getAttribute("background") || "https://picsum.photos/1200/600";
-    const overlayColor = this.getAttribute("overlay-color") || "#000000";
+    const overlayColor = this.getAttribute("overlay-color") || "rgba(0,0,0,0.9)";
     const overlayOpacity = parseFloat(this.getAttribute("overlay-opacity")) || 0.7;
     const title = this.getAttribute("title") || "Impulsa tu negocio al siguiente nivel";
     const subtitle = this.getAttribute("subtitle") || "Descubre cómo nuestra plataforma puede ayudarte a crecer, conectar con más clientes y aumentar tus ventas.";
     const buttons = this.getAttribute("buttons") || `
       <span class="glf-button" data-glf-cuid="af65ce46-dd1a-4bc2-8461-df278b715ca2" data-glf-ruid="4a27439a-e98e-441e-a2db-477113814476">See MENU & Order</span>
       <span class="glf-reservation" data-glf-cuid="c6f6fcc9-ebb9-4575-b513-3f3d9ea55da0" data-glf-ruid="1e45b55d-4e3a-4866-a22b-30601bde9f8a" data-glf-reservation="true">Table Reservation</span>
+      <script src="https://www.fbgcdn.com/embedder/js/ewm2.js" defer async></script>
     `;
 
     const isVideo = /\.(mp4|webm|ogg)(\?.*)?$/i.test(background);
@@ -935,23 +937,22 @@ class MenutechHero extends HTMLElement {
         :host {
           display: block;
           width: 100%;
-          height: auto;
-          position: relative;
-          overflow: hidden;
+          height: 100%;
         }
 
         section.hero {
           position: relative;
           width: 100%;
-          min-height: 400px;
+          height: 100vh; /* Pantalla completa en web */
+          min-height: 300px; /* Altura mínima en editor */
+          background: ${!isVideo ? `url('${background}') center/cover no-repeat` : "none"};
           display: flex;
           align-items: center;
           justify-content: center;
-          color: white;
           text-align: center;
-          border-radius: 12px;
+          color: white;
           overflow: hidden;
-          ${!isVideo ? `background: url('${background}') center/cover no-repeat;` : ""}
+          border-radius: 12px;
         }
 
         .hero-overlay {
@@ -964,8 +965,7 @@ class MenutechHero extends HTMLElement {
 
         video.hero-bg {
           position: absolute;
-          top: 0;
-          left: 0;
+          inset: 0;
           width: 100%;
           height: 100%;
           object-fit: cover;
@@ -975,22 +975,41 @@ class MenutechHero extends HTMLElement {
         .hero-content {
           position: relative;
           z-index: 1;
-          max-width: 700px;
-          padding: 2rem;
+          max-width: 800px;
+          padding: 20px;
           animation: fadeInUp 1s ease-out;
         }
 
-        .hero h1 {
-          font-size: 2.2rem;
+        h1 {
+          font-size: 3rem;
           font-weight: 700;
           margin-bottom: 1rem;
           line-height: 1.2;
         }
 
-        .hero p {
-          font-size: 1rem;
-          margin-bottom: 1.5rem;
+        p {
+          font-size: 1.2rem;
+          margin-bottom: 2rem;
           opacity: 0.9;
+        }
+
+        .hero-buttons span {
+          display: inline-block;
+          background: #00bcd4;
+          color: white;
+          text-decoration: none;
+          padding: 14px 28px;
+          border-radius: 8px;
+          font-weight: 600;
+          font-size: 1.1rem;
+          margin: 5px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        .hero-buttons span:hover {
+          background: #0198a7;
+          transform: translateY(-2px);
         }
 
         @keyframes fadeInUp {
@@ -998,9 +1017,19 @@ class MenutechHero extends HTMLElement {
           to { opacity: 1; transform: translateY(0); }
         }
 
-        @media (max-width: 600px) {
-          .hero h1 { font-size: 1.6rem; }
-          .hero p { font-size: 0.95rem; }
+        @media (max-width: 768px) {
+          section.hero {
+            height: 60vh;
+            background-position: center;
+          }
+
+          h1 { font-size: 2.2rem; }
+          p { font-size: 1rem; }
+
+          .hero-buttons span {
+            padding: 12px 24px;
+            font-size: 1rem;
+          }
         }
       </style>
 
@@ -1010,17 +1039,24 @@ class MenutechHero extends HTMLElement {
         <div class="hero-content">
           <h1>${title}</h1>
           <p>${subtitle}</p>
-          <div class="hero-buttons"></div>
+          <div class="hero-buttons">${buttons}</div>
         </div>
       </section>
     `;
 
-    const btnContainer = this.shadow.querySelector(".hero-buttons");
-    if (btnContainer) btnContainer.innerHTML = buttons;
+    // 🔹 ejecutamos scripts embebidos dentro del atributo "buttons"
+    const scripts = this.shadow.querySelectorAll("script");
+    scripts.forEach(s => {
+      const newScript = document.createElement("script");
+      Array.from(s.attributes).forEach(a => newScript.setAttribute(a.name, a.value));
+      newScript.textContent = s.textContent;
+      document.head.appendChild(newScript);
+    });
   }
 }
 
 customElements.define("menutech-hero", MenutechHero);
+
 
 
 
@@ -1807,6 +1843,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
