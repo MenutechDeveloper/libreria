@@ -78,6 +78,7 @@ body.pastel-mode { background: #ffb6c1; color: #4b2e2e; transition: background .
 .theme-option[data-theme="waves-pink"]  { background: linear-gradient(135deg,#ff7eb3,#ff9a9e); }
 .theme-option[data-theme="waves-green"] { background: linear-gradient(135deg,#9be15d,#00e3ae); }
 
+.theme-option[data-theme^="fog-"] { background-size: cover; }
 .theme-option[data-theme="fog-1"] { background: linear-gradient(135deg,#a18cd1,#fbc2eb); }
 .theme-option[data-theme="fog-2"] { background: linear-gradient(135deg,#84fab0,#8fd3f4); }
 .theme-option[data-theme="fog-3"] { background: linear-gradient(135deg,#ffd194,#f6d365); }
@@ -99,14 +100,13 @@ body.pastel-mode { background: #ffb6c1; color: #4b2e2e; transition: background .
 }
     `;
 
-    const html = document.createElement("div");
-    html.innerHTML = `
-<div id="theme-dropdown">🎨</div>
-
-<div id="theme-panel">
-  <div class="theme-option" data-theme="white"></div>
-  <div class="theme-option" data-theme="dark"></div>
-  <div class="theme-option" data-theme="pastel"></div>
+    const container = document.createElement("div");
+    container.innerHTML = `
+<div id="theme-dropdown" title="Abrir selector">🎨</div>
+<div id="theme-panel" aria-hidden="true">
+  <div class="theme-option" data-theme="white" title="Blanco"></div>
+  <div class="theme-option" data-theme="dark" title="Oscuro"></div>
+  <div class="theme-option" data-theme="pastel" title="Pastel Rosa"></div>
 
   <div class="theme-option" data-theme="waves-blue"></div>
   <div class="theme-option" data-theme="waves-pink"></div>
@@ -127,107 +127,313 @@ body.pastel-mode { background: #ffb6c1; color: #4b2e2e; transition: background .
   <div class="theme-option" data-theme="liquid-2"></div>
   <div class="theme-option" data-theme="liquid-3"></div>
 </div>
-
-<div id="liquid-bg"></div>
+<div id="liquid-bg" aria-hidden="true"></div>
     `;
 
     shadow.appendChild(style);
-    shadow.appendChild(html);
+    shadow.appendChild(container);
   }
 
   connectedCallback() {
-    this.initializeScripts();
+    this.initExternalMode();
   }
 
-  initializeScripts() {
+  initExternalMode() {
     const shadow = this.shadowRoot;
-
     const btn = shadow.querySelector("#theme-dropdown");
     const panel = shadow.querySelector("#theme-panel");
-    const liquidBg = shadow.querySelector("#liquid-bg");
-    const options = shadow.querySelectorAll(".theme-option");
+    const bg = shadow.querySelector("#liquid-bg");
+    let vantaEffect = null;
+    let metaballsInstance = null;
 
-    btn.addEventListener("click", () => {
-      panel.classList.toggle("active");
-      const open = panel.classList.contains("active");
-      panel.setAttribute("aria-hidden", open ? "false" : "true");
-    });
+    function loadScriptsSequential(urls, cb) {
+      let i = 0;
+      function next() {
+        if (i >= urls.length) return cb && cb();
+        const s = document.createElement("script");
+        s.src = urls[i++];
+        s.onload = next;
+        s.onerror = next;
+        document.head.appendChild(s);
+      }
+      next();
+    }
 
-    const setTheme = (theme) => {
-      document.body.classList.remove(
-        "white-mode",
-        "dark-mode",
-        "pastel-mode"
-      );
+    const libs = [
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/r121/three.min.js",
+      "https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.waves.min.js",
+      "https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.fog.min.js",
+      "https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.clouds.min.js"
+    ];
 
-      liquidBg.classList.add("hidden");
-      liquidBg.style.background = "transparent";
+    loadScriptsSequential(libs, () => {
+      // Metaballs implementation (same as original)
+      function Metaballs(container, opts = {}) {
+        const cfg = Object.assign({
+          count: 8,
+          colors: ['#66a6ff','#89f7fe','#3b82f6'],
+          bg: '#00111f',
+          blur: 36,
+          speed: 0.6,
+          radiusRange: [60, 160],
+          mouseRepel: 0.15
+        }, opts);
 
-      if (theme === "white") document.body.classList.add("white-mode");
-      else if (theme === "dark") document.body.classList.add("dark-mode");
-      else if (theme === "pastel") document.body.classList.add("pastel-mode");
+        let canvas = document.createElement('canvas');
+        canvas.style.position = 'absolute';
+        canvas.style.top = '0';
+        canvas.style.left = '0';
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
+        canvas.style.zIndex = '-1';
+        canvas.style.pointerEvents = 'none';
+        canvas.width = container.clientWidth;
+        canvas.height = container.clientHeight;
+        container.appendChild(canvas);
+        const ctx = canvas.getContext('2d');
 
-      if (theme.startsWith("waves-")) {
-        liquidBg.classList.remove("hidden");
-        if (theme === "waves-blue")
-          liquidBg.style.background = "linear-gradient(135deg,#6ec1e4,#b3e5fc)";
-        else if (theme === "waves-pink")
-          liquidBg.style.background = "linear-gradient(135deg,#ff7eb3,#ff9a9e)";
-        else if (theme === "waves-green")
-          liquidBg.style.background = "linear-gradient(135deg,#9be15d,#00e3ae)";
+        const balls = [];
+        for (let i=0;i<cfg.count;i++){
+          const r = rand(cfg.radiusRange[0], cfg.radiusRange[1]);
+          balls.push({
+            x: Math.random()*canvas.width,
+            y: Math.random()*canvas.height,
+            vx: (Math.random()-0.5)*cfg.speed*4,
+            vy: (Math.random()-0.5)*cfg.speed*4,
+            r,
+            color: cfg.colors[i % cfg.colors.length]
+          });
+        }
+
+        let raf = null;
+        let mouse = {x: canvas.width/2, y: canvas.height/2,vx:0,vy:0,down:false};
+
+        function resize(){
+          canvas.width = container.clientWidth;
+          canvas.height = container.clientHeight;
+        }
+        window.addEventListener('resize', resize);
+
+        function onMove(e){
+          const rect = canvas.getBoundingClientRect();
+          const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
+          const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
+          mouse.x = x; mouse.y = y;
+        }
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('touchmove', onMove, {passive:true});
+
+        function step(){
+          ctx.clearRect(0,0,canvas.width,canvas.height);
+          ctx.fillStyle = cfg.bg;
+          ctx.fillRect(0,0,canvas.width,canvas.height);
+
+          for (let b of balls){
+            b.x += b.vx;
+            b.y += b.vy;
+
+            if (b.x < -b.r) b.x = canvas.width + b.r;
+            if (b.x > canvas.width + b.r) b.x = -b.r;
+            if (b.y < -b.r) b.y = canvas.height + b.r;
+            if (b.y > canvas.height + b.r) b.y = -b.r;
+
+            const dx = mouse.x - b.x;
+            const dy = mouse.y - b.y;
+            const dist = Math.sqrt(dx*dx + dy*dy) + 0.001;
+            const force = Math.max(-1, Math.min(1, (200 - dist) / 200));
+            b.vx += -dx/dist * force * cfg.mouseRepel;
+            b.vy += -dy/dist * force * cfg.mouseRepel;
+            b.vx *= 0.995; b.vy *= 0.995;
+
+            const g = ctx.createRadialGradient(b.x, b.y, b.r*0.1, b.x, b.y, b.r);
+            g.addColorStop(0, hexToRgba(b.color, 0.95));
+            g.addColorStop(0.4, hexToRgba(b.color, 0.6));
+            g.addColorStop(1, hexToRgba(b.color, 0.0));
+            ctx.globalCompositeOperation = 'lighter';
+            ctx.fillStyle = g;
+            ctx.beginPath();
+            ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
+            ctx.fill();
+          }
+          raf = requestAnimationFrame(step);
+        }
+
+        function start(){ if(!raf) raf = requestAnimationFrame(step); }
+        function stop(){
+          if(raf){ cancelAnimationFrame(raf); raf = null; }
+          window.removeEventListener('resize', resize);
+          window.removeEventListener('mousemove', onMove);
+          window.removeEventListener('touchmove', onMove);
+          if (canvas && canvas.parentNode) canvas.parentNode.removeChild(canvas);
+        }
+
+        function rand(a,b){ return a + Math.random()*(b-a); }
+        function hexToRgba(hex, a){
+          hex = hex.replace('#','');
+          if(hex.length === 3) hex = hex.split('').map(h=>h+h).join('');
+          const r = parseInt(hex.substring(0,2),16);
+          const g = parseInt(hex.substring(2,4),16);
+          const b = parseInt(hex.substring(4,6),16);
+          return `rgba(${r},${g},${b},${a})`;
+        }
+
+        return { start, stop, setColors: c=>{ cfg.colors = c; balls.forEach((b,i)=>b.color = cfg.colors[i%cfg.colors.length]); } };
       }
 
-      if (theme.startsWith("fog-")) {
-        liquidBg.classList.remove("hidden");
-        if (theme === "fog-1")
-          liquidBg.style.background = "linear-gradient(135deg,#a18cd1,#fbc2eb)";
-        else if (theme === "fog-2")
-          liquidBg.style.background = "linear-gradient(135deg,#84fab0,#8fd3f4)";
-        else if (theme === "fog-3")
-          liquidBg.style.background = "linear-gradient(135deg,#ffd194,#f6d365)";
-        else if (theme === "fog-4")
-          liquidBg.style.background = "linear-gradient(135deg,#ff9a9e,#fecfef)";
-        else if (theme === "fog-5")
-          liquidBg.style.background = "linear-gradient(135deg,#c2e9fb,#a1c4fd)";
-        else if (theme === "fog-6")
-          liquidBg.style.background = "linear-gradient(135deg,#fbc2eb,#a6c1ee)";
+      function destroyAll() {
+        if (vantaEffect && typeof vantaEffect.destroy === 'function') {
+          try { vantaEffect.destroy(); } catch(e) {}
+          vantaEffect = null;
+        }
+        if (metaballsInstance && typeof metaballsInstance.stop === 'function') {
+          try { metaballsInstance.stop(); } catch(e) {}
+          metaballsInstance = null;
+        }
       }
 
-      if (theme.startsWith("clouds-")) {
-        liquidBg.classList.remove("hidden");
-        if (theme === "clouds-1")
-          liquidBg.style.background = "linear-gradient(135deg,#e0eafc,#cfdef3)";
-        else if (theme === "clouds-2")
-          liquidBg.style.background = "linear-gradient(135deg,#fbc2eb,#a6c1ee)";
-        else if (theme === "clouds-3")
-          liquidBg.style.background = "linear-gradient(135deg,#fddb92,#d1fdff)";
+      function luminanceFromHex(hex) {
+        hex = hex.replace('#','');
+        if(hex.length === 3) hex = hex.split('').map(h=>h+h).join('');
+        const r = parseInt(hex.substr(0,2),16)/255;
+        const g = parseInt(hex.substr(2,2),16)/255;
+        const b = parseInt(hex.substr(4,2),16)/255;
+        return 0.299*r + 0.587*g + 0.114*b;
       }
 
-      if (theme.startsWith("liquid-")) {
-        liquidBg.classList.remove("hidden");
-        if (theme === "liquid-1")
-          liquidBg.style.background = "linear-gradient(135deg,#89f7fe,#66a6ff)";
-        else if (theme === "liquid-2")
-          liquidBg.style.background = "linear-gradient(135deg,#c471f5,#fa71cd)";
-        else if (theme === "liquid-3")
-          liquidBg.style.background = "linear-gradient(135deg,#f6d365,#fda085)";
+      function luminanceForPreset(p) {
+        if(p.type === 'mode') return luminanceFromHex(p.bg);
+        if(p.type === 'clouds') return luminanceFromHex(p.background);
+        if(p.type === 'waves') return luminanceFromHex(("#" + (p.color.toString(16).padStart(6,"0"))));
+        if(p.type === 'fog') return 0.33 * (luminanceFromHex(p.h) + luminanceFromHex(p.m) + luminanceFromHex(p.l));
+        if(p.type === 'metaballs') return luminanceFromHex(p.bg);
+        return 1;
       }
 
-      localStorage.setItem("menutech-theme", theme);
-    };
+      const presets = {
+        white:  { type:"mode", className:"white-mode", bg:"#ffffff" },
+        dark:   { type:"mode", className:"dark-mode", bg:"#0d0d0d" },
+        pastel: { type:"mode", className:"pastel-mode", bg:"#ffb6c1" },
 
-    options.forEach(option => {
-      option.addEventListener("click", () => {
-        setTheme(option.dataset.theme);
+        "waves-blue":  { type:"waves", color:0x6ec1e4 },
+        "waves-pink":  { type:"waves", color:0xff7eb3 },
+        "waves-green": { type:"waves", color:0x00e3ae },
+
+        "fog-1": { type:"fog", h:"#fbc2eb", m:"#a18cd1", l:"#6b5b95" },
+        "fog-2": { type:"fog", h:"#84fab0", m:"#8fd3f4", l:"#5bc0eb" },
+        "fog-3": { type:"fog", h:"#ffd194", m:"#f6d365", l:"#ffb347" },
+        "fog-4": { type:"fog", h:"#ff9a9e", m:"#fecfef", l:"#ff6b6b" },
+        "fog-5": { type:"fog", h:"#c2e9fb", m:"#a1c4fd", l:"#6ea8fe" },
+        "fog-6": { type:"fog", h:"#fbc2eb", m:"#a6c1ee", l:"#6f86d6" },
+
+        "clouds-1": { type:"clouds", background:"#cfdef3" },
+        "clouds-2": { type:"clouds", background:"#fbc2eb" },
+        "clouds-3": { type:"clouds", background:"#fddb92" },
+
+        "liquid-1": { type:"metaballs", colors:['#66a6ff','#89f7fe','#3b82f6'], bg:"#00111f" },
+        "liquid-2": { type:"metaballs", colors:['#c471f5','#fa71cd','#7b2cbf'], bg:"#1a002b" },
+        "liquid-3": { type:"metaballs", colors:['#f6d365','#fda085','#d97706'], bg:"#2b0f00" }
+      };
+
+      function applyTheme(key) {
+        const p = presets[key];
+        if (!p) return;
+
+        destroyAll();
+        bg.classList.remove('hidden');
+        localStorage.setItem('theme', key);
+
+        if (p.type === 'mode') {
+          bg.classList.add('hidden');
+          document.body.classList.remove('white-mode','dark-mode','pastel-mode');
+          document.body.classList.add(p.className);
+          if (key === "dark") {
+            document.body.style.color = "#fff";
+          } else {
+            document.body.style.color = luminanceForPreset(p) < 0.5 ? "#fff" : "#222";
+          }
+          return;
+        }
+
+        const lum = luminanceForPreset(p);
+        if (p.type === "fog" || p.type === "clouds") {
+          document.body.style.color = "black";
+        } else {
+          document.body.style.color = lum < 0.5 ? "#fff" : "#222";
+        }
+
+        if (p.type === 'waves' && window.VANTA && VANTA.WAVES) {
+          vantaEffect = VANTA.WAVES({
+            el: bg,
+            mouseControls: true,
+            touchControls: true,
+            color: p.color,
+            shininess: 60,
+            waveHeight: 25,
+            waveSpeed: 0.7,
+            zoom: 1.05
+          });
+        } else if (p.type === 'fog' && window.VANTA && VANTA.FOG) {
+          vantaEffect = VANTA.FOG({
+            el: bg,
+            mouseControls: true,
+            touchControls: true,
+            highlightColor: p.h,
+            midtoneColor: p.m,
+            lowlightColor: p.l,
+            baseColor: "#000000",
+            blurFactor: 0.7,
+            speed: 1.1,
+            zoom: 1.1
+          });
+        } else if (p.type === 'clouds' && window.VANTA && VANTA.CLOUDS) {
+          vantaEffect = VANTA.CLOUDS({
+            el: bg,
+            mouseControls: true,
+            touchControls: true,
+            backgroundColor: p.background,
+            skyColor: p.background,
+            speed: 0.5
+          });
+        } else if (p.type === 'metaballs') {
+          metaballsInstance = Metaballs(bg, {
+            count: 9,
+            colors: p.colors,
+            bg: p.bg,
+            speed: 0.6,
+            radiusRange: [80,160],
+            mouseRepel: 0.18
+          });
+          metaballsInstance.start();
+        } else {
+          // fallback: simple bg color
+          bg.style.background = p.background || p.bg || "transparent";
+        }
+      }
+
+      btn.addEventListener('click', () => {
+        panel.classList.toggle('active');
+        panel.setAttribute('aria-hidden', panel.classList.contains('active') ? 'false' : 'true');
       });
-    });
 
-    const saved = localStorage.getItem("menutech-theme");
-    if (saved) setTheme(saved);
+      panel.querySelectorAll('.theme-option').forEach(opt => {
+        opt.addEventListener('click', () => {
+          const key = opt.dataset.theme;
+          applyTheme(key);
+          panel.classList.remove('active');
+          panel.setAttribute('aria-hidden', 'true');
+        });
+      });
+
+      const saved = localStorage.getItem('theme') || 'white';
+      setTimeout(()=>applyTheme(saved), 50);
+
+      window.addEventListener('beforeunload', destroyAll);
+    });
   }
 }
 
 customElements.define("menutech-themes", MenutechThemes);
+
 
 
 
@@ -2065,6 +2271,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
