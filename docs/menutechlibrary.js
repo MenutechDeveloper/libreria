@@ -1,4 +1,174 @@
 /******************************
+ * MENUTECH THEMES
+ ******************************/
+class MenutechThemes extends HTMLElement {
+  static get observedAttributes() {
+    return ["imagenes"];
+  }
+
+  constructor() {
+    super();
+    const shadow = this.attachShadow({ mode: "open" });
+
+    // ===== CSS original (mantiene el responsive correcto) =====
+    const style = document.createElement("style");
+    style.textContent = `
+      :host {
+        display: block;
+        width: 100%;
+        margin: 40px 0;
+        position: relative;
+      }
+
+      .flipbook-viewport {
+        overflow: hidden;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+      }
+
+      @media (max-width: 992px) {
+        .flipbook-viewport {
+          width: 90%;
+          height: auto;
+          display: block;
+        }
+      }
+
+      .flipbook-viewport .container {
+        padding: 20px;
+        text-align: center;
+        position: relative;
+        margin: 0 auto;
+      }
+
+      .flipbook {
+        width: 922px;
+        height: 700px;
+        margin: 0 auto;
+        display: block;
+      }
+
+      @media (max-width: 992px) {
+        .flipbook {
+          width: 100%;
+          height: 400px;
+          margin-top: 10px;
+        }
+      }
+
+      .flipbook .page {
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+      }
+
+      .flipbook img {
+        width: 100%;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+
+      @media (min-width: 992px) {
+        .flipbook-viewport {
+          justify-content: center;
+          align-items: center;
+        }
+
+        .container {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+      }
+    `;
+
+    // ===== Estructura HTML =====
+    const container = document.createElement("div");
+    container.classList.add("flipbook-viewport");
+    container.innerHTML = `
+      <div class="container">
+        <div class="flipbook"></div>
+      </div>
+    `;
+
+    shadow.appendChild(style);
+    shadow.appendChild(container);
+  }
+
+  connectedCallback() {
+    this.render();
+    this.ensureTurnJS();
+  }
+
+  attributeChangedCallback() {
+    this.render();
+  }
+
+  render() {
+    const flipbook = this.shadowRoot.querySelector(".flipbook");
+    if (!flipbook) return;
+
+    // Obtener imágenes del atributo o usar predeterminadas
+    let urls = [];
+    try {
+      urls = JSON.parse(this.getAttribute("imagenes") || "[]");
+    } catch {
+      const raw = this.getAttribute("imagenes");
+      if (raw) urls = raw.split(",").map(u => u.trim());
+    }
+
+    const imagesToUse = urls.length ? urls : [
+      "https://vikingantonio.github.io/cabanamenu/assets/img/1.jpg",
+      "https://vikingantonio.github.io/cabanamenu/assets/img/2.jpg",
+      "https://vikingantonio.github.io/cabanamenu/assets/img/3.jpg",
+      "https://vikingantonio.github.io/cabanamenu/assets/img/4.jpg",
+      "https://vikingantonio.github.io/cabanamenu/assets/img/5.jpg",
+      "https://vikingantonio.github.io/cabanamenu/assets/img/6.jpg",
+      "https://vikingantonio.github.io/cabanamenu/assets/img/7.jpg",
+      "https://vikingantonio.github.io/cabanamenu/assets/img/8.jpg",
+      "https://vikingantonio.github.io/cabanamenu/assets/img/9.jpg",
+      "https://vikingantonio.github.io/cabanamenu/assets/img/10.jpg",
+      "https://vikingantonio.github.io/cabanamenu/assets/img/11.jpg",
+      "https://vikingantonio.github.io/cabanamenu/assets/img/12.jpg"
+    ];
+
+    // Renderizar las imágenes
+    flipbook.innerHTML = imagesToUse
+      .map(src => `<img class="page" src="${src}" alt="page">`)
+      .join("");
+
+    // Reiniciar flipbook si Turn.js ya está cargado
+    if (window.jQuery && jQuery.fn.turn) {
+      jQuery(flipbook).turn("destroy").turn();
+    }
+  }
+
+  ensureTurnJS() {
+    const init = () => {
+      if (window.jQuery && jQuery.fn.turn) {
+        const flipbook = this.shadowRoot.querySelector(".flipbook");
+        jQuery(flipbook).turn();
+      } else if (!window.jQuery) {
+        const jq = document.createElement("script");
+        jq.src = "https://code.jquery.com/jquery-3.6.0.min.js";
+        jq.onload = init;
+        document.head.appendChild(jq);
+      } else {
+        const turn = document.createElement("script");
+        turn.src = "https://menutech.biz/m10/assets/js/turn.js";
+        turn.onload = init;
+        document.head.appendChild(turn);
+      }
+    };
+    init();
+  }
+}
+
+customElements.define("menutech-themes", MenutechThemes);
+
+/******************************
  * MENUTECH MENU
  ******************************/
 class MenutechMenu extends HTMLElement {
@@ -1824,6 +1994,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
