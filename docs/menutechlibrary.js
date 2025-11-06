@@ -78,7 +78,6 @@ body.pastel-mode { background: #ffb6c1; color: #4b2e2e; transition: background .
 .theme-option[data-theme="waves-pink"]  { background: linear-gradient(135deg,#ff7eb3,#ff9a9e); }
 .theme-option[data-theme="waves-green"] { background: linear-gradient(135deg,#9be15d,#00e3ae); }
 
-.theme-option[data-theme^="fog-"] { background-size: cover; }
 .theme-option[data-theme="fog-1"] { background: linear-gradient(135deg,#a18cd1,#fbc2eb); }
 .theme-option[data-theme="fog-2"] { background: linear-gradient(135deg,#84fab0,#8fd3f4); }
 .theme-option[data-theme="fog-3"] { background: linear-gradient(135deg,#ffd194,#f6d365); }
@@ -102,9 +101,9 @@ body.pastel-mode { background: #ffb6c1; color: #4b2e2e; transition: background .
 
     const html = document.createElement("div");
     html.innerHTML = `
-<div id="theme-dropdown" title="Abrir selector">🎨</div>
+<div id="theme-dropdown">🎨</div>
 
-<div id="theme-panel" aria-hidden="true">
+<div id="theme-panel">
   <div class="theme-option" data-theme="white"></div>
   <div class="theme-option" data-theme="dark"></div>
   <div class="theme-option" data-theme="pastel"></div>
@@ -129,7 +128,7 @@ body.pastel-mode { background: #ffb6c1; color: #4b2e2e; transition: background .
   <div class="theme-option" data-theme="liquid-3"></div>
 </div>
 
-<div id="liquid-bg" aria-hidden="true"></div>
+<div id="liquid-bg"></div>
     `;
 
     shadow.appendChild(style);
@@ -139,9 +138,97 @@ body.pastel-mode { background: #ffb6c1; color: #4b2e2e; transition: background .
   connectedCallback() {
     this.initializeScripts();
   }
+
+  initializeScripts() {
+    const shadow = this.shadowRoot;
+
+    const btn = shadow.querySelector("#theme-dropdown");
+    const panel = shadow.querySelector("#theme-panel");
+    const liquidBg = shadow.querySelector("#liquid-bg");
+    const options = shadow.querySelectorAll(".theme-option");
+
+    btn.addEventListener("click", () => {
+      panel.classList.toggle("active");
+      const open = panel.classList.contains("active");
+      panel.setAttribute("aria-hidden", open ? "false" : "true");
+    });
+
+    const setTheme = (theme) => {
+      document.body.classList.remove(
+        "white-mode",
+        "dark-mode",
+        "pastel-mode"
+      );
+
+      liquidBg.classList.add("hidden");
+      liquidBg.style.background = "transparent";
+
+      if (theme === "white") document.body.classList.add("white-mode");
+      else if (theme === "dark") document.body.classList.add("dark-mode");
+      else if (theme === "pastel") document.body.classList.add("pastel-mode");
+
+      if (theme.startsWith("waves-")) {
+        liquidBg.classList.remove("hidden");
+        if (theme === "waves-blue")
+          liquidBg.style.background = "linear-gradient(135deg,#6ec1e4,#b3e5fc)";
+        else if (theme === "waves-pink")
+          liquidBg.style.background = "linear-gradient(135deg,#ff7eb3,#ff9a9e)";
+        else if (theme === "waves-green")
+          liquidBg.style.background = "linear-gradient(135deg,#9be15d,#00e3ae)";
+      }
+
+      if (theme.startsWith("fog-")) {
+        liquidBg.classList.remove("hidden");
+        if (theme === "fog-1")
+          liquidBg.style.background = "linear-gradient(135deg,#a18cd1,#fbc2eb)";
+        else if (theme === "fog-2")
+          liquidBg.style.background = "linear-gradient(135deg,#84fab0,#8fd3f4)";
+        else if (theme === "fog-3")
+          liquidBg.style.background = "linear-gradient(135deg,#ffd194,#f6d365)";
+        else if (theme === "fog-4")
+          liquidBg.style.background = "linear-gradient(135deg,#ff9a9e,#fecfef)";
+        else if (theme === "fog-5")
+          liquidBg.style.background = "linear-gradient(135deg,#c2e9fb,#a1c4fd)";
+        else if (theme === "fog-6")
+          liquidBg.style.background = "linear-gradient(135deg,#fbc2eb,#a6c1ee)";
+      }
+
+      if (theme.startsWith("clouds-")) {
+        liquidBg.classList.remove("hidden");
+        if (theme === "clouds-1")
+          liquidBg.style.background = "linear-gradient(135deg,#e0eafc,#cfdef3)";
+        else if (theme === "clouds-2")
+          liquidBg.style.background = "linear-gradient(135deg,#fbc2eb,#a6c1ee)";
+        else if (theme === "clouds-3")
+          liquidBg.style.background = "linear-gradient(135deg,#fddb92,#d1fdff)";
+      }
+
+      if (theme.startsWith("liquid-")) {
+        liquidBg.classList.remove("hidden");
+        if (theme === "liquid-1")
+          liquidBg.style.background = "linear-gradient(135deg,#89f7fe,#66a6ff)";
+        else if (theme === "liquid-2")
+          liquidBg.style.background = "linear-gradient(135deg,#c471f5,#fa71cd)";
+        else if (theme === "liquid-3")
+          liquidBg.style.background = "linear-gradient(135deg,#f6d365,#fda085)";
+      }
+
+      localStorage.setItem("menutech-theme", theme);
+    };
+
+    options.forEach(option => {
+      option.addEventListener("click", () => {
+        setTheme(option.dataset.theme);
+      });
+    });
+
+    const saved = localStorage.getItem("menutech-theme");
+    if (saved) setTheme(saved);
+  }
 }
 
 customElements.define("menutech-themes", MenutechThemes);
+
 
 
 
@@ -1978,6 +2065,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
