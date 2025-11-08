@@ -132,8 +132,8 @@ body.pastel-mode { background: #ffb6c1; color: #4b2e2e; transition: background .
 
     const container = document.createElement("div");
     container.innerHTML = `
-<div id="theme-dropdown" title="Abrir selector">🎨</div>
-<div id="theme-panel" aria-hidden="true">
+<div id="theme-dropdown">🎨</div>
+<div id="theme-panel">
   <div class="theme-option" data-theme="white"></div>
   <div class="theme-option" data-theme="dark"></div>
   <div class="theme-option" data-theme="pastel"></div>
@@ -157,7 +157,6 @@ body.pastel-mode { background: #ffb6c1; color: #4b2e2e; transition: background .
     <div id="overlay-toggle">Negro</div>
   </div>
 </div>
-
 <div id="liquid-bg"></div>
 <div id="overlay"></div>
 
@@ -178,9 +177,6 @@ body.pastel-mode { background: #ffb6c1; color: #4b2e2e; transition: background .
   init() {
     const s = document.createElement("script");
     s.textContent = `
-${(() => {}).toString()}
-${document.currentScript?.textContent || ''}
-
 function Metaballs(container, opts = {}) {
   const cfg = Object.assign({
     count: 8,
@@ -243,8 +239,8 @@ function Metaballs(container, opts = {}) {
       g.addColorStop(0.4, hexToRgba(b.color, 0.6));
       g.addColorStop(1, hexToRgba(b.color, 0.0));
       ctx.globalCompositeOperation = 'lighter';
-      ctx.fillStyle = g;
       ctx.beginPath();
+      ctx.fillStyle = g;
       ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
       ctx.fill();
     }
@@ -375,6 +371,7 @@ document.addEventListener("DOMContentLoaded", () => {
 }
 
 customElements.define("menutech-themes", MenutechThemes);
+
 
 
 
@@ -2220,6 +2217,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
