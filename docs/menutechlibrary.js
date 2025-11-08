@@ -305,17 +305,18 @@ body.pastel-mode { background: #ffb6c1; color: #4b2e2e; transition: background .
         else if (theme.startsWith("birds")) {
           vantaEffect = VANTA.BIRDS({
             el: bg,
-            backgroundColor: 0x0d0d0d,
+            backgroundColor: 0xaeefff,
             color1: theme === "birds-1" ? 0xff0055 :
                     theme === "birds-2" ? 0xffc300 : 0x33ff57,
             color2: theme === "birds-1" ? 0x00fff6 :
                     theme === "birds-2" ? 0xff5733 : 0x00ccff,
-            birdSize: 1.6,
-            wingSpan: 25.0,
-            quantity: 3.0,
-            speedLimit: 3.0,
-            separation: 60.0,
-            alignment: 35.0
+            birdSize: 1,
+            wingSpan: 30,
+            quantity: 5,
+            speedLimit: 5,
+            separation: 20,
+            alignment: 20,
+            cohesion: 20
           });
         }
 
@@ -2209,6 +2210,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
