@@ -8,6 +8,7 @@ class MenutechThemes extends HTMLElement {
 
     const style = document.createElement("style");
     style.textContent = `
+/* ---------- BOTÓN Y PANEL ---------- */
 #theme-dropdown {
   position: fixed;
   top: 16px;
@@ -60,24 +61,55 @@ class MenutechThemes extends HTMLElement {
   inset: 0;
   width: 100%;
   height: 100%;
-  z-index: -1;
+  z-index: -2;
   transition: opacity .6s ease;
   background: transparent;
 }
 #liquid-bg.hidden { opacity: 0; pointer-events: none; }
 
+#overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.1);
+  z-index: -1;
+  pointer-events: none;
+  transition: background .3s ease;
+}
+
+#overlay-controls {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: rgba(255,255,255,0.9);
+  padding: 8px 10px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  backdrop-filter: blur(6px);
+  margin-top: 6px;
+}
+#overlay-range { width: 100px; }
+#overlay-toggle {
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: #e5e5e5;
+  user-select: none;
+  font-size: 12px;
+  font-weight: 600;
+}
+
 body.white-mode { background: #fff; color: #222; transition: background .6s, color .6s; }
-body.dark-mode { background: #0d0d0d; color: #fff; transition: background .6s, color .6s; }
+body.dark-mode { background: #3b3b3b; color: #fff; transition: background .6s, color .6s; }
 body.pastel-mode { background: #ffb6c1; color: #4b2e2e; transition: background .6s, color .6s; }
 
 .theme-option[data-theme="white"] { background: #ffffff; }
 .theme-option[data-theme="dark"]  { background: #111111; }
 .theme-option[data-theme="pastel"] { background: linear-gradient(135deg,#ffb6c1,#ffe6eb); }
-
 .theme-option[data-theme="waves-blue"]  { background: linear-gradient(135deg,#6ec1e4,#b3e5fc); }
 .theme-option[data-theme="waves-pink"]  { background: linear-gradient(135deg,#ff7eb3,#ff9a9e); }
 .theme-option[data-theme="waves-green"] { background: linear-gradient(135deg,#9be15d,#00e3ae); }
-
 .theme-option[data-theme^="fog-"] { background-size: cover; }
 .theme-option[data-theme="fog-1"] { background: linear-gradient(135deg,#a18cd1,#fbc2eb); }
 .theme-option[data-theme="fog-2"] { background: linear-gradient(135deg,#84fab0,#8fd3f4); }
@@ -85,11 +117,9 @@ body.pastel-mode { background: #ffb6c1; color: #4b2e2e; transition: background .
 .theme-option[data-theme="fog-4"] { background: linear-gradient(135deg,#ff9a9e,#fecfef); }
 .theme-option[data-theme="fog-5"] { background: linear-gradient(135deg,#c2e9fb,#a1c4fd); }
 .theme-option[data-theme="fog-6"] { background: linear-gradient(135deg,#fbc2eb,#a6c1ee); }
-
 .theme-option[data-theme="clouds-1"] { background: linear-gradient(135deg,#e0eafc,#cfdef3); }
 .theme-option[data-theme="clouds-2"] { background: linear-gradient(135deg,#fbc2eb,#a6c1ee); }
 .theme-option[data-theme="clouds-3"] { background: linear-gradient(135deg,#fddb92,#d1fdff); }
-
 .theme-option[data-theme="liquid-1"] { background: linear-gradient(135deg,#89f7fe,#66a6ff); }
 .theme-option[data-theme="liquid-2"] { background: linear-gradient(135deg,#c471f5,#fa71cd); }
 .theme-option[data-theme="liquid-3"] { background: linear-gradient(135deg,#f6d365,#fda085); }
@@ -104,335 +134,254 @@ body.pastel-mode { background: #ffb6c1; color: #4b2e2e; transition: background .
     container.innerHTML = `
 <div id="theme-dropdown" title="Abrir selector">🎨</div>
 <div id="theme-panel" aria-hidden="true">
-  <div class="theme-option" data-theme="white" title="Blanco"></div>
-  <div class="theme-option" data-theme="dark" title="Oscuro"></div>
-  <div class="theme-option" data-theme="pastel" title="Pastel Rosa"></div>
-
+  <div class="theme-option" data-theme="white"></div>
+  <div class="theme-option" data-theme="dark"></div>
+  <div class="theme-option" data-theme="pastel"></div>
   <div class="theme-option" data-theme="waves-blue"></div>
   <div class="theme-option" data-theme="waves-pink"></div>
   <div class="theme-option" data-theme="waves-green"></div>
-
   <div class="theme-option" data-theme="fog-1"></div>
   <div class="theme-option" data-theme="fog-2"></div>
   <div class="theme-option" data-theme="fog-3"></div>
   <div class="theme-option" data-theme="fog-4"></div>
   <div class="theme-option" data-theme="fog-5"></div>
   <div class="theme-option" data-theme="fog-6"></div>
-
   <div class="theme-option" data-theme="clouds-1"></div>
   <div class="theme-option" data-theme="clouds-2"></div>
   <div class="theme-option" data-theme="clouds-3"></div>
-
   <div class="theme-option" data-theme="liquid-1"></div>
   <div class="theme-option" data-theme="liquid-2"></div>
   <div class="theme-option" data-theme="liquid-3"></div>
+  <div id="overlay-controls">
+    <input type="range" id="overlay-range" min="0" max="100" value="10">
+    <div id="overlay-toggle">Negro</div>
+  </div>
 </div>
-<div id="liquid-bg" aria-hidden="true"></div>
-    `;
+
+<div id="liquid-bg"></div>
+<div id="overlay"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r121/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.waves.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.fog.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.clouds.min.js"></script>
+`;
 
     shadow.appendChild(style);
     shadow.appendChild(container);
   }
 
   connectedCallback() {
-    this.initExternalMode();
+    this.init();
   }
 
-  initExternalMode() {
-    const shadow = this.shadowRoot;
-    const btn = shadow.querySelector("#theme-dropdown");
-    const panel = shadow.querySelector("#theme-panel");
-    const bg = shadow.querySelector("#liquid-bg");
-    let vantaEffect = null;
-    let metaballsInstance = null;
+  init() {
+    const s = document.createElement("script");
+    s.textContent = `
+${(() => {}).toString()}
+${document.currentScript?.textContent || ''}
 
-    function loadScriptsSequential(urls, cb) {
-      let i = 0;
-      function next() {
-        if (i >= urls.length) return cb && cb();
-        const s = document.createElement("script");
-        s.src = urls[i++];
-        s.onload = next;
-        s.onerror = next;
-        document.head.appendChild(s);
-      }
-      next();
+function Metaballs(container, opts = {}) {
+  const cfg = Object.assign({
+    count: 8,
+    colors: ['#66a6ff','#89f7fe','#3b82f6'],
+    bg: '#00111f',
+    blur: 36,
+    speed: 0.6,
+    radiusRange: [60, 160],
+    mouseRepel: 0.15
+  }, opts);
+
+  let canvas = document.createElement('canvas');
+  canvas.style.position = 'absolute';
+  canvas.style.top = '0';
+  canvas.style.left = '0';
+  canvas.style.width = '100%';
+  canvas.style.height = '100%';
+  canvas.style.zIndex = '-1';
+  canvas.style.pointerEvents = 'none';
+  canvas.width = container.clientWidth;
+  canvas.height = container.clientHeight;
+  container.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+
+  const balls = [];
+  for (let i=0;i<cfg.count;i++){
+    const r = rand(cfg.radiusRange[0], cfg.radiusRange[1]);
+    balls.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height,
+      vx: (Math.random()-0.5)*cfg.speed*4, vy: (Math.random()-0.5)*cfg.speed*4,
+      r, color: cfg.colors[i % cfg.colors.length] });
+  }
+
+  let raf = null;
+  let mouse = {x: canvas.width/2, y: canvas.height/2};
+
+  function resize(){ canvas.width = container.clientWidth; canvas.height = container.clientHeight; }
+  window.addEventListener('resize', resize);
+
+  function onMove(e){
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
+    const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
+    mouse.x = x; mouse.y = y;
+  }
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('touchmove', onMove, {passive:true});
+
+  function step(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = cfg.bg; ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    for (let b of balls){
+      b.x += b.vx; b.y += b.vy;
+      if (b.x < -b.r) b.x = canvas.width + b.r;
+      if (b.x > canvas.width + b.r) b.x = -b.r;
+      if (b.y < -b.r) b.y = canvas.height + b.r;
+      if (b.y > canvas.height + b.r) b.y = -b.r;
+      const g = ctx.createRadialGradient(b.x,b.y,b.r*0.1,b.x,b.y,b.r);
+      g.addColorStop(0, hexToRgba(b.color, 0.95));
+      g.addColorStop(0.4, hexToRgba(b.color, 0.6));
+      g.addColorStop(1, hexToRgba(b.color, 0.0));
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
+      ctx.fill();
     }
+    raf = requestAnimationFrame(step);
+  }
 
-    const libs = [
-      "https://cdnjs.cloudflare.com/ajax/libs/three.js/r121/three.min.js",
-      "https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.waves.min.js",
-      "https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.fog.min.js",
-      "https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.clouds.min.js"
-    ];
+  function start(){ if(!raf) raf = requestAnimationFrame(step); }
+  function stop(){ if(raf){ cancelAnimationFrame(raf); raf=null; } if(canvas&&canvas.parentNode)canvas.parentNode.removeChild(canvas); }
+  function rand(a,b){ return a + Math.random()*(b-a); }
+  function hexToRgba(hex,a){ hex=hex.replace('#',''); if(hex.length===3)hex=hex.split('').map(h=>h+h).join(''); const r=parseInt(hex.substring(0,2),16); const g=parseInt(hex.substring(2,4),16); const b=parseInt(hex.substring(4,6),16); return \`rgba(\${r},\${g},\${b},\${a})\`; }
 
-    loadScriptsSequential(libs, () => {
-      // Metaballs implementation (same as original)
-      function Metaballs(container, opts = {}) {
-        const cfg = Object.assign({
-          count: 8,
-          colors: ['#66a6ff','#89f7fe','#3b82f6'],
-          bg: '#00111f',
-          blur: 36,
-          speed: 0.6,
-          radiusRange: [60, 160],
-          mouseRepel: 0.15
-        }, opts);
+  return { start, stop };
+}
 
-        let canvas = document.createElement('canvas');
-        canvas.style.position = 'absolute';
-        canvas.style.top = '0';
-        canvas.style.left = '0';
-        canvas.style.width = '100%';
-        canvas.style.height = '100%';
-        canvas.style.zIndex = '-1';
-        canvas.style.pointerEvents = 'none';
-        canvas.width = container.clientWidth;
-        canvas.height = container.clientHeight;
-        container.appendChild(canvas);
-        const ctx = canvas.getContext('2d');
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = document.getElementById("theme-dropdown");
+  const panel = document.getElementById("theme-panel");
+  const bg = document.getElementById("liquid-bg");
+  const overlay = document.getElementById("overlay");
+  const range = document.getElementById("overlay-range");
+  const toggle = document.getElementById("overlay-toggle");
+  let overlayColor = "black";
+  let vantaEffect = null;
+  let metaballsInstance = null;
+  const sections = ['navbar','hero','services','newsletter','about','gallery','footer'];
 
-        const balls = [];
-        for (let i=0;i<cfg.count;i++){
-          const r = rand(cfg.radiusRange[0], cfg.radiusRange[1]);
-          balls.push({
-            x: Math.random()*canvas.width,
-            y: Math.random()*canvas.height,
-            vx: (Math.random()-0.5)*cfg.speed*4,
-            vy: (Math.random()-0.5)*cfg.speed*4,
-            r,
-            color: cfg.colors[i % cfg.colors.length]
-          });
-        }
+  const presets = {
+    white:  { type:"mode", className:"white-mode",
+      sections:{
+        navbar:{bg:"#fff",color:"#222"},
+        hero:{bg:"#f4f4f4",color:"#111"},
+        services:{bg:"#fff",color:"#000"},
+        newsletter:{bg:"#eee",color:"#000"},
+        about:{bg:"#fff",color:"#000"},
+        gallery:{bg:"#fafafa",color:"#000"},
+        footer:{bg:"#f2f2f2",color:"#000"}
+      }},
+    dark:   { type:"mode", className:"dark-mode",
+      sections:{
+        navbar:{bg:"#000",color:"#fff"},
+        hero:{bg:"#0d0d0d",color:"#fff"},
+        services:{bg:"#111",color:"#fff"},
+        newsletter:{bg:"#0d0d0d",color:"#fff"},
+        about:{bg:"#111",color:"#fff"},
+        gallery:{bg:"#0f0f0f",color:"#fff"},
+        footer:{bg:"#000",color:"#fff"}
+      }},
+    pastel: { type:"mode", className:"pastel-mode",
+      sections:{
+        navbar:{bg:"#ffc0cb",color:"#4b2e2e"},
+        hero:{bg:"#ffd6e0",color:"#4b2e2e"},
+        services:{bg:"#ffe4ec",color:"#4b2e2e"},
+        newsletter:{bg:"#ffd6e0",color:"#4b2e2e"},
+        about:{bg:"#ffc0cb",color:"#4b2e2e"},
+        gallery:{bg:"#ffe6f0",color:"#4b2e2e"},
+        footer:{bg:"#ffc0cb",color:"#4b2e2e"}
+      }},
+    "waves-blue":  { type:"waves", color:0x6ec1e4 },
+    "waves-pink":  { type:"waves", color:0xff7eb3 },
+    "waves-green": { type:"waves", color:0x00e3ae },
+    "fog-1": { type:"fog", h:"#fbc2eb", m:"#a18cd1", l:"#6b5b95" },
+    "fog-2": { type:"fog", h:"#84fab0", m:"#8fd3f4", l:"#5bc0eb" },
+    "fog-3": { type:"fog", h:"#ffd194", m:"#f6d365", l:"#ffb347" },
+    "fog-4": { type:"fog", h:"#ff9a9e", m:"#fecfef", l:"#ff6b6b" },
+    "fog-5": { type:"fog", h:"#c2e9fb", m:"#a1c4fd", l:"#6ea8fe" },
+    "fog-6": { type:"fog", h:"#fbc2eb", m:"#a6c1ee", l:"#6f86d6" },
+    "clouds-1": { type:"clouds", background:"#cfdef3" },
+    "clouds-2": { type:"clouds", background:"#fbc2eb" },
+    "clouds-3": { type:"clouds", background:"#fddb92" },
+    "liquid-1": { type:"metaballs", colors:['#66a6ff','#89f7fe','#3b82f6'], bg:"#00111f" },
+    "liquid-2": { type:"metaballs", colors:['#c471f5','#fa71cd','#7b2cbf'], bg:"#1a002b" },
+    "liquid-3": { type:"metaballs", colors:['#f6d365','#fda085','#d97706'], bg:"#2b0f00" }
+  };
 
-        let raf = null;
-        let mouse = {x: canvas.width/2, y: canvas.height/2,vx:0,vy:0,down:false};
+  function destroyAll(){ if(vantaEffect?.destroy)try{vantaEffect.destroy();}catch{} vantaEffect=null; if(metaballsInstance?.stop)metaballsInstance.stop(); metaballsInstance=null; }
 
-        function resize(){
-          canvas.width = container.clientWidth;
-          canvas.height = container.clientHeight;
-        }
-        window.addEventListener('resize', resize);
-
-        function onMove(e){
-          const rect = canvas.getBoundingClientRect();
-          const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
-          const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
-          mouse.x = x; mouse.y = y;
-        }
-        window.addEventListener('mousemove', onMove);
-        window.addEventListener('touchmove', onMove, {passive:true});
-
-        function step(){
-          ctx.clearRect(0,0,canvas.width,canvas.height);
-          ctx.fillStyle = cfg.bg;
-          ctx.fillRect(0,0,canvas.width,canvas.height);
-
-          for (let b of balls){
-            b.x += b.vx;
-            b.y += b.vy;
-
-            if (b.x < -b.r) b.x = canvas.width + b.r;
-            if (b.x > canvas.width + b.r) b.x = -b.r;
-            if (b.y < -b.r) b.y = canvas.height + b.r;
-            if (b.y > canvas.height + b.r) b.y = -b.r;
-
-            const dx = mouse.x - b.x;
-            const dy = mouse.y - b.y;
-            const dist = Math.sqrt(dx*dx + dy*dy) + 0.001;
-            const force = Math.max(-1, Math.min(1, (200 - dist) / 200));
-            b.vx += -dx/dist * force * cfg.mouseRepel;
-            b.vy += -dy/dist * force * cfg.mouseRepel;
-            b.vx *= 0.995; b.vy *= 0.995;
-
-            const g = ctx.createRadialGradient(b.x, b.y, b.r*0.1, b.x, b.y, b.r);
-            g.addColorStop(0, hexToRgba(b.color, 0.95));
-            g.addColorStop(0.4, hexToRgba(b.color, 0.6));
-            g.addColorStop(1, hexToRgba(b.color, 0.0));
-            ctx.globalCompositeOperation = 'lighter';
-            ctx.fillStyle = g;
-            ctx.beginPath();
-            ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
-            ctx.fill();
-          }
-          raf = requestAnimationFrame(step);
-        }
-
-        function start(){ if(!raf) raf = requestAnimationFrame(step); }
-        function stop(){
-          if(raf){ cancelAnimationFrame(raf); raf = null; }
-          window.removeEventListener('resize', resize);
-          window.removeEventListener('mousemove', onMove);
-          window.removeEventListener('touchmove', onMove);
-          if (canvas && canvas.parentNode) canvas.parentNode.removeChild(canvas);
-        }
-
-        function rand(a,b){ return a + Math.random()*(b-a); }
-        function hexToRgba(hex, a){
-          hex = hex.replace('#','');
-          if(hex.length === 3) hex = hex.split('').map(h=>h+h).join('');
-          const r = parseInt(hex.substring(0,2),16);
-          const g = parseInt(hex.substring(2,4),16);
-          const b = parseInt(hex.substring(4,6),16);
-          return `rgba(${r},${g},${b},${a})`;
-        }
-
-        return { start, stop, setColors: c=>{ cfg.colors = c; balls.forEach((b,i)=>b.color = cfg.colors[i%cfg.colors.length]); } };
+  function applySectionStyles(preset){
+    if(!preset.sections)return;
+    sections.forEach(id=>{
+      const el=document.getElementById(id);
+      if(el && preset.sections[id]){
+        el.style.background=preset.sections[id].bg;
+        el.style.color=preset.sections[id].color;
       }
-
-      function destroyAll() {
-        if (vantaEffect && typeof vantaEffect.destroy === 'function') {
-          try { vantaEffect.destroy(); } catch(e) {}
-          vantaEffect = null;
-        }
-        if (metaballsInstance && typeof metaballsInstance.stop === 'function') {
-          try { metaballsInstance.stop(); } catch(e) {}
-          metaballsInstance = null;
-        }
-      }
-
-      function luminanceFromHex(hex) {
-        hex = hex.replace('#','');
-        if(hex.length === 3) hex = hex.split('').map(h=>h+h).join('');
-        const r = parseInt(hex.substr(0,2),16)/255;
-        const g = parseInt(hex.substr(2,2),16)/255;
-        const b = parseInt(hex.substr(4,2),16)/255;
-        return 0.299*r + 0.587*g + 0.114*b;
-      }
-
-      function luminanceForPreset(p) {
-        if(p.type === 'mode') return luminanceFromHex(p.bg);
-        if(p.type === 'clouds') return luminanceFromHex(p.background);
-        if(p.type === 'waves') return luminanceFromHex(("#" + (p.color.toString(16).padStart(6,"0"))));
-        if(p.type === 'fog') return 0.33 * (luminanceFromHex(p.h) + luminanceFromHex(p.m) + luminanceFromHex(p.l));
-        if(p.type === 'metaballs') return luminanceFromHex(p.bg);
-        return 1;
-      }
-
-      const presets = {
-        white:  { type:"mode", className:"white-mode", bg:"#ffffff" },
-        dark:   { type:"mode", className:"dark-mode", bg:"#0d0d0d" },
-        pastel: { type:"mode", className:"pastel-mode", bg:"#ffb6c1" },
-
-        "waves-blue":  { type:"waves", color:0x6ec1e4 },
-        "waves-pink":  { type:"waves", color:0xff7eb3 },
-        "waves-green": { type:"waves", color:0x00e3ae },
-
-        "fog-1": { type:"fog", h:"#fbc2eb", m:"#a18cd1", l:"#6b5b95" },
-        "fog-2": { type:"fog", h:"#84fab0", m:"#8fd3f4", l:"#5bc0eb" },
-        "fog-3": { type:"fog", h:"#ffd194", m:"#f6d365", l:"#ffb347" },
-        "fog-4": { type:"fog", h:"#ff9a9e", m:"#fecfef", l:"#ff6b6b" },
-        "fog-5": { type:"fog", h:"#c2e9fb", m:"#a1c4fd", l:"#6ea8fe" },
-        "fog-6": { type:"fog", h:"#fbc2eb", m:"#a6c1ee", l:"#6f86d6" },
-
-        "clouds-1": { type:"clouds", background:"#cfdef3" },
-        "clouds-2": { type:"clouds", background:"#fbc2eb" },
-        "clouds-3": { type:"clouds", background:"#fddb92" },
-
-        "liquid-1": { type:"metaballs", colors:['#66a6ff','#89f7fe','#3b82f6'], bg:"#00111f" },
-        "liquid-2": { type:"metaballs", colors:['#c471f5','#fa71cd','#7b2cbf'], bg:"#1a002b" },
-        "liquid-3": { type:"metaballs", colors:['#f6d365','#fda085','#d97706'], bg:"#2b0f00" }
-      };
-
-      function applyTheme(key) {
-        const p = presets[key];
-        if (!p) return;
-
-        destroyAll();
-        bg.classList.remove('hidden');
-        localStorage.setItem('theme', key);
-
-        if (p.type === 'mode') {
-          bg.classList.add('hidden');
-          document.body.classList.remove('white-mode','dark-mode','pastel-mode');
-          document.body.classList.add(p.className);
-          if (key === "dark") {
-            document.body.style.color = "#fff";
-          } else {
-            document.body.style.color = luminanceForPreset(p) < 0.5 ? "#fff" : "#222";
-          }
-          return;
-        }
-
-        const lum = luminanceForPreset(p);
-        if (p.type === "fog" || p.type === "clouds") {
-          document.body.style.color = "black";
-        } else {
-          document.body.style.color = lum < 0.5 ? "#fff" : "#222";
-        }
-
-        if (p.type === 'waves' && window.VANTA && VANTA.WAVES) {
-          vantaEffect = VANTA.WAVES({
-            el: bg,
-            mouseControls: true,
-            touchControls: true,
-            color: p.color,
-            shininess: 60,
-            waveHeight: 25,
-            waveSpeed: 0.7,
-            zoom: 1.05
-          });
-        } else if (p.type === 'fog' && window.VANTA && VANTA.FOG) {
-          vantaEffect = VANTA.FOG({
-            el: bg,
-            mouseControls: true,
-            touchControls: true,
-            highlightColor: p.h,
-            midtoneColor: p.m,
-            lowlightColor: p.l,
-            baseColor: "#000000",
-            blurFactor: 0.7,
-            speed: 1.1,
-            zoom: 1.1
-          });
-        } else if (p.type === 'clouds' && window.VANTA && VANTA.CLOUDS) {
-          vantaEffect = VANTA.CLOUDS({
-            el: bg,
-            mouseControls: true,
-            touchControls: true,
-            backgroundColor: p.background,
-            skyColor: p.background,
-            speed: 0.5
-          });
-        } else if (p.type === 'metaballs') {
-          metaballsInstance = Metaballs(bg, {
-            count: 9,
-            colors: p.colors,
-            bg: p.bg,
-            speed: 0.6,
-            radiusRange: [80,160],
-            mouseRepel: 0.18
-          });
-          metaballsInstance.start();
-        } else {
-          // fallback: simple bg color
-          bg.style.background = p.background || p.bg || "transparent";
-        }
-      }
-
-      btn.addEventListener('click', () => {
-        panel.classList.toggle('active');
-        panel.setAttribute('aria-hidden', panel.classList.contains('active') ? 'false' : 'true');
-      });
-
-      panel.querySelectorAll('.theme-option').forEach(opt => {
-        opt.addEventListener('click', () => {
-          const key = opt.dataset.theme;
-          applyTheme(key);
-          panel.classList.remove('active');
-          panel.setAttribute('aria-hidden', 'true');
-        });
-      });
-
-      const saved = localStorage.getItem('theme') || 'white';
-      setTimeout(()=>applyTheme(saved), 50);
-
-      window.addEventListener('beforeunload', destroyAll);
     });
+  }
+
+  function applyOverlay(){
+    const val = range.value / 100;
+    overlay.style.background = overlayColor === "black"
+      ? \`rgba(0,0,0,\${val})\`
+      : \`rgba(255,255,255,\${val})\`;
+  }
+
+  range.addEventListener("input", applyOverlay);
+  toggle.addEventListener("click",()=>{
+    overlayColor = overlayColor==="black"?"white":"black";
+    toggle.textContent = overlayColor==="black"?"Negro":"Blanco";
+    applyOverlay();
+  });
+
+  function applyTheme(key){
+    const p=presets[key]; if(!p)return;
+    destroyAll(); bg.classList.remove('hidden');
+    localStorage.setItem('theme',key); applyOverlay(); applySectionStyles(p);
+
+    if(p.type==="mode"){
+      bg.classList.add('hidden');
+      document.body.classList.remove('white-mode','dark-mode','pastel-mode');
+      document.body.classList.add(p.className); return;
+    }
+    if(p.type==="waves")vantaEffect=VANTA.WAVES({el:bg,color:p.color,mouseControls:true,touchControls:true,shininess:60,waveHeight:25,waveSpeed:0.7,zoom:1.05});
+    else if(p.type==="fog")vantaEffect=VANTA.FOG({el:bg,highlightColor:p.h,midtoneColor:p.m,lowlightColor:p.l,baseColor:"#000",blurFactor:0.7,speed:1.1,zoom:1.1});
+    else if(p.type==="clouds")vantaEffect=VANTA.CLOUDS({el:bg,backgroundColor:p.background,skyColor:p.background,speed:0.5});
+    else if(p.type==="metaballs"){metaballsInstance=Metaballs(bg,{count:9,colors:p.colors,bg:p.bg});metaballsInstance.start();}
+  }
+
+  btn.addEventListener('click',()=>{panel.classList.toggle('active');panel.setAttribute('aria-hidden',panel.classList.contains('active')?'false':'true');});
+  panel.querySelectorAll('.theme-option').forEach(opt=>opt.addEventListener('click',()=>{applyTheme(opt.dataset.theme);panel.classList.remove('active');panel.setAttribute('aria-hidden','true');}));
+
+  const saved=localStorage.getItem('theme')||'white';
+  setTimeout(()=>applyTheme(saved),0);
+  window.addEventListener('beforeunload',destroyAll);
+});
+`;
+    this.shadowRoot.appendChild(s);
   }
 }
 
 customElements.define("menutech-themes", MenutechThemes);
+
+
+
+
+
+
+
 
 
 
@@ -2271,6 +2220,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
