@@ -60,11 +60,48 @@ class MenutechThemes extends HTMLElement {
   inset: 0;
   width: 100%;
   height: 100%;
-  z-index: -1;
+  z-index: -2;
   transition: opacity .6s ease;
   background: transparent;
 }
 #liquid-bg.hidden { opacity: 0; pointer-events: none; }
+
+/* OVERLAY */
+#overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.0);
+  z-index: -1;
+  pointer-events: none;
+  transition: background .3s ease;
+}
+
+/* Overlay controls inside panel */
+#overlay-controls {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: rgba(255,255,255,0.9);
+  padding: 8px 10px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.0);
+  backdrop-filter: blur(6px);
+  margin-top: 6px;
+}
+#overlay-range {
+  width: 100px;
+}
+#overlay-toggle {
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: #e5e5e5;
+  user-select: none;
+  font-size: 12px;
+  font-weight: 600;
+}
 
 body.white-mode { background: #fff; color: #222; transition: background .6s, color .6s; }
 body.dark-mode { background: #0d0d0d; color: #fff; transition: background .6s, color .6s; }
@@ -126,8 +163,14 @@ body.pastel-mode { background: #ffb6c1; color: #4b2e2e; transition: background .
   <div class="theme-option" data-theme="liquid-1"></div>
   <div class="theme-option" data-theme="liquid-2"></div>
   <div class="theme-option" data-theme="liquid-3"></div>
+
+  <div id="overlay-controls">
+    <input type="range" id="overlay-range" min="0" max="100" value="10">
+    <div id="overlay-toggle">Negro</div>
+  </div>
 </div>
 <div id="liquid-bg" aria-hidden="true"></div>
+<div id="overlay"></div>
     `;
 
     shadow.appendChild(style);
@@ -143,8 +186,27 @@ body.pastel-mode { background: #ffb6c1; color: #4b2e2e; transition: background .
     const btn = shadow.querySelector("#theme-dropdown");
     const panel = shadow.querySelector("#theme-panel");
     const bg = shadow.querySelector("#liquid-bg");
+    const overlay = shadow.querySelector("#overlay");
+    const range = shadow.querySelector("#overlay-range");
+    const toggle = shadow.querySelector("#overlay-toggle");
     let vantaEffect = null;
     let metaballsInstance = null;
+
+    // Overlay controls logic
+    let overlayColor = "black";
+    function applyOverlay() {
+      const val = (range && range.value ? range.value : 10) / 100;
+      overlay.style.background = overlayColor === "black"
+        ? `rgba(0,0,0,${val})`
+        : `rgba(255,255,255,${val})`;
+    }
+    if (range) range.addEventListener("input", applyOverlay);
+    if (toggle) toggle.addEventListener("click", () => {
+      overlayColor = overlayColor === "black" ? "white" : "black";
+      toggle.textContent = overlayColor === "black" ? "Negro" : "Blanco";
+      applyOverlay();
+    });
+    applyOverlay();
 
     function loadScriptsSequential(urls, cb) {
       let i = 0;
@@ -167,7 +229,6 @@ body.pastel-mode { background: #ffb6c1; color: #4b2e2e; transition: background .
     ];
 
     loadScriptsSequential(libs, () => {
-      // Metaballs implementation (same as original)
       function Metaballs(container, opts = {}) {
         const cfg = Object.assign({
           count: 8,
@@ -206,7 +267,7 @@ body.pastel-mode { background: #ffb6c1; color: #4b2e2e; transition: background .
         }
 
         let raf = null;
-        let mouse = {x: canvas.width/2, y: canvas.height/2,vx:0,vy:0,down:false};
+        let mouse = {x: canvas.width/2, y: canvas.height/2, vx:0, vy:0, down:false};
 
         function resize(){
           canvas.width = container.clientWidth;
@@ -334,6 +395,18 @@ body.pastel-mode { background: #ffb6c1; color: #4b2e2e; transition: background .
         "liquid-3": { type:"metaballs", colors:['#f6d365','#fda085','#d97706'], bg:"#2b0f00" }
       };
 
+      function applySectionStyles(preset){
+        if(!preset.sections)return;
+        const sections = ['navbar','hero','services','newsletter','about','gallery','footer'];
+        sections.forEach(id=>{
+          const el=document.getElementById(id);
+          if(el && preset.sections[id]){
+            el.style.background=preset.sections[id].bg;
+            el.style.color=preset.sections[id].color;
+          }
+        });
+      }
+
       function applyTheme(key) {
         const p = presets[key];
         if (!p) return;
@@ -351,6 +424,8 @@ body.pastel-mode { background: #ffb6c1; color: #4b2e2e; transition: background .
           } else {
             document.body.style.color = luminanceForPreset(p) < 0.5 ? "#fff" : "#222";
           }
+          applyOverlay();
+          applySectionStyles(p);
           return;
         }
 
@@ -405,9 +480,11 @@ body.pastel-mode { background: #ffb6c1; color: #4b2e2e; transition: background .
           });
           metaballsInstance.start();
         } else {
-          // fallback: simple bg color
           bg.style.background = p.background || p.bg || "transparent";
         }
+
+        applyOverlay();
+        applySectionStyles(p);
       }
 
       btn.addEventListener('click', () => {
@@ -433,6 +510,7 @@ body.pastel-mode { background: #ffb6c1; color: #4b2e2e; transition: background .
 }
 
 customElements.define("menutech-themes", MenutechThemes);
+
 
 
 
@@ -2279,6 +2357,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
