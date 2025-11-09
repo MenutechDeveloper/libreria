@@ -131,9 +131,10 @@ body.pastel-mode { background: #ffb6c1; color: #4b2e2e; transition: background .
 .theme-option[data-theme="liquid-2"] { background: linear-gradient(135deg,#c471f5,#fa71cd); }
 .theme-option[data-theme="liquid-3"] { background: linear-gradient(135deg,#f6d365,#fda085); }
 
-.theme-option[data-theme="birds-1"] { background: linear-gradient(135deg,#ff0055,#00fff6); }
-.theme-option[data-theme="birds-2"] { background: linear-gradient(135deg,#ffc300,#ff5733); }
-.theme-option[data-theme="birds-3"] { background: linear-gradient(135deg,#33ff57,#00ccff); }
+/* --- NUEVOS BIRDS THEMES --- */
+.theme-option[data-theme="birds-1"] { background: linear-gradient(135deg,#ff9a9e,#fad0c4); }
+.theme-option[data-theme="birds-2"] { background: linear-gradient(135deg,#a1c4fd,#c2e9fb); }
+.theme-option[data-theme="birds-3"] { background: linear-gradient(135deg,#d4fc79,#96e6a1); }
 
 @media(max-width:600px){
   #theme-panel { grid-template-columns: repeat(3,48px); gap:8px; padding:10px; }
@@ -168,6 +169,7 @@ body.pastel-mode { background: #ffb6c1; color: #4b2e2e; transition: background .
   <div class="theme-option" data-theme="liquid-2"></div>
   <div class="theme-option" data-theme="liquid-3"></div>
 
+  <!-- Nueva fila de Birds antes del overlay -->
   <div class="theme-option" data-theme="birds-1"></div>
   <div class="theme-option" data-theme="birds-2"></div>
   <div class="theme-option" data-theme="birds-3"></div>
@@ -236,132 +238,309 @@ body.pastel-mode { background: #ffb6c1; color: #4b2e2e; transition: background .
       "https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.clouds.min.js",
       "https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.birds.min.js"
     ];
-    // Cargar las librerías VANTA secuencialmente
+
     loadScriptsSequential(libs, () => {
-      const options = shadow.querySelectorAll(".theme-option");
+      function Metaballs(container, opts = {}) {
+        const cfg = Object.assign({
+          count: 8,
+          colors: ['#66a6ff','#89f7fe','#3b82f6'],
+          bg: '#00111f',
+          blur: 36,
+          speed: 0.6,
+          radiusRange: [60, 160],
+          mouseRepel: 0.15
+        }, opts);
 
-      // Al hacer clic en 🎨 se muestra u oculta el panel
-      btn.addEventListener("click", () => {
-        panel.classList.toggle("active");
-      });
+        let canvas = document.createElement('canvas');
+        canvas.style.position = 'absolute';
+        canvas.style.top = '0';
+        canvas.style.left = '0';
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
+        canvas.style.zIndex = '-1';
+        canvas.style.pointerEvents = 'none';
+        canvas.width = container.clientWidth;
+        canvas.height = container.clientHeight;
+        container.appendChild(canvas);
+        const ctx = canvas.getContext('2d');
 
-      // Función para aplicar tema
-      function applyTheme(theme) {
-        document.body.classList.remove("white-mode", "dark-mode", "pastel-mode");
-        bg.classList.remove("hidden");
+        const balls = [];
+        for (let i=0;i<cfg.count;i++){
+          const r = rand(cfg.radiusRange[0], cfg.radiusRange[1]);
+          balls.push({
+            x: Math.random()*canvas.width,
+            y: Math.random()*canvas.height,
+            vx: (Math.random()-0.5)*cfg.speed*4,
+            vy: (Math.random()-0.5)*cfg.speed*4,
+            r,
+            color: cfg.colors[i % cfg.colors.length]
+          });
+        }
 
-        // Limpiar efecto VANTA previo si existe
-        if (vantaEffect && vantaEffect.destroy) vantaEffect.destroy();
-        vantaEffect = null;
+        let raf = null;
+        let mouse = {x: canvas.width/2, y: canvas.height/2, vx:0, vy:0, down:false};
 
-        if (theme === "white") document.body.classList.add("white-mode");
-        else if (theme === "dark") document.body.classList.add("dark-mode");
-        else if (theme === "pastel") document.body.classList.add("pastel-mode");
+        function resize(){
+          canvas.width = container.clientWidth;
+          canvas.height = container.clientHeight;
+        }
+        window.addEventListener('resize', resize);
 
-        // Temas VANTA
-        if (theme.startsWith("waves")) {
+        function onMove(e){
+          const rect = canvas.getBoundingClientRect();
+          const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
+          const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
+          mouse.x = x; mouse.y = y;
+        }
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('touchmove', onMove, {passive:true});
+
+        function step(){
+          ctx.clearRect(0,0,canvas.width,canvas.height);
+          ctx.fillStyle = cfg.bg;
+          ctx.fillRect(0,0,canvas.width,canvas.height);
+
+          for (let b of balls){
+            b.x += b.vx;
+            b.y += b.vy;
+
+            if (b.x < -b.r) b.x = canvas.width + b.r;
+            if (b.x > canvas.width + b.r) b.x = -b.r;
+            if (b.y < -b.r) b.y = canvas.height + b.r;
+            if (b.y > canvas.height + b.r) b.y = -b.r;
+
+            const dx = mouse.x - b.x;
+            const dy = mouse.y - b.y;
+            const dist = Math.sqrt(dx*dx + dy*dy) + 0.001;
+            const force = Math.max(-1, Math.min(1, (200 - dist) / 200));
+            b.vx += -dx/dist * force * cfg.mouseRepel;
+            b.vy += -dy/dist * force * cfg.mouseRepel;
+            b.vx *= 0.995; b.vy *= 0.995;
+
+            const g = ctx.createRadialGradient(b.x, b.y, b.r*0.1, b.x, b.y, b.r);
+            g.addColorStop(0, hexToRgba(b.color, 0.95));
+            g.addColorStop(0.4, hexToRgba(b.color, 0.6));
+            g.addColorStop(1, hexToRgba(b.color, 0.0));
+            ctx.globalCompositeOperation = 'lighter';
+            ctx.fillStyle = g;
+            ctx.beginPath();
+            ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
+            ctx.fill();
+          }
+          raf = requestAnimationFrame(step);
+        }
+
+        function start(){ if(!raf) raf = requestAnimationFrame(step); }
+        function stop(){
+          if(raf){ cancelAnimationFrame(raf); raf = null; }
+          window.removeEventListener('resize', resize);
+          window.removeEventListener('mousemove', onMove);
+          window.removeEventListener('touchmove', onMove);
+          if (canvas && canvas.parentNode) canvas.parentNode.removeChild(canvas);
+        }
+
+        function rand(a,b){ return a + Math.random()*(b-a); }
+        function hexToRgba(hex, a){
+          hex = hex.replace('#','');
+          if(hex.length === 3) hex = hex.split('').map(h=>h+h).join('');
+          const r = parseInt(hex.substring(0,2),16);
+          const g = parseInt(hex.substring(2,4),16);
+          const b = parseInt(hex.substring(4,6),16);
+          return `rgba(${r},${g},${b},${a})`;
+        }
+
+        return { start, stop, setColors: c=>{ cfg.colors = c; balls.forEach((b,i)=>b.color = cfg.colors[i%cfg.colors.length]); } };
+      }
+
+      function destroyAll() {
+        if (vantaEffect && typeof vantaEffect.destroy === 'function') {
+          try { vantaEffect.destroy(); } catch(e) {}
+          vantaEffect = null;
+        }
+        if (metaballsInstance && typeof metaballsInstance.stop === 'function') {
+          try { metaballsInstance.stop(); } catch(e) {}
+          metaballsInstance = null;
+        }
+      }
+
+      function luminanceFromHex(hex) {
+        hex = hex.replace('#','');
+        if(hex.length === 3) hex = hex.split('').map(h=>h+h).join('');
+        const r = parseInt(hex.substr(0,2),16)/255;
+        const g = parseInt(hex.substr(2,2),16)/255;
+        const b = parseInt(hex.substr(4,2),16)/255;
+        return 0.299*r + 0.587*g + 0.114*b;
+      }
+
+      function luminanceForPreset(p) {
+        if(p.type === 'mode') return luminanceFromHex(p.bg);
+        if(p.type === 'clouds') return luminanceFromHex(p.background);
+        if(p.type === 'waves') return luminanceFromHex(("#" + (p.color.toString(16).padStart(6,"0"))));
+        if(p.type === 'fog') return 0.33 * (luminanceFromHex(p.h) + luminanceFromHex(p.m) + luminanceFromHex(p.l));
+        if(p.type === 'metaballs') return luminanceFromHex(p.bg);
+        if(p.type === 'birds') return luminanceFromHex(p.background);
+        return 1;
+      }
+
+      const presets = {
+        white:  { type:"mode", className:"white-mode", bg:"#ffffff" },
+        dark:   { type:"mode", className:"dark-mode", bg:"#0d0d0d" },
+        pastel: { type:"mode", className:"pastel-mode", bg:"#ffb6c1" },
+
+        "waves-blue":  { type:"waves", color:0x6ec1e4 },
+        "waves-pink":  { type:"waves", color:0xff7eb3 },
+        "waves-green": { type:"waves", color:0x00e3ae },
+
+        "fog-1": { type:"fog", h:"#fbc2eb", m:"#a18cd1", l:"#6b5b95" },
+        "fog-2": { type:"fog", h:"#84fab0", m:"#8fd3f4", l:"#5bc0eb" },
+        "fog-3": { type:"fog", h:"#ffd194", m:"#f6d365", l:"#ffb347" },
+        "fog-4": { type:"fog", h:"#ff9a9e", m:"#fecfef", l:"#ff6b6b" },
+        "fog-5": { type:"fog", h:"#c2e9fb", m:"#a1c4fd", l:"#6ea8fe" },
+        "fog-6": { type:"fog", h:"#fbc2eb", m:"#a6c1ee", l:"#6f86d6" },
+
+        "clouds-1": { type:"clouds", background:"#cfdef3" },
+        "clouds-2": { type:"clouds", background:"#fbc2eb" },
+        "clouds-3": { type:"clouds", background:"#fddb92" },
+
+        "liquid-1": { type:"metaballs", colors:['#66a6ff','#89f7fe','#3b82f6'], bg:"#00111f" },
+        "liquid-2": { type:"metaballs", colors:['#c471f5','#fa71cd','#7b2cbf'], bg:"#1a002b" },
+        "liquid-3": { type:"metaballs", colors:['#f6d365','#fda085','#d97706'], bg:"#2b0f00" },
+
+        /* --- NUEVOS PRESETS DE BIRDS --- */
+        "birds-1": { type:"birds", background:"#fad0c4", color1:"#ff9a9e", color2:"#fad0c4" },
+        "birds-2": { type:"birds", background:"#a1c4fd", color1:"#c2e9fb", color2:"#a1c4fd" },
+        "birds-3": { type:"birds", background:"#96e6a1", color1:"#d4fc79", color2:"#96e6a1" }
+      };
+
+      function applySectionStyles(preset){
+        if(!preset.sections)return;
+        const sections = ['navbar','hero','services','newsletter','about','gallery','footer'];
+        sections.forEach(id=>{
+          const el=document.getElementById(id);
+          if(el && preset.sections[id]){
+            el.style.background=preset.sections[id].bg;
+            el.style.color=preset.sections[id].color;
+          }
+        });
+      }
+
+      function applyTheme(key) {
+        const p = presets[key];
+        if (!p) return;
+
+        destroyAll();
+        bg.classList.remove('hidden');
+        localStorage.setItem('theme', key);
+
+        if (p.type === 'mode') {
+          bg.classList.add('hidden');
+          document.body.classList.remove('white-mode','dark-mode','pastel-mode');
+          document.body.classList.add(p.className);
+          if (key === "dark") {
+            document.body.style.color = "#fff";
+          } else {
+            document.body.style.color = luminanceForPreset(p) < 0.5 ? "#fff" : "#222";
+          }
+          applyOverlay();
+          applySectionStyles(p);
+          return;
+        }
+
+        const lum = luminanceForPreset(p);
+        if (p.type === "fog" || p.type === "clouds" || p.type === "birds") {
+          document.body.style.color = "black";
+        } else {
+          document.body.style.color = lum < 0.5 ? "#fff" : "#222";
+        }
+
+        if (p.type === 'waves' && window.VANTA && VANTA.WAVES) {
           vantaEffect = VANTA.WAVES({
             el: bg,
             mouseControls: true,
             touchControls: true,
-            gyroControls: false,
-            minHeight: 200.0,
-            minWidth: 200.0,
-            scale: 1.0,
-            scaleMobile: 1.0,
-            shininess: 50.0,
-            waveHeight: 20.0,
-            waveSpeed: 1.0,
-            color: theme.includes("pink") ? 0xff7eb3 :
-                   theme.includes("green") ? 0x00e3ae : 0x6ec1e4,
-            backgroundColor: 0x0d0d0d
+            color: p.color,
+            shininess: 60,
+            waveHeight: 25,
+            waveSpeed: 0.7,
+            zoom: 1.05
           });
-        }
-
-        else if (theme.startsWith("fog")) {
+        } else if (p.type === 'fog' && window.VANTA && VANTA.FOG) {
           vantaEffect = VANTA.FOG({
             el: bg,
-            highlightColor: 0xffffff,
-            midtoneColor: 0xff00ff,
-            lowlightColor: 0x0000ff,
-            baseColor: 0x000000,
-            blurFactor: 0.5,
-            speed: 1.5,
-            zoom: 1.2
+            mouseControls: true,
+            touchControls: true,
+            highlightColor: p.h,
+            midtoneColor: p.m,
+            lowlightColor: p.l,
+            baseColor: "#000000",
+            blurFactor: 0.7,
+            speed: 1.1,
+            zoom: 1.1
           });
-        }
-
-        else if (theme.startsWith("clouds")) {
+        } else if (p.type === 'clouds' && window.VANTA && VANTA.CLOUDS) {
           vantaEffect = VANTA.CLOUDS({
             el: bg,
-            skyColor: 0x88ccee,
-            cloudColor: 0xffffff,
-            sunColor: 0xff9900,
-            sunlightColor: 0xffcc00,
-            speed: 0.8
+            mouseControls: true,
+            touchControls: true,
+            backgroundColor: p.background,
+            skyColor: p.background,
+            speed: 0.5
           });
-        }
-
-        else if (theme.startsWith("birds")) {
+        } else if (p.type === 'birds' && window.VANTA && VANTA.BIRDS) {
           vantaEffect = VANTA.BIRDS({
             el: bg,
-            backgroundColor: 0xaeefff,
-            color1: theme === "birds-1" ? 0xff0055 :
-                    theme === "birds-2" ? 0xffc300 : 0x33ff57,
-            color2: theme === "birds-1" ? 0x00fff6 :
-                    theme === "birds-2" ? 0xff5733 : 0x00ccff,
-            birdSize: 1,
-            wingSpan: 30,
-            quantity: 5,
-            speedLimit: 5,
-            separation: 20,
-            alignment: 20,
-            cohesion: 20
+            mouseControls: true,
+            touchControls: true,
+            backgroundColor: p.background,
+            color1: p.color1,
+            color2: p.color2,
+            separation: 50.0,
+            alignment: 50.0,
+            cohesion: 50.0,
+            quantity: 3.0
           });
+        } else if (p.type === 'metaballs') {
+          metaballsInstance = Metaballs(bg, {
+            count: 9,
+            colors: p.colors,
+            bg: p.bg,
+            speed: 0.6,
+            radiusRange: [80,160],
+            mouseRepel: 0.18
+          });
+          metaballsInstance.start();
+        } else {
+          bg.style.background = p.background || p.bg || "transparent";
         }
 
-        else if (theme.startsWith("liquid")) {
-          bg.innerHTML = "";
-          const canvas = document.createElement("canvas");
-          canvas.style.width = "100%";
-          canvas.style.height = "100%";
-          bg.appendChild(canvas);
-          const ctx = canvas.getContext("2d");
-          function draw() {
-            const w = canvas.width = window.innerWidth;
-            const h = canvas.height = window.innerHeight;
-            const grad = ctx.createLinearGradient(0, 0, w, h);
-            grad.addColorStop(0, theme === "liquid-1" ? "#89f7fe" :
-                                 theme === "liquid-2" ? "#c471f5" : "#f6d365");
-            grad.addColorStop(1, theme === "liquid-1" ? "#66a6ff" :
-                                 theme === "liquid-2" ? "#fa71cd" : "#fda085");
-            ctx.fillStyle = grad;
-            ctx.fillRect(0, 0, w, h);
-            requestAnimationFrame(draw);
-          }
-          draw();
-        }
+        applyOverlay();
+        applySectionStyles(p);
       }
 
-      // Listener para cada opción de tema
-      options.forEach(opt => {
-        opt.addEventListener("click", e => {
-          const theme = e.currentTarget.dataset.theme;
-          applyTheme(theme);
-          localStorage.setItem("menutech-theme", theme);
+      btn.addEventListener('click', () => {
+        panel.classList.toggle('active');
+        panel.setAttribute('aria-hidden', panel.classList.contains('active') ? 'false' : 'true');
+      });
+
+      panel.querySelectorAll('.theme-option').forEach(opt => {
+        opt.addEventListener('click', () => {
+          const key = opt.dataset.theme;
+          applyTheme(key);
+          panel.classList.remove('active');
+          panel.setAttribute('aria-hidden', 'true');
         });
       });
 
-      // Cargar el tema guardado
-      const saved = localStorage.getItem("menutech-theme");
-      if (saved) applyTheme(saved);
-      else applyTheme("white");
+      const saved = localStorage.getItem('theme') || 'white';
+      setTimeout(()=>applyTheme(saved), 50);
+
+      window.addEventListener('beforeunload', destroyAll);
     });
   }
 }
 
-// Registrar el componente
 customElements.define("menutech-themes", MenutechThemes);
+
 
 
 
@@ -2210,6 +2389,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
