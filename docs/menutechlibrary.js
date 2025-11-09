@@ -478,7 +478,8 @@ body.pastel-mode { background: #ffb6c1; color: #4b2e2e; transition: background .
         } else if (p.type === 'clouds' && window.VANTA && VANTA.CLOUDS) {
           vantaEffect = VANTA.CLOUDS({
             el: bg,
-            mouseControls: true,
+            mouseControls: false,
+            gyroControls:true,
             touchControls: true,
             backgroundColor: p.background,
             skyColor: p.background,
@@ -2393,6 +2394,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
