@@ -131,10 +131,10 @@ body.pastel-mode { background: #ffb6c1; color: #4b2e2e; transition: background .
 .theme-option[data-theme="liquid-2"] { background: linear-gradient(135deg,#c471f5,#fa71cd); }
 .theme-option[data-theme="liquid-3"] { background: linear-gradient(135deg,#f6d365,#fda085); }
 
-/* NUEVOS: Birds */
-.theme-option[data-theme="birds-1"] { background: linear-gradient(135deg,#74ebd5,#ACB6E5); }
-.theme-option[data-theme="birds-2"] { background: linear-gradient(135deg,#f6d365,#fda085); }
-.theme-option[data-theme="birds-3"] { background: linear-gradient(135deg,#a1c4fd,#c2e9fb); }
+/* BIRDS */
+.theme-option[data-theme="birds-1"] { background: linear-gradient(135deg,#c9ffbf,#ffafbd); }
+.theme-option[data-theme="birds-2"] { background: linear-gradient(135deg,#a1c4fd,#c2e9fb); }
+.theme-option[data-theme="birds-3"] { background: linear-gradient(135deg,#fbc2eb,#a6c1ee); }
 
 @media(max-width:600px){
   #theme-panel { grid-template-columns: repeat(3,48px); gap:8px; padding:10px; }
@@ -169,10 +169,9 @@ body.pastel-mode { background: #ffb6c1; color: #4b2e2e; transition: background .
   <div class="theme-option" data-theme="liquid-2"></div>
   <div class="theme-option" data-theme="liquid-3"></div>
 
-  <!-- Nueva fila Birds -->
-  <div class="theme-option" data-theme="birds-1" title="Birds Azul"></div>
-  <div class="theme-option" data-theme="birds-2" title="Birds Naranja"></div>
-  <div class="theme-option" data-theme="birds-3" title="Birds Celeste"></div>
+  <div class="theme-option" data-theme="birds-1"></div>
+  <div class="theme-option" data-theme="birds-2"></div>
+  <div class="theme-option" data-theme="birds-3"></div>
 
   <div id="overlay-controls">
     <input type="range" id="overlay-range" min="0" max="100" value="10">
@@ -207,8 +206,8 @@ body.pastel-mode { background: #ffb6c1; color: #4b2e2e; transition: background .
     function applyOverlay() {
       const val = (range && range.value ? range.value : 10) / 100;
       overlay.style.background = overlayColor === "black"
-        ? \`rgba(0,0,0,\${val})\`
-        : \`rgba(255,255,255,\${val})\`;
+        ? `rgba(0,0,0,${val})`
+        : `rgba(255,255,255,${val})`;
     }
     if (range) range.addEventListener("input", applyOverlay);
     if (toggle) toggle.addEventListener("click", () => {
@@ -240,6 +239,148 @@ body.pastel-mode { background: #ffb6c1; color: #4b2e2e; transition: background .
     ];
 
     loadScriptsSequential(libs, () => {
+      function Metaballs(container, opts = {}) {
+        const cfg = Object.assign({
+          count: 8,
+          colors: ['#66a6ff','#89f7fe','#3b82f6'],
+          bg: '#00111f',
+          blur: 36,
+          speed: 0.6,
+          radiusRange: [60, 160],
+          mouseRepel: 0.15
+        }, opts);
+
+        let canvas = document.createElement('canvas');
+        canvas.style.position = 'absolute';
+        canvas.style.top = '0';
+        canvas.style.left = '0';
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
+        canvas.style.zIndex = '-1';
+        canvas.style.pointerEvents = 'none';
+        canvas.width = container.clientWidth;
+        canvas.height = container.clientHeight;
+        container.appendChild(canvas);
+        const ctx = canvas.getContext('2d');
+
+        const balls = [];
+        for (let i=0;i<cfg.count;i++){
+          const r = rand(cfg.radiusRange[0], cfg.radiusRange[1]);
+          balls.push({
+            x: Math.random()*canvas.width,
+            y: Math.random()*canvas.height,
+            vx: (Math.random()-0.5)*cfg.speed*4,
+            vy: (Math.random()-0.5)*cfg.speed*4,
+            r,
+            color: cfg.colors[i % cfg.colors.length]
+          });
+        }
+
+        let raf = null;
+        let mouse = {x: canvas.width/2, y: canvas.height/2, vx:0, vy:0, down:false};
+
+        function resize(){
+          canvas.width = container.clientWidth;
+          canvas.height = container.clientHeight;
+        }
+        window.addEventListener('resize', resize);
+
+        function onMove(e){
+          const rect = canvas.getBoundingClientRect();
+          const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
+          const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
+          mouse.x = x; mouse.y = y;
+        }
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('touchmove', onMove, {passive:true});
+
+        function step(){
+          ctx.clearRect(0,0,canvas.width,canvas.height);
+          ctx.fillStyle = cfg.bg;
+          ctx.fillRect(0,0,canvas.width,canvas.height);
+
+          for (let b of balls){
+            b.x += b.vx;
+            b.y += b.vy;
+
+            if (b.x < -b.r) b.x = canvas.width + b.r;
+            if (b.x > canvas.width + b.r) b.x = -b.r;
+            if (b.y < -b.r) b.y = canvas.height + b.r;
+            if (b.y > canvas.height + b.r) b.y = -b.r;
+
+            const dx = mouse.x - b.x;
+            const dy = mouse.y - b.y;
+            const dist = Math.sqrt(dx*dx + dy*dy) + 0.001;
+            const force = Math.max(-1, Math.min(1, (200 - dist) / 200));
+            b.vx += -dx/dist * force * cfg.mouseRepel;
+            b.vy += -dy/dist * force * cfg.mouseRepel;
+            b.vx *= 0.995; b.vy *= 0.995;
+
+            const g = ctx.createRadialGradient(b.x, b.y, b.r*0.1, b.x, b.y, b.r);
+            g.addColorStop(0, hexToRgba(b.color, 0.95));
+            g.addColorStop(0.4, hexToRgba(b.color, 0.6));
+            g.addColorStop(1, hexToRgba(b.color, 0.0));
+            ctx.globalCompositeOperation = 'lighter';
+            ctx.fillStyle = g;
+            ctx.beginPath();
+            ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
+            ctx.fill();
+          }
+          raf = requestAnimationFrame(step);
+        }
+
+        function start(){ if(!raf) raf = requestAnimationFrame(step); }
+        function stop(){
+          if(raf){ cancelAnimationFrame(raf); raf = null; }
+          window.removeEventListener('resize', resize);
+          window.removeEventListener('mousemove', onMove);
+          window.removeEventListener('touchmove', onMove);
+          if (canvas && canvas.parentNode) canvas.parentNode.removeChild(canvas);
+        }
+
+        function rand(a,b){ return a + Math.random()*(b-a); }
+        function hexToRgba(hex, a){
+          hex = hex.replace('#','');
+          if(hex.length === 3) hex = hex.split('').map(h=>h+h).join('');
+          const r = parseInt(hex.substring(0,2),16);
+          const g = parseInt(hex.substring(2,4),16);
+          const b = parseInt(hex.substring(4,6),16);
+          return `rgba(${r},${g},${b},${a})`;
+        }
+
+        return { start, stop, setColors: c=>{ cfg.colors = c; balls.forEach((b,i)=>b.color = cfg.colors[i%cfg.colors.length]); } };
+      }
+
+      function destroyAll() {
+        if (vantaEffect && typeof vantaEffect.destroy === 'function') {
+          try { vantaEffect.destroy(); } catch(e) {}
+          vantaEffect = null;
+        }
+        if (metaballsInstance && typeof metaballsInstance.stop === 'function') {
+          try { metaballsInstance.stop(); } catch(e) {}
+          metaballsInstance = null;
+        }
+      }
+
+      function luminanceFromHex(hex) {
+        hex = hex.replace('#','');
+        if(hex.length === 3) hex = hex.split('').map(h=>h+h).join('');
+        const r = parseInt(hex.substr(0,2),16)/255;
+        const g = parseInt(hex.substr(2,2),16)/255;
+        const b = parseInt(hex.substr(4,2),16)/255;
+        return 0.299*r + 0.587*g + 0.114*b;
+      }
+
+      function luminanceForPreset(p) {
+        if(p.type === 'mode') return luminanceFromHex(p.bg);
+        if(p.type === 'clouds') return luminanceFromHex(p.background);
+        if(p.type === 'waves') return luminanceFromHex(("#" + (p.color.toString(16).padStart(6,"0"))));
+        if(p.type === 'fog') return 0.33 * (luminanceFromHex(p.h) + luminanceFromHex(p.m) + luminanceFromHex(p.l));
+        if(p.type === 'metaballs') return luminanceFromHex(p.bg);
+        if(p.type === 'birds') return luminanceFromHex(p.background);
+        return 1;
+      }
+
       const presets = {
         white:  { type:"mode", className:"white-mode", bg:"#ffffff" },
         dark:   { type:"mode", className:"dark-mode", bg:"#0d0d0d" },
@@ -264,101 +405,101 @@ body.pastel-mode { background: #ffb6c1; color: #4b2e2e; transition: background .
         "liquid-2": { type:"metaballs", colors:['#c471f5','#fa71cd','#7b2cbf'], bg:"#1a002b" },
         "liquid-3": { type:"metaballs", colors:['#f6d365','#fda085','#d97706'], bg:"#2b0f00" },
 
-        /* NUEVOS: Birds */
-        "birds-1": { type:"birds", color1:0x74ebd5, color2:0xACB6E5, bg:"#00111f" },
-        "birds-2": { type:"birds", color1:0xf6d365, color2:0xfda085, bg:"#220b00" },
-        "birds-3": { type:"birds", color1:0xa1c4fd, color2:0xc2e9fb, bg:"#000814" }
+        "birds-1": { type:"birds", background:"#c9ffbf", color1:"#c9ffbf", color2:"#ffafbd" },
+        "birds-2": { type:"birds", background:"#a1c4fd", color1:"#a1c4fd", color2:"#c2e9fb" },
+        "birds-3": { type:"birds", background:"#fbc2eb", color1:"#fbc2eb", color2:"#a6c1ee" }
       };
 
-      function destroyAll() {
-        if (vantaEffect && typeof vantaEffect.destroy === "function") vantaEffect.destroy();
-        vantaEffect = null;
-        bg.innerHTML = "";
+      function applySectionStyles(preset){
+        if(!preset.sections)return;
+        const sections = ['navbar','hero','services','newsletter','about','gallery','footer'];
+        sections.forEach(id=>{
+          const el=document.getElementById(id);
+          if(el && preset.sections[id]){
+            el.style.background=preset.sections[id].bg;
+            el.style.color=preset.sections[id].color;
+          }
+        });
       }
 
       function applyTheme(key) {
         const p = presets[key];
         if (!p) return;
-        destroyAll();
-        bg.classList.remove("hidden");
-        localStorage.setItem("theme", key);
 
-        if (p.type === "mode") {
-          bg.classList.add("hidden");
-          document.body.classList.remove("white-mode", "dark-mode", "pastel-mode");
+        destroyAll();
+        bg.classList.remove('hidden');
+        localStorage.setItem('theme', key);
+
+        if (p.type === 'mode') {
+          bg.classList.add('hidden');
+          document.body.classList.remove('white-mode','dark-mode','pastel-mode');
           document.body.classList.add(p.className);
+          if (key === "dark") {
+            document.body.style.color = "#fff";
+          } else {
+            document.body.style.color = luminanceForPreset(p) < 0.5 ? "#fff" : "#222";
+          }
           applyOverlay();
+          applySectionStyles(p);
           return;
         }
 
-        if (p.type === "waves" && window.VANTA && VANTA.WAVES) {
+        const lum = luminanceForPreset(p);
+        if (p.type === "fog" || p.type === "clouds") {
+          document.body.style.color = "black";
+        } else {
+          document.body.style.color = lum < 0.5 ? "#fff" : "#222";
+        }
+
+        if (p.type === 'waves' && window.VANTA && VANTA.WAVES) {
           vantaEffect = VANTA.WAVES({
             el: bg,
             mouseControls: true,
             touchControls: true,
             color: p.color,
-            shininess: 50,
-            waveSpeed: 0.5,
-            zoom: 0.75
+            shininess: 60,
+            waveHeight: 25,
+            waveSpeed: 0.7,
+            zoom: 1.05
           });
-        }
-
-        if (p.type === "fog" && window.VANTA && VANTA.FOG) {
+        } else if (p.type === 'fog' && window.VANTA && VANTA.FOG) {
           vantaEffect = VANTA.FOG({
             el: bg,
+            mouseControls: true,
+            touchControls: true,
             highlightColor: p.h,
             midtoneColor: p.m,
             lowlightColor: p.l,
-            blurFactor: 0.6
+            baseColor: "#000000",
+            blurFactor: 0.7,
+            speed: 1.1,
+            zoom: 1.1
           });
-        }
-
-        if (p.type === "clouds" && window.VANTA && VANTA.CLOUDS) {
+        } else if (p.type === 'clouds' && window.VANTA && VANTA.CLOUDS) {
           vantaEffect = VANTA.CLOUDS({
             el: bg,
+            mouseControls: true,
+            touchControls: true,
             backgroundColor: p.background,
-            speed: 0.8
+            skyColor: p.background,
+            speed: 0.5
           });
-        }
-
-        if (p.type === "metaballs") {
-          const c = document.createElement("canvas");
-          c.width = window.innerWidth;
-          c.height = window.innerHeight;
-          bg.appendChild(c);
-          const ctx = c.getContext("2d");
-          const balls = Array.from({ length: 10 }, () => ({
-            x: Math.random() * c.width,
-            y: Math.random() * c.height,
-            r: 60 + Math.random() * 40,
-            dx: -2 + Math.random() * 4,
-            dy: -2 + Math.random() * 4,
-            color: p.colors[Math.floor(Math.random() * p.colors.length)]
-          }));
-          function draw() {
-            ctx.clearRect(0, 0, c.width, c.height);
-            ctx.globalCompositeOperation = "lighter";
-            balls.forEach(b => {
-              ctx.beginPath();
-              ctx.fillStyle = b.color;
-              ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
-              ctx.fill();
-              b.x += b.dx;
-              b.y += b.dy;
-              if (b.x < 0 || b.x > c.width) b.dx *= -1;
-              if (b.y < 0 || b.y > c.height) b.dy *= -1;
-            });
-            requestAnimationFrame(draw);
-          }
-          draw();
-        }
-
-        if (p.type === "birds" && window.VANTA && VANTA.BIRDS) {
+        } else if (p.type === 'metaballs') {
+          metaballsInstance = Metaballs(bg, {
+            count: 9,
+            colors: p.colors,
+            bg: p.bg,
+            speed: 0.6,
+            radiusRange: [80,160],
+            mouseRepel: 0.18
+          });
+          metaballsInstance.start();
+        } else if (p.type === 'birds' && window.VANTA && VANTA.BIRDS) {
           vantaEffect = VANTA.BIRDS({
             el: bg,
             mouseControls: true,
             touchControls: true,
-            backgroundColor: p.bg,
+            backgroundColor: p.background,
             color1: p.color1,
             color2: p.color2,
             birdSize: 1.2,
@@ -368,23 +509,38 @@ body.pastel-mode { background: #ffb6c1; color: #4b2e2e; transition: background .
             cohesion: 20,
             quantity: 3.0
           });
+        } else {
+          bg.style.background = p.background || p.bg || "transparent";
         }
 
         applyOverlay();
+        applySectionStyles(p);
       }
 
-      btn.addEventListener("click", () => panel.classList.toggle("active"));
-      shadow.querySelectorAll(".theme-option").forEach(el =>
-        el.addEventListener("click", () => applyTheme(el.dataset.theme))
-      );
+      btn.addEventListener('click', () => {
+        panel.classList.toggle('active');
+        panel.setAttribute('aria-hidden', panel.classList.contains('active') ? 'false' : 'true');
+      });
 
-      const saved = localStorage.getItem("theme") || "white";
-      applyTheme(saved);
+      panel.querySelectorAll('.theme-option').forEach(opt => {
+        opt.addEventListener('click', () => {
+          const key = opt.dataset.theme;
+          applyTheme(key);
+          panel.classList.remove('active');
+          panel.setAttribute('aria-hidden', 'true');
+        });
+      });
+
+      const saved = localStorage.getItem('theme') || 'white';
+      setTimeout(()=>applyTheme(saved), 50);
+
+      window.addEventListener('beforeunload', destroyAll);
     });
   }
 }
 
 customElements.define("menutech-themes", MenutechThemes);
+
 
 
 
@@ -2235,6 +2391,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
