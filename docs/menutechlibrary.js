@@ -404,24 +404,9 @@ body.pastel-mode { background: #ffb6c1; color: #4b2e2e; transition: background .
         "liquid-2": { type:"metaballs", colors:['#c471f5','#fa71cd','#7b2cbf'], bg:"#1a002b" },
         "liquid-3": { type:"metaballs", colors:['#f6d365','#fda085','#d97706'], bg:"#2b0f00" },
 
-        "birds-1": { 
-  type: "birds",
-  bg: "linear-gradient(135deg, #A1C4FD, #C2E9FB)", // azul pastel degradado
-  color1: 0xA1C4FD,
-  color2: 0xC2E9FB
-},
-"birds-2": { 
-  type: "birds",
-  bg: "linear-gradient(135deg, #FFDEE9, #B5FFFC)", // rosa pastel a celeste
-  color1: 0xFFDEE9,
-  color2: 0xB5FFFC
-},
-"birds-3": { 
-  type: "birds",
-  bg: "linear-gradient(135deg, #FAD0C4, #FFD1FF)", // durazno a lila pastel
-  color1: 0xFAD0C4,
-  color2: 0xFFD1FF
-}
+         "birds-1": { type:"birds", bg:"#9d366c", color1:0xbc85ff, color2:0xfac0ea },
+        "birds-2": { type:"birds", bg:"#6e369d", color1:0xbc85ff, color2:0xfac0ea },
+        "birds-3": { type:"birds", bg:"#36969d", color1:0xbc85ff, color2:0xfac0ea }
 
       };
 
@@ -2406,6 +2391,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
