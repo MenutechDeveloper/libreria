@@ -131,10 +131,9 @@ body.pastel-mode { background: #ffb6c1; color: #4b2e2e; transition: background .
 .theme-option[data-theme="liquid-2"] { background: linear-gradient(135deg,#c471f5,#fa71cd); }
 .theme-option[data-theme="liquid-3"] { background: linear-gradient(135deg,#f6d365,#fda085); }
 
-/* BIRDS */
-.theme-option[data-theme="birds-1"] { background: linear-gradient(135deg,#c9ffbf,#ffafbd); }
-.theme-option[data-theme="birds-2"] { background: linear-gradient(135deg,#a1c4fd,#c2e9fb); }
-.theme-option[data-theme="birds-3"] { background: linear-gradient(135deg,#fbc2eb,#a6c1ee); }
+.theme-option[data-theme="birds-1"] { background: linear-gradient(135deg,#8EC5FC,#E0C3FC); }
+.theme-option[data-theme="birds-2"] { background: linear-gradient(135deg,#F6D365,#FDA085); }
+.theme-option[data-theme="birds-3"] { background: linear-gradient(135deg,#84FAB0,#8FD3F4); }
 
 @media(max-width:600px){
   #theme-panel { grid-template-columns: repeat(3,48px); gap:8px; padding:10px; }
@@ -377,7 +376,7 @@ body.pastel-mode { background: #ffb6c1; color: #4b2e2e; transition: background .
         if(p.type === 'waves') return luminanceFromHex(("#" + (p.color.toString(16).padStart(6,"0"))));
         if(p.type === 'fog') return 0.33 * (luminanceFromHex(p.h) + luminanceFromHex(p.m) + luminanceFromHex(p.l));
         if(p.type === 'metaballs') return luminanceFromHex(p.bg);
-        if(p.type === 'birds') return luminanceFromHex(p.background);
+        if(p.type === 'birds') return luminanceFromHex(p.bg);
         return 1;
       }
 
@@ -405,9 +404,9 @@ body.pastel-mode { background: #ffb6c1; color: #4b2e2e; transition: background .
         "liquid-2": { type:"metaballs", colors:['#c471f5','#fa71cd','#7b2cbf'], bg:"#1a002b" },
         "liquid-3": { type:"metaballs", colors:['#f6d365','#fda085','#d97706'], bg:"#2b0f00" },
 
-        "birds-1": { type:"birds", background:"#c9ffbf", color1:"#c9ffbf", color2:"#ffafbd" },
-        "birds-2": { type:"birds", background:"#a1c4fd", color1:"#a1c4fd", color2:"#c2e9fb" },
-        "birds-3": { type:"birds", background:"#fbc2eb", color1:"#fbc2eb", color2:"#a6c1ee" }
+        "birds-1": { type:"birds", bg:"#8EC5FC", color1:0x8EC5FC, color2:0xE0C3FC },
+        "birds-2": { type:"birds", bg:"#F6D365", color1:0xF6D365, color2:0xFDA085 },
+        "birds-3": { type:"birds", bg:"#84FAB0", color1:0x84FAB0, color2:0x8FD3F4 }
       };
 
       function applySectionStyles(preset){
@@ -499,14 +498,13 @@ body.pastel-mode { background: #ffb6c1; color: #4b2e2e; transition: background .
             el: bg,
             mouseControls: true,
             touchControls: true,
-            backgroundColor: p.background,
+            backgroundColor: p.bg,
             color1: p.color1,
             color2: p.color2,
-            birdSize: 1.2,
-            speedLimit: 4,
-            separation: 40,
-            alignment: 40,
-            cohesion: 20,
+            speedLimit: 4.0,
+            separation: 50.0,
+            alignment: 30.0,
+            cohesion: 20.0,
             quantity: 3.0
           });
         } else {
@@ -540,6 +538,7 @@ body.pastel-mode { background: #ffb6c1; color: #4b2e2e; transition: background .
 }
 
 customElements.define("menutech-themes", MenutechThemes);
+
 
 
 
@@ -2391,6 +2390,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
