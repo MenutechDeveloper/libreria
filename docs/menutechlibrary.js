@@ -398,7 +398,7 @@ body.pastel-mode { background: #ffb6c1; color: #4b2e2e; transition: background .
 
         "clouds-1": { type:"clouds", background:"#cfdef3" },
         "clouds-2": { type:"clouds", background:"#fbc2eb" },
-        "clouds-3": { type:"clouds", background:"#fddb92" },
+        "clouds-3": { type:"clouds", background:"#68b8d7" },
 
         "liquid-1": { type:"metaballs", colors:['#66a6ff','#89f7fe','#3b82f6'], bg:"#00111f" },
         "liquid-2": { type:"metaballs", colors:['#c471f5','#fa71cd','#7b2cbf'], bg:"#1a002b" },
@@ -481,7 +481,7 @@ body.pastel-mode { background: #ffb6c1; color: #4b2e2e; transition: background .
             touchControls: true,
             backgroundColor: p.background,
             skyColor: p.background,
-            speed: 0.5
+            speed: 1
           });
         } else if (p.type === 'metaballs') {
           metaballsInstance = Metaballs(bg, {
@@ -2390,6 +2390,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
