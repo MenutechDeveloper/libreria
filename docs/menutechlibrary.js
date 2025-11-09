@@ -502,11 +502,13 @@ body.pastel-mode { background: #ffb6c1; color: #4b2e2e; transition: background .
             backgroundColor: p.bg,
             color1: p.color1,
             color2: p.color2,
-            speedLimit: 4.0,
-            separation: 50.0,
-            alignment: 30.0,
+            speedLimit: 5,
+            separation: 20,
+            wingSpan:30,
+            birdSize:1,
+            alignment: 20,
             cohesion: 20.0,
-            quantity: 3.0
+            quantity: 5
           });
         } else {
           bg.style.background = p.background || p.bg || "transparent";
@@ -2391,6 +2393,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
