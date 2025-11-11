@@ -173,7 +173,7 @@ body.pastel-mode { background: #ffb6c1; color: #4b2e2e; transition: background .
   <div class="theme-option" data-theme="birds-3"></div>
 
   <div id="overlay-controls">
-    <input type="range" id="overlay-range" min="0" max="100" value="10">
+    <input type="range" id="overlay-range" min="0" max="100" value="0">
     <div id="overlay-toggle">Negro</div>
   </div>
 </div>
@@ -2394,6 +2394,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
