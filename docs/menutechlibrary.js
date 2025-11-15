@@ -70,6 +70,23 @@ class MenutechChatbot extends HTMLElement {
           .chat-window{ right:12px; left:12px; width:auto; bottom:88px; height:70vh; }
           .chat-toggle{ right:12px; bottom:12px; }
         }
+
+/* Animación de desintegración */
+@keyframes bubble-delete {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+}
+
+.bubble.deleting {
+  animation: bubble-delete 0.35s ease forwards;
+}
+
       </style>
 
       <!-- Floating button (always visible) -->
@@ -134,13 +151,57 @@ class MenutechChatbot extends HTMLElement {
     });
 
     // Clear history
-    this.clearBtn.addEventListener('click', ()=>{
-      if(!confirm('¿Seguro que quieres borrar el historial?')) return;
-      this.history = [];
-      localStorage.setItem(this.historyKey, JSON.stringify(this.history));
-      this.renderHistory();
-    });
-  }
+this.clearBtn.addEventListener('click', () => {
+  const bubbles = this.shadow.querySelectorAll('.bubble');
+
+  if(bubbles.length === 0) return;
+
+  // Añadir animación a cada burbuja
+  bubbles.forEach((bub, i) => {
+    setTimeout(() => {
+      bub.classList.add('deleting');
+    }, i * 60); // efecto cascada suave
+  });
+
+  // Esperar animación y limpiar historial
+  setTimeout(() => {
+    this.history = [];
+    localStorage.setItem(this.historyKey, JSON.stringify([]));
+    this.renderHistory();
+
+
+
+    
+showClearedMessage(){
+  const msg = document.createElement('div');
+  msg.style.textAlign = "center";
+  msg.style.opacity = "0";
+  msg.style.padding = "10px";
+  msg.style.color = "#ff7a00";
+  msg.style.fontWeight = "600";
+  msg.style.transition = "opacity .4s ease";
+  msg.textContent = "✔ Historial borrado";
+
+  this.bodyEl.appendChild(msg);
+
+  // activar fade-in
+  requestAnimationFrame(() => {
+    msg.style.opacity = "1";
+  });
+
+  // eliminar mensaje después de 2s
+  setTimeout(() => {
+    msg.style.opacity = "0";
+    setTimeout(() => msg.remove(), 300);
+  }, 1800);
+}
+
+    // Mensaje visual de "limpiado"
+    this.showClearedMessage();
+  }, bubbles.length * 60 + 350);
+});
+
+
 
   async loadKB(){
     try{
@@ -2650,6 +2711,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
