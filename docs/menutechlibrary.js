@@ -94,6 +94,7 @@ class MenutechChatbot extends HTMLElement {
         <div id="body" class="chat-body"></div>
 
         <div class="chat-input">
+          <button id="micBtn" class="iconbtn" title="Hablar">🎤</button>
           <button id="clearBtn" class="iconbtn" title="Limpiar historial">🗑️</button>
           <input id="messageInput" placeholder="Escribe tu pregunta..." />
           <button id="sendBtn" class="send">Enviar</button>
@@ -103,6 +104,37 @@ class MenutechChatbot extends HTMLElement {
   }
 
   bindElements(){
+
+    this.micBtn = s.getElementById('micBtn');
+
+if ('webkitSpeechRecognition' in window) {
+
+  const SpeechRecognition = window.webkitSpeechRecognition;
+  const recognizer = new SpeechRecognition();
+  recognizer.lang = "es-ES";
+  recognizer.continuous = false;
+  recognizer.interimResults = false;
+
+  this.micBtn.addEventListener('click', () => {
+    recognizer.start();
+    this.micBtn.textContent = "🎙️"; // animación simple
+  });
+
+  recognizer.onresult = (e) => {
+    const text = e.results[0][0].transcript;
+    this.input.value = text;
+    this.sendBtn.click(); // Enviar automático
+  };
+
+  recognizer.onend = () => {
+    this.micBtn.textContent = "🎤";
+  };
+
+} else {
+  console.warn("API de voz no compatible en este navegador.");
+  this.micBtn.style.opacity = 0.4;
+}
+
     const s = this.shadow;
     this.openBtn = s.getElementById('openBtn');
     this.chat = s.getElementById('chat');
@@ -2688,6 +2720,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
