@@ -57,11 +57,15 @@ class MenutechChatbot extends HTMLElement {
         }
 .chat-input{
   display:flex;
-  padding:12px 12px;
-  border-top:1px solid #eee;
-  gap:10px;
   align-items:center;
+  gap:10px;
+
+  /* 🔥 Ajustes críticos */
+  padding:10px 12px;
+  border-top:1px solid #eee;
   background:#fff;
+  height:64px;       /* ← Evita que se corte nada */
+  box-sizing:border-box;
 }
 
 .chat-input input{
@@ -70,6 +74,9 @@ class MenutechChatbot extends HTMLElement {
   border-radius:10px;
   border:1px solid #d5d5d5;
   font-size:15px;
+
+  /* ← evita que empuje al botón */
+  min-width:0;
 }
 
 .chat-input button.iconbtn{
@@ -80,6 +87,8 @@ class MenutechChatbot extends HTMLElement {
   cursor:pointer;
   font-size:20px;
   color:#ff7a00;
+
+  flex-shrink:0;  /* ← evita que se achique */
 }
 
 .chat-input button.send{
@@ -91,7 +100,10 @@ class MenutechChatbot extends HTMLElement {
   cursor:pointer;
   font-size:15px;
   font-weight:600;
+
+  flex-shrink:0; /* ← evita que se corte */
 }
+
 
 
         /* Animación borrar */
@@ -2734,6 +2746,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
