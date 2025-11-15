@@ -118,7 +118,7 @@ class MenutechChatbot extends HTMLElement {
         <div id="body" class="chat-body"></div>
 
         <div class="chat-input">
-          <button id="micBtn" class="iconbtn" title="Hablar">🎤</button>
+          <button id="micBtn" class="iconbtn" title="Hablar">🗣️</button>
           <button id="clearBtn" class="iconbtn" title="Limpiar historial">🗑️</button>
           <input id="messageInput" placeholder="Escribe tu pregunta..." />
           <button id="sendBtn" class="send">Enviar</button>
@@ -2734,6 +2734,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
