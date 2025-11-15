@@ -37,75 +37,65 @@ class MenutechChatbot extends HTMLElement {
         .chat-window{
           position:fixed;right:20px;bottom:88px;width:360px;height:640px;max-height:90vh;
           background:#ffffff;border-radius:12px;box-shadow:0 16px 40px rgba(10,10,10,.2);
-          display:flex;flex-direction:column;overflow:hidden;font-family:Inter,system-ui,Arial;
+          display:flex;flex-direction:column;overflow:hidden;
           z-index:999998;border:1px solid rgba(0,0,0,.06);
         }
         .chat-header{
           padding:12px 14px;
-          background: linear-gradient(90deg,#ff7a00,#ff9b3a); /* naranja */
+          background: linear-gradient(90deg,#ff7a00,#ff9b3a);
           color:#fff;display:flex;align-items:center;justify-content:space-between;
         }
-        .chat-header strong{font-size:15px}
         .chat-body{padding:12px;overflow:auto;flex:1;background:linear-gradient(#fff,#fbfbfb)}
         .msg{margin-bottom:10px;display:flex}
         .msg.user{justify-content:flex-end}
-        .bubble{max-width:78%;padding:10px 12px;border-radius:12px;background:#f1f5ff;color:#111}
+        .bubble{
+          max-width:78%;padding:10px 12px;border-radius:12px;
+          background:#f1f5ff;color:#111;
+        }
         .msg.user .bubble{
-          background:#ffd9b3; /* burbuja usuario más clara */
-          color:#000; /* texto negro */
-          border-radius:12px;
+          background:#ffd9b3;color:#000;
         }
-        .chat-input{display:flex;padding:10px;border-top:1px solid #eee;gap:8px;align-items:center}
-        .chat-input input{flex:1;padding:10px;border-radius:8px;border:1px solid #ddd}
-        .chat-input button.send{padding:8px 12px;border-radius:8px;border:none;background:#ff7a00;color:#fff;cursor:pointer}
+        .chat-input{
+          display:flex;padding:10px;border-top:1px solid #eee;gap:8px;align-items:center
+        }
+        .chat-input input{
+          flex:1;padding:10px;border-radius:8px;border:1px solid #ddd
+        }
+        .chat-input button.send{
+          padding:8px 12px;border-radius:8px;border:none;
+          background:#ff7a00;color:#fff;cursor:pointer
+        }
         .chat-input button.iconbtn{
-          padding:6px 8px;background:transparent;border:none;border-radius:6px;cursor:pointer;font-size:18px;color:#ff7a00;
+          padding:6px 8px;background:transparent;border:none;
+          border-radius:6px;cursor:pointer;font-size:18px;color:#ff7a00;
         }
 
-        /* small KB list (hidden, used internally if needed) */
-        .kb-editor{display:none}
-
-        /* responsive tweak */
-        @media (max-width:420px){
-          .chat-window{ right:12px; left:12px; width:auto; bottom:88px; height:70vh; }
-          .chat-toggle{ right:12px; bottom:12px; }
+        /* Animación borrar */
+        @keyframes bubble-delete {
+          0% { opacity:1; transform:scale(1); }
+          100% { opacity:0; transform:scale(0.7); }
         }
-
-/* Animación de desintegración */
-@keyframes bubble-delete {
-  0% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(0.7);
-  }
-}
-
-.bubble.deleting {
-  animation: bubble-delete 0.35s ease forwards;
-}
-
+        .bubble.deleting {
+          animation: bubble-delete .35s ease forwards;
+        }
       </style>
 
-      <!-- Floating button (always visible) -->
-      <button id="openBtn" class="chat-toggle" title="Abrir chat">
-        <img id="openIcon" src="https://menutechdeveloper.github.io/databasewindows/img/icon.png" style="width:32px;height:32px;border-radius:50%;" alt="logo" />
+      <button id="openBtn" class="chat-toggle">
+        <img id="openIcon" src="https://menutechdeveloper.github.io/databasewindows/img/icon.png"
+        style="width:32px;height:32px;border-radius:50%" />
       </button>
 
-      <!-- Chat window (hidden by default) -->
-      <div id="chat" class="chat-window" style="display:none" aria-hidden="true" role="dialog" aria-label="Chat de ayuda">
+      <div id="chat" class="chat-window" style="display:none" aria-hidden="true">
         <div class="chat-header">
           <div><strong>Asistente</strong><div style="font-size:12px;opacity:.9">Soporte automático</div></div>
-          <button id="closeBtn" style="background:transparent;border:none;color:#fff;font-size:18px;cursor:pointer" aria-label="Cerrar">✕</button>
+          <button id="closeBtn" style="background:transparent;border:none;color:#fff;font-size:18px;cursor:pointer">✕</button>
         </div>
 
-        <div id="body" class="chat-body" role="log" aria-live="polite"></div>
+        <div id="body" class="chat-body"></div>
 
-        <div class="chat-input" part="input">
-          <button id="clearBtn" class="iconbtn" title="Limpiar historial" aria-label="Limpiar historial">🗑️</button>
-          <input id="messageInput" placeholder="Escribe tu pregunta..." aria-label="Mensaje" />
+        <div class="chat-input">
+          <button id="clearBtn" class="iconbtn" title="Limpiar historial">🗑️</button>
+          <input id="messageInput" placeholder="Escribe tu pregunta..." />
           <button id="sendBtn" class="send">Enviar</button>
         </div>
       </div>
@@ -122,27 +112,25 @@ class MenutechChatbot extends HTMLElement {
     this.sendBtn = s.getElementById('sendBtn');
     this.clearBtn = s.getElementById('clearBtn');
 
-    // Always-visible toggle: clicking opens/closes (toggle behavior)
+    // Toggle abrir/cerrar
     this.openBtn.addEventListener('click', () => {
       const isOpen = this.chat.style.display === 'flex';
-      if(isOpen){
-        this.chat.style.display = 'none';
-        this.chat.setAttribute('aria-hidden','true');
-      } else {
-        this.chat.style.display = 'flex';
-        this.chat.setAttribute('aria-hidden','false');
-        this.input.focus();
-      }
+      this.chat.style.display = isOpen ? 'none' : 'flex';
+      this.chat.setAttribute('aria-hidden', isOpen ? 'true' : 'false');
+      if(!isOpen) this.input.focus();
     });
 
-    // Close button inside
     this.closeBtn.addEventListener('click', ()=>{
       this.chat.style.display = 'none';
       this.chat.setAttribute('aria-hidden','true');
     });
 
-    // Send flow
-    this.sendBtn.addEventListener('click', ()=>{ this.userSend(this.input.value); this.input.value=''; this.input.focus(); });
+    this.sendBtn.addEventListener('click', ()=>{
+      this.userSend(this.input.value);
+      this.input.value='';
+      this.input.focus();
+    });
+
     this.input.addEventListener('keydown', e=>{
       if(e.key === 'Enter'){
         e.preventDefault();
@@ -150,57 +138,53 @@ class MenutechChatbot extends HTMLElement {
       }
     });
 
-    // Clear history
-this.clearBtn.addEventListener('click', () => {
-  const bubbles = this.shadow.querySelectorAll('.bubble');
+    // ----------------------------
+    // CLEAR HISTORY (ubicación correcta)
+    // ----------------------------
+    this.clearBtn.addEventListener('click', () => {
+      const bubbles = this.shadow.querySelectorAll('.bubble');
 
-  if(bubbles.length === 0) return;
+      if(bubbles.length === 0) return;
 
-  // Añadir animación a cada burbuja
-  bubbles.forEach((bub, i) => {
-    setTimeout(() => {
-      bub.classList.add('deleting');
-    }, i * 60); // efecto cascada suave
-  });
+      bubbles.forEach((bub, i) => {
+        setTimeout(() => {
+          bub.classList.add('deleting');
+        }, i * 60);
+      });
 
-  // Esperar animación y limpiar historial
-  setTimeout(() => {
-    this.history = [];
-    localStorage.setItem(this.historyKey, JSON.stringify([]));
-    this.renderHistory();
+      setTimeout(() => {
+        this.history = [];
+        localStorage.setItem(this.historyKey, JSON.stringify([]));
+        this.renderHistory();
+        this.showClearedMessage();
+      }, bubbles.length * 60 + 350);
+    });
+  }
 
-
-
-    
-showClearedMessage(){
-  const msg = document.createElement('div');
-  msg.style.textAlign = "center";
-  msg.style.opacity = "0";
-  msg.style.padding = "10px";
-  msg.style.color = "#ff7a00";
-  msg.style.fontWeight = "600";
-  msg.style.transition = "opacity .4s ease";
-  msg.textContent = "✔ Historial borrado";
-
-  this.bodyEl.appendChild(msg);
-
-  // activar fade-in
-  requestAnimationFrame(() => {
-    msg.style.opacity = "1";
-  });
-
-  // eliminar mensaje después de 2s
-  setTimeout(() => {
+  // ----------------------------
+  // FUNCIÓN mensaje “historial borrado”
+  // ----------------------------
+  showClearedMessage(){
+    const msg = document.createElement('div');
+    msg.style.textAlign = "center";
     msg.style.opacity = "0";
-    setTimeout(() => msg.remove(), 300);
-  }, 1800);
-}
+    msg.style.padding = "10px";
+    msg.style.color = "#ff7a00";
+    msg.style.fontWeight = "600";
+    msg.style.transition = "opacity .4s ease";
+    msg.textContent = "✔ Historial borrado";
 
-    // Mensaje visual de "limpiado"
-    this.showClearedMessage();
-  }, bubbles.length * 60 + 350);
-});
+    this.bodyEl.appendChild(msg);
 
+    requestAnimationFrame(() => {
+      msg.style.opacity = "1";
+    });
+
+    setTimeout(() => {
+      msg.style.opacity = "0";
+      setTimeout(() => msg.remove(), 300);
+    }, 1800);
+  }
 
 
   async loadKB(){
@@ -209,27 +193,21 @@ showClearedMessage(){
       if(!res.ok) throw new Error('KB fetch failed: ' + res.status);
       const data = await res.json();
       if(!Array.isArray(data)) throw new Error('KB JSON must be an array of {q,a}');
-      // normalize entries: ensure q and a
-      this.kb = data.map(e => ({ q: (e.q||'').toString(), a: (e.a||'').toString() }));
+      this.kb = data.map(e => ({ q: e.q.toString(), a: e.a.toString() }));
     }catch(err){
       console.error('Menutech Chatbot — error loading KB:', err);
-      this.kb = []; // keep empty if fetch fails
+      this.kb = [];
     }
   }
 
-  // tokenizers & cosine similarity
   tokenize(text){
     return (text||'').toLowerCase().replace(/[^\w\sñáéíóúü]/g,' ').split(/\s+/).filter(Boolean);
   }
   buildTf(tokens){
-    const tf = {};
-    tokens.forEach(t=>tf[t]=(tf[t]||0)+1);
-    return tf;
+    const tf = {}; tokens.forEach(t=>tf[t]=(tf[t]||0)+1); return tf;
   }
   dot(a,b){
-    let s=0;
-    for(const k in a) if(b[k]) s += a[k]*b[k];
-    return s;
+    let s=0; for(const k in a) if(b[k]) s += a[k]*b[k]; return s;
   }
   norm(a){
     let s=0; for(const k in a) s+= a[k]*a[k]; return Math.sqrt(s);
@@ -252,20 +230,18 @@ showClearedMessage(){
 
   userSend(text){
     if(!text || !text.trim()) return;
-    // push user message
+
     this.history.push({role:'user', text});
     localStorage.setItem(this.historyKey, JSON.stringify(this.history));
     this.renderHistory();
 
-    // Find response
     const best = this.findBestAnswer(text);
     const THRESHOLD = 0.18;
+
     if(best.score >= THRESHOLD){
       const kbEntry = this.kb[best.index];
-      const extra = best.score > 0.7 ? '' : `\n\n(Referencia: "${kbEntry.q}")`;
-      this.botReply(kbEntry.a + extra);
+      this.botReply(kbEntry.a);
     } else {
-      // fallback only when user asked something unknown
       this.botReply("Lo siento, no tengo una respuesta segura para eso. ¿Quieres que agregue esta pregunta a las FAQs?");
     }
   }
@@ -290,16 +266,16 @@ showClearedMessage(){
     this.bodyEl.scrollTop = this.bodyEl.scrollHeight;
   }
 
-  escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]); }
+  escapeHtml(s){
+    return (s||'').replace(/[&<>"']/g, c=>({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    })[c]);
+  }
 
-  // allow attribute overrides if desired later (not required)
   static get observedAttributes(){ return ['kb-url','icon']; }
   attributeChangedCallback(name, oldV, newV){
-    if(name === 'kb-url' && newV){
-      this.kbUrl = newV;
-      this.loadKB();
-    }
-    if(name === 'icon' && newV){
+    if(name === 'kb-url') this.kbUrl = newV;
+    if(name === 'icon'){
       const img = this.shadow.getElementById('openIcon');
       if(img) img.src = newV;
     }
@@ -307,6 +283,7 @@ showClearedMessage(){
 }
 
 customElements.define('menutech-chatbot', MenutechChatbot);
+
 
 
 
@@ -2711,6 +2688,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
