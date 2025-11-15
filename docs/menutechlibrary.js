@@ -80,9 +80,9 @@ class MenutechChatbot extends HTMLElement {
         }
       </style>
 
-      <button id="openBtn" class="chat-toggle">
+      <button id="openBtn" class="chat-toggle" title="Abrir chat">
         <img id="openIcon" src="https://menutechdeveloper.github.io/databasewindows/img/icon.png"
-        style="width:32px;height:32px;border-radius:50%" />
+        style="width:32px;height:32px;border-radius:50%" alt="abrir chat" />
       </button>
 
       <div id="chat" class="chat-window" style="display:none" aria-hidden="true">
@@ -104,38 +104,9 @@ class MenutechChatbot extends HTMLElement {
   }
 
   bindElements(){
-
-    this.micBtn = s.getElementById('micBtn');
-
-if ('webkitSpeechRecognition' in window) {
-
-  const SpeechRecognition = window.webkitSpeechRecognition;
-  const recognizer = new SpeechRecognition();
-  recognizer.lang = "es-ES";
-  recognizer.continuous = false;
-  recognizer.interimResults = false;
-
-  this.micBtn.addEventListener('click', () => {
-    recognizer.start();
-    this.micBtn.textContent = "🎙️"; // animación simple
-  });
-
-  recognizer.onresult = (e) => {
-    const text = e.results[0][0].transcript;
-    this.input.value = text;
-    this.sendBtn.click(); // Enviar automático
-  };
-
-  recognizer.onend = () => {
-    this.micBtn.textContent = "🎤";
-  };
-
-} else {
-  console.warn("API de voz no compatible en este navegador.");
-  this.micBtn.style.opacity = 0.4;
-}
-
     const s = this.shadow;
+
+    // obtener referencias primero
     this.openBtn = s.getElementById('openBtn');
     this.chat = s.getElementById('chat');
     this.closeBtn = s.getElementById('closeBtn');
@@ -143,8 +114,9 @@ if ('webkitSpeechRecognition' in window) {
     this.input = s.getElementById('messageInput');
     this.sendBtn = s.getElementById('sendBtn');
     this.clearBtn = s.getElementById('clearBtn');
+    this.micBtn = s.getElementById('micBtn');
 
-    // Toggle abrir/cerrar
+    // Toggle abrir/cerrar (botón siempre visible)
     this.openBtn.addEventListener('click', () => {
       const isOpen = this.chat.style.display === 'flex';
       this.chat.style.display = isOpen ? 'none' : 'flex';
@@ -152,11 +124,13 @@ if ('webkitSpeechRecognition' in window) {
       if(!isOpen) this.input.focus();
     });
 
+    // Close button inside
     this.closeBtn.addEventListener('click', ()=>{
       this.chat.style.display = 'none';
       this.chat.setAttribute('aria-hidden','true');
     });
 
+    // Send flow
     this.sendBtn.addEventListener('click', ()=>{
       this.userSend(this.input.value);
       this.input.value='';
@@ -170,20 +144,13 @@ if ('webkitSpeechRecognition' in window) {
       }
     });
 
-    // ----------------------------
-    // CLEAR HISTORY (ubicación correcta)
-    // ----------------------------
+    // Clear history (animado)
     this.clearBtn.addEventListener('click', () => {
       const bubbles = this.shadow.querySelectorAll('.bubble');
-
       if(bubbles.length === 0) return;
-
       bubbles.forEach((bub, i) => {
-        setTimeout(() => {
-          bub.classList.add('deleting');
-        }, i * 60);
+        setTimeout(() => bub.classList.add('deleting'), i * 60);
       });
-
       setTimeout(() => {
         this.history = [];
         localStorage.setItem(this.historyKey, JSON.stringify([]));
@@ -191,11 +158,49 @@ if ('webkitSpeechRecognition' in window) {
         this.showClearedMessage();
       }, bubbles.length * 60 + 350);
     });
+
+    // --- Speech to Text: registrar *después* de tener this.micBtn, this.input, this.sendBtn
+    if (this.micBtn) {
+      if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognizer = new SpeechRec();
+        recognizer.lang = "es-ES";
+        recognizer.continuous = false;
+        recognizer.interimResults = false;
+
+        this.micBtn.addEventListener('click', () => {
+          try {
+            recognizer.start();
+            this.micBtn.textContent = "🎙️";
+          } catch (e) {
+            console.warn('No se pudo iniciar reconocimiento:', e);
+          }
+        });
+
+        recognizer.onresult = (e) => {
+          const text = e.results[0][0].transcript;
+          this.input.value = text;
+          // enviar automáticamente
+          if (this.input.value.trim() !== "") this.sendBtn.click();
+        };
+
+        recognizer.onend = () => {
+          // restaurar icono
+          this.micBtn.textContent = "🎤";
+        };
+
+        recognizer.onerror = (ev) => {
+          console.warn('Speech recognition error', ev);
+          this.micBtn.textContent = "🎤";
+        };
+      } else {
+        // no soportado
+        this.micBtn.style.opacity = 0.35;
+        this.micBtn.title = "Reconocimiento de voz no disponible";
+      }
+    }
   }
 
-  // ----------------------------
-  // FUNCIÓN mensaje “historial borrado”
-  // ----------------------------
   showClearedMessage(){
     const msg = document.createElement('div');
     msg.style.textAlign = "center";
@@ -207,10 +212,7 @@ if ('webkitSpeechRecognition' in window) {
     msg.textContent = "✔ Historial borrado";
 
     this.bodyEl.appendChild(msg);
-
-    requestAnimationFrame(() => {
-      msg.style.opacity = "1";
-    });
+    requestAnimationFrame(() => msg.style.opacity = "1");
 
     setTimeout(() => {
       msg.style.opacity = "0";
@@ -218,14 +220,13 @@ if ('webkitSpeechRecognition' in window) {
     }, 1800);
   }
 
-
   async loadKB(){
     try{
       const res = await fetch(this.kbUrl, {cache: 'no-cache'});
       if(!res.ok) throw new Error('KB fetch failed: ' + res.status);
       const data = await res.json();
       if(!Array.isArray(data)) throw new Error('KB JSON must be an array of {q,a}');
-      this.kb = data.map(e => ({ q: e.q.toString(), a: e.a.toString() }));
+      this.kb = data.map(e => ({ q: (e.q||'').toString(), a: (e.a||'').toString() }));
     }catch(err){
       console.error('Menutech Chatbot — error loading KB:', err);
       this.kb = [];
@@ -235,20 +236,10 @@ if ('webkitSpeechRecognition' in window) {
   tokenize(text){
     return (text||'').toLowerCase().replace(/[^\w\sñáéíóúü]/g,' ').split(/\s+/).filter(Boolean);
   }
-  buildTf(tokens){
-    const tf = {}; tokens.forEach(t=>tf[t]=(tf[t]||0)+1); return tf;
-  }
-  dot(a,b){
-    let s=0; for(const k in a) if(b[k]) s += a[k]*b[k]; return s;
-  }
-  norm(a){
-    let s=0; for(const k in a) s+= a[k]*a[k]; return Math.sqrt(s);
-  }
-  cosineSim(aTokens, bTokens){
-    const A = this.buildTf(aTokens), B = this.buildTf(bTokens);
-    const d = this.dot(A,B); const n = this.norm(A)*this.norm(B);
-    return n===0?0:d/n;
-  }
+  buildTf(tokens){ const tf = {}; tokens.forEach(t=>tf[t]=(tf[t]||0)+1); return tf; }
+  dot(a,b){ let s=0; for(const k in a) if(b[k]) s += a[k]*b[k]; return s; }
+  norm(a){ let s=0; for(const k in a) s+= a[k]*a[k]; return Math.sqrt(s); }
+  cosineSim(aTokens, bTokens){ const A = this.buildTf(aTokens), B = this.buildTf(bTokens); const d = this.dot(A,B); const n = this.norm(A)*this.norm(B); return n===0?0:d/n; }
 
   findBestAnswer(query){
     const qTokens = this.tokenize(query);
@@ -262,14 +253,12 @@ if ('webkitSpeechRecognition' in window) {
 
   userSend(text){
     if(!text || !text.trim()) return;
-
     this.history.push({role:'user', text});
     localStorage.setItem(this.historyKey, JSON.stringify(this.history));
     this.renderHistory();
 
     const best = this.findBestAnswer(text);
     const THRESHOLD = 0.18;
-
     if(best.score >= THRESHOLD){
       const kbEntry = this.kb[best.index];
       this.botReply(kbEntry.a);
@@ -306,8 +295,8 @@ if ('webkitSpeechRecognition' in window) {
 
   static get observedAttributes(){ return ['kb-url','icon']; }
   attributeChangedCallback(name, oldV, newV){
-    if(name === 'kb-url') this.kbUrl = newV;
-    if(name === 'icon'){
+    if(name === 'kb-url' && newV) this.kbUrl = newV;
+    if(name === 'icon' && newV){
       const img = this.shadow.getElementById('openIcon');
       if(img) img.src = newV;
     }
@@ -315,6 +304,7 @@ if ('webkitSpeechRecognition' in window) {
 }
 
 customElements.define('menutech-chatbot', MenutechChatbot);
+
 
 
 
@@ -2720,6 +2710,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
