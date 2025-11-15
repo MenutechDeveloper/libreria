@@ -55,20 +55,44 @@ class MenutechChatbot extends HTMLElement {
         .msg.user .bubble{
           background:#ffd9b3;color:#000;
         }
-        .chat-input{
-          display:flex;padding:10px;border-top:1px solid #eee;gap:8px;align-items:center
-        }
-        .chat-input input{
-          flex:1;padding:10px;border-radius:8px;border:1px solid #ddd
-        }
-        .chat-input button.send{
-          padding:8px 12px;border-radius:8px;border:none;
-          background:#ff7a00;color:#fff;cursor:pointer
-        }
-        .chat-input button.iconbtn{
-          padding:6px 8px;background:transparent;border:none;
-          border-radius:6px;cursor:pointer;font-size:18px;color:#ff7a00;
-        }
+.chat-input{
+  display:flex;
+  padding:12px 12px;
+  border-top:1px solid #eee;
+  gap:10px;
+  align-items:center;
+  background:#fff;
+}
+
+.chat-input input{
+  flex:1;
+  padding:12px 14px;
+  border-radius:10px;
+  border:1px solid #d5d5d5;
+  font-size:15px;
+}
+
+.chat-input button.iconbtn{
+  padding:8px;
+  background:transparent;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:20px;
+  color:#ff7a00;
+}
+
+.chat-input button.send{
+  padding:10px 16px;
+  border-radius:10px;
+  border:none;
+  background:#ff7a00;
+  color:#fff;
+  cursor:pointer;
+  font-size:15px;
+  font-weight:600;
+}
+
 
         /* Animación borrar */
         @keyframes bubble-delete {
@@ -2710,6 +2734,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
