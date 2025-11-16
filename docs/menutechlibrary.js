@@ -133,14 +133,16 @@ class MenutechChatbot extends HTMLElement {
       <div id="chat" class="chat-window" style="display:none" aria-hidden="true">
         <div class="chat-header">
           <div><strong>Asistente</strong><div style="font-size:12px;opacity:.9">Soporte automático</div></div>
-          <button id="closeBtn" style="background:transparent;border:none;color:#fff;font-size:18px;cursor:pointer">✕</button>
+          <button id="closeBtn" style="background:transparent;border:none;color:#fff;font-size:18px;cursor:pointer">
+          <img src="https://menutechdeveloper.github.io/libreria/icons/close.svg" style="width:20px;height:20px;filter:invert(1)">
+          </button>
         </div>
 
         <div id="body" class="chat-body"></div>
 
         <div class="chat-input">
-          <button id="micBtn" class="iconbtn" title="Hablar">🗣️</button>
-          <button id="clearBtn" class="iconbtn" title="Limpiar historial">🗑️</button>
+          <button id="micBtn" class="iconbtn" title="Hablar"><img id="micIcon" src="https://menutechdeveloper.github.io/libreria/icons/mic.svg"></button>
+          <button id="clearBtn" class="iconbtn" title="Limpiar historial"><img src="https://menutechdeveloper.github.io/libreria/icons/trash.svg"></button>
           <input id="messageInput" placeholder="Escribe tu pregunta..." />
           <button id="sendBtn" class="send">Enviar</button>
         </div>
@@ -213,10 +215,13 @@ class MenutechChatbot extends HTMLElement {
         recognizer.continuous = false;
         recognizer.interimResults = false;
 
+        this.micIcon = this.shadow.getElementById("micIcon");
         this.micBtn.addEventListener('click', () => {
           try {
             recognizer.start();
-            this.micBtn.textContent = "🎙️";
+            this.micIcon.src = "https://menutechdeveloper.github.io/libreria/icons/mic-listening.svg";
+            this.micIcon.style.filter =
+            "invert(31%) sepia(100%) saturate(7480%) hue-rotate(204deg) brightness(96%) contrast(101%)";
           } catch (e) {
             console.warn('No se pudo iniciar reconocimiento:', e);
           }
@@ -231,12 +236,12 @@ class MenutechChatbot extends HTMLElement {
 
         recognizer.onend = () => {
           // restaurar icono
-          this.micBtn.textContent = "🎤";
+          this.micIcon.src = "https://menutechdeveloper.github.io/libreria/icons/mic.svg";
         };
 
         recognizer.onerror = (ev) => {
           console.warn('Speech recognition error', ev);
-          this.micBtn.textContent = "🎤";
+          this.micIcon.src = "https://menutechdeveloper.github.io/libreria/icons/mic.svg";
         };
       } else {
         // no soportado
@@ -2755,6 +2760,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
