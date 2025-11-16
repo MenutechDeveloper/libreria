@@ -2902,6 +2902,39 @@ customElements.define("menutech-navbar", MenutechNavbar);
 // Menutech ICONOS    this.iconPath = "https://menutech.xyz/icons/";
 // ==========================================================================================================================
 
+class MenutechIconLoader {
+    constructor() {
+        this.iconPath = "https://menutechdeveloper.github.io/libreria/icons/"; // ← SLASH IMPORTANTE
+        this.processAll();
+    }
+
+    processAll() {
+        const icons = document.querySelectorAll("i[class*='menutech-']");
+        icons.forEach(icon => this.loadIcon(icon));
+    }
+
+    async loadIcon(el) {
+        const classes = [...el.classList];
+        const name = classes.find(c => c.startsWith("menutech-"))?.replace("menutech-", "");
+        if (!name) return;
+
+        try {
+            let svgText = await fetch(`${this.iconPath}${name}.svg`).then(r => r.text());
+
+            svgText = svgText
+                .replace(/fill="[^"]*"/g, '')
+                .replace(/stroke="[^"]*"/g, '')
+                .replace('<svg', '<svg fill="currentColor"');
+
+            el.innerHTML = svgText;
+        } catch (e) {
+            console.error("Icono Menutech no encontrado:", name);
+        }
+    }
+}
+
+document.addEventListener("DOMContentLoaded", () => new MenutechIconLoader());
+
 
 
 
