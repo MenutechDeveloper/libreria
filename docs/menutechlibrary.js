@@ -114,6 +114,15 @@ class MenutechChatbot extends HTMLElement {
         .bubble.deleting {
           animation: bubble-delete .35s ease forwards;
         }
+
+        .iconbtn img,
+.iconbtn svg {
+  width:22px;
+  height:22px;
+  display:block;
+  pointer-events:none;
+}
+
       </style>
 
       <button id="openBtn" class="chat-toggle" title="Abrir chat">
@@ -2746,6 +2755,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
