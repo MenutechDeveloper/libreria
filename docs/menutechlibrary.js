@@ -2924,7 +2924,8 @@ class MenutechIconLoader {
             svgText = svgText
                 .replace(/fill="[^"]*"/g, 'fill="currentColor"')
                 .replace(/stroke="[^"]*"/g, 'stroke="currentColor"')
-                .replace('<svg', '<svg fill="currentColor" style="width:1em; height:1em; flex-shrink:0; display:inline-block;"');
+                .replace('<svg', '<svg fill="currentColor" width="1em" height="1em" style="width:1.4em;height:1.4em;display:block;pointer-events:none;"')
+
 
             el.innerHTML = svgText;
             el.style.display = "inline-block";
@@ -2936,6 +2937,7 @@ class MenutechIconLoader {
 }
 
 document.addEventListener("DOMContentLoaded", () => new MenutechIconLoader());
+
 
 
 
