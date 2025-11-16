@@ -2902,73 +2902,7 @@ customElements.define("menutech-navbar", MenutechNavbar);
 // Menutech ICONOS    this.iconPath = "https://menutech.xyz/icons/";
 // ==========================================================================================================================
 
-// Auto loader de iconos Menutech
 
-class MenutechIconLoader {
-    constructor() {
-        this.iconPath = "https://menutechdeveloper.github.io/libreria/icons/";
-        this.injectStyles();
-        this.processAll();
-    }
-
-    injectStyles() {
-        // Estilos seguros SOLO para i.menutech-*
-        const css = `
-            i[class^="menutech-"],
-            i[class*=" menutech-"] {
-                display: inline-flex !important;
-                align-items: center;
-                justify-content: center;
-                width: 1em;
-                height: 1em;
-                vertical-align: middle;
-                line-height: 1;
-            }
-
-            i[class^="menutech-"] svg,
-            i[class*=" menutech-"] svg {
-                width: 100%;
-                height: 100%;
-                fill: currentColor !important;
-            }
-        `;
-
-        const style = document.createElement("style");
-        style.textContent = css;
-        document.head.appendChild(style);
-    }
-
-    processAll() {
-        const icons = document.querySelectorAll("i[class*='menutech-']");
-        icons.forEach(icon => this.loadIcon(icon));
-    }
-
-    async loadIcon(el) {
-        const classes = [...el.classList];
-        const name = classes
-            .find(c => c.startsWith("menutech-"))
-            ?.replace("menutech-", "");
-
-        if (!name) return;
-
-        try {
-            let svgText = await fetch(`${this.iconPath}${name}.svg`).then(r => r.text());
-
-            // Limpiar colores fijos del SVG
-            svgText = svgText
-                .replace(/fill="[^"]*"/g, "")       // eliminar fill
-                .replace(/stroke="[^"]*"/g, "")     // eliminar stroke
-                .replace("<svg", '<svg fill="currentColor"');
-
-            el.innerHTML = svgText;
-
-        } catch (e) {
-            console.error("Icono Menutech no encontrado:", name);
-        }
-    }
-}
-
-document.addEventListener("DOMContentLoaded", () => new MenutechIconLoader());
 
 
 
