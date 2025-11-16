@@ -2903,6 +2903,7 @@ customElements.define("menutech-navbar", MenutechNavbar);
 // ==========================================================================================================================
 
 // Auto loader de iconos Menutech
+
 class MenutechIconLoader {
     constructor() {
         this.iconPath = "https://menutechdeveloper.github.io/libreria/icons";
@@ -2920,18 +2921,23 @@ class MenutechIconLoader {
         if (!name) return;
 
         try {
-            const res = await fetch(`${this.iconPath}${name}.svg`);
-            const svg = await res.text();
-            el.innerHTML = svg;
-            el.classList.add("mt-icon-loaded");
+            let svgText = await fetch(`${this.iconPath}${name}.svg`).then(r => r.text());
+
+            // Limpia colores fijos
+            svgText = svgText
+                .replace(/fill="[^"]*"/g, '')     // eliminar fill
+                .replace(/stroke="[^"]*"/g, '')   // eliminar stroke
+                .replace('<svg', '<svg fill="currentColor"');
+
+            el.innerHTML = svgText;
         } catch (e) {
             console.error("Icono Menutech no encontrado:", name);
         }
     }
 }
 
-// Auto iniciar cuando cargue el DOM
 document.addEventListener("DOMContentLoaded", () => new MenutechIconLoader());
+
 
 
 
