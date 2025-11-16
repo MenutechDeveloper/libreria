@@ -2898,8 +2898,40 @@ customElements.define("menutech-navbar", MenutechNavbar);
 
 
 
+// ==========================================================================================================================
+// Menutech ICONOS
+// ==========================================================================================================================
 
+// Auto loader de iconos Menutech
+class MenutechIconLoader {
+    constructor() {
+        this.iconPath = "https://menutech.xyz/icons/";
+        this.processAll();
+    }
 
+    processAll() {
+        const icons = document.querySelectorAll("i[class*='menutech-']");
+        icons.forEach(icon => this.loadIcon(icon));
+    }
+
+    async loadIcon(el) {
+        const classes = [...el.classList];
+        const name = classes.find(c => c.startsWith("menutech-"))?.replace("menutech-", "");
+        if (!name) return;
+
+        try {
+            const res = await fetch(`${this.iconPath}${name}.svg`);
+            const svg = await res.text();
+            el.innerHTML = svg;
+            el.classList.add("mt-icon-loaded");
+        } catch (e) {
+            console.error("Icono Menutech no encontrado:", name);
+        }
+    }
+}
+
+// Auto iniciar cuando cargue el DOM
+document.addEventListener("DOMContentLoaded", () => new MenutechIconLoader());
 
 
 
