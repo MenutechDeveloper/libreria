@@ -2904,7 +2904,7 @@ customElements.define("menutech-navbar", MenutechNavbar);
 
 class MenutechIconLoader {
     constructor() {
-        this.iconPath = "https://menutechdeveloper.github.io/libreria/icons/"; // ← SLASH IMPORTANTE
+        this.iconPath = "https://menutechdeveloper.github.io/libreria/icons/";
         this.processAll();
     }
 
@@ -2922,11 +2922,13 @@ class MenutechIconLoader {
             let svgText = await fetch(`${this.iconPath}${name}.svg`).then(r => r.text());
 
             svgText = svgText
-                .replace(/fill="[^"]*"/g, '')
-                .replace(/stroke="[^"]*"/g, '')
-                .replace('<svg', '<svg fill="currentColor"');
+                .replace(/fill="[^"]*"/g, 'fill="currentColor"')
+                .replace(/stroke="[^"]*"/g, 'stroke="currentColor"')
+                .replace('<svg', '<svg fill="currentColor" style="width:1em; height:1em; flex-shrink:0; display:inline-block;"');
 
             el.innerHTML = svgText;
+            el.style.display = "inline-block";
+
         } catch (e) {
             console.error("Icono Menutech no encontrado:", name);
         }
@@ -2934,6 +2936,7 @@ class MenutechIconLoader {
 }
 
 document.addEventListener("DOMContentLoaded", () => new MenutechIconLoader());
+
 
 
 
