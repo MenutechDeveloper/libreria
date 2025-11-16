@@ -237,11 +237,13 @@ class MenutechChatbot extends HTMLElement {
         recognizer.onend = () => {
           // restaurar icono
           this.micIcon.src = "https://menutechdeveloper.github.io/libreria/icons/mic.svg";
+          this.micIcon.style.filter = "";
         };
 
         recognizer.onerror = (ev) => {
           console.warn('Speech recognition error', ev);
           this.micIcon.src = "https://menutechdeveloper.github.io/libreria/icons/mic.svg";
+          this.micIcon.style.filter = "";
         };
       } else {
         // no soportado
@@ -2760,6 +2762,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
