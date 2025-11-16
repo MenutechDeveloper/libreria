@@ -358,6 +358,139 @@ class MenutechChatbot extends HTMLElement {
 customElements.define('menutech-chatbot', MenutechChatbot);
 
 
+/******************************
+ * MENUTECH DRAWER
+ ******************************/
+class MenutechDrawer extends HTMLElement {
+  constructor() {
+    super();
+    const shadow = this.attachShadow({ mode: "open" });
+
+    // ===== CSS =====
+    const style = document.createElement("style");
+    style.textContent = `
+      .nav-container {
+        position: fixed;
+        left: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 80px;
+        height: 260px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .nav {
+        position: relative;
+        width: 80px;
+        height: 260px;
+      }
+
+      .icon {
+        position: absolute;
+        width: 42px;
+        height: 42px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        transition:
+          transform 0.5s cubic-bezier(0.25, 1.4, 0.4, 1),
+          top 0.6s cubic-bezier(0.25, 1.4, 0.4, 1),
+          left 0.6s cubic-bezier(0.25, 1.4, 0.4, 1),
+          opacity 0.5s ease;
+        opacity: 0;
+        transform: scale(0.6);
+      }
+
+      .icon:hover {
+        transform: scale(1.35) !important;
+      }
+
+      .nav:not(:hover) .icon {
+        opacity: 0;
+        pointer-events: none;
+        transform: scale(0.6);
+      }
+      .nav:not(:hover) .icon.last {
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        transform: scale(1) !important;
+      }
+
+      .icon {
+        left: 5px;
+        top: 110px;
+      }
+
+      /* Media luna ampliada */
+      .nav:hover .icon:nth-child(1) { top: -40px; left: -10px; opacity: 1; transform: scale(1); }
+      .nav:hover .icon:nth-child(2) { top: 30px;  left: 25px;  opacity: 1; transform: scale(1); }
+      .nav:hover .icon:nth-child(3) { top: 120px; left: 55px;  opacity: 1; transform: scale(1); }
+      .nav:hover .icon:nth-child(4) { top: 210px; left: 25px;  opacity: 1; transform: scale(1); }
+      .nav:hover .icon:nth-child(5) { top: 280px; left: -10px; opacity: 1; transform: scale(1); }
+
+      img {
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
+    `;
+
+    // ===== HTML =====
+    const wrapper = document.createElement("div");
+    wrapper.classList.add("nav-container");
+    wrapper.innerHTML = `
+      <div class="nav">
+        <div class="icon"><img src="https://menutechdeveloper.github.io/libreria/icons/mago.svg"></div>
+        <div class="icon"><img src="https://menutechdeveloper.github.io/libreria/icons/close.svg"></div>
+        <div class="icon last"><img src="https://menutechdeveloper.github.io/libreria/icons/trash.svg"></div>
+        <div class="icon"><img src="https://menutechdeveloper.github.io/libreria/icons/mic.svg"></div>
+        <div class="icon"><img src="https://menutechdeveloper.github.io/libreria/icons/mago.svg"></div>
+      </div>
+    `;
+
+    shadow.appendChild(style);
+    shadow.appendChild(wrapper);
+  }
+
+  connectedCallback() {
+    this.initializeBehavior();
+  }
+
+  initializeBehavior() {
+    const icons = this.shadowRoot.querySelectorAll(".icon");
+    let lastIcon = this.shadowRoot.querySelector(".icon.last");
+
+    // Sonidos suaves por defecto
+    const soundEnter = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
+    const soundMove = new Audio("https://actions.google.com/sounds/v1/cartoon/pop.ogg");
+
+    icons.forEach(icon => {
+      icon.addEventListener("mouseenter", () => {
+        soundEnter.currentTime = 0;
+        soundMove.currentTime = 0;
+        soundEnter.play();
+        soundMove.play();
+
+        lastIcon.classList.remove("last");
+        icon.classList.add("last");
+        lastIcon = icon;
+      });
+    });
+
+    icons.forEach(icon => {
+      icon.addEventListener("click", () => {
+        const url = icon.dataset.url;
+        if (url) window.open(url);
+      });
+    });
+  }
+}
+
+customElements.define("menutech-drawer", MenutechDrawer);
+
 
 
 
@@ -2762,6 +2895,7 @@ class MenutechNavbar extends HTMLElement {
 }
 
 customElements.define("menutech-navbar", MenutechNavbar);
+
 
 
 
