@@ -2899,13 +2899,13 @@ customElements.define("menutech-navbar", MenutechNavbar);
 
 
 // ==========================================================================================================================
-// Menutech ICONOS
+// Menutech ICONOS    this.iconPath = "https://menutech.xyz/icons/";
 // ==========================================================================================================================
 
 // Auto loader de iconos Menutech
 class MenutechIconLoader {
     constructor() {
-        this.iconPath = "https://menutech.xyz/icons/";
+        this.iconPath = "https://menutechdeveloper.github.io/libreria/icons";
         this.processAll();
     }
 
@@ -2932,6 +2932,7 @@ class MenutechIconLoader {
 
 // Auto iniciar cuando cargue el DOM
 document.addEventListener("DOMContentLoaded", () => new MenutechIconLoader());
+
 
 
 
