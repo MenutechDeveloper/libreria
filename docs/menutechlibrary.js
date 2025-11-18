@@ -6,79 +6,87 @@
 // - Shows fallback message only when user asks something unknown
 
 class MenutechChatbot extends HTMLElement {
-  constructor(){
+  constructor() {
     super();
     this.kbUrl = 'https://menutechdeveloper.github.io/databasewindows/kb.json';
     this.historyKey = 'menutech_chat_history_v1';
     this.kb = [];
     this.history = JSON.parse(localStorage.getItem(this.historyKey) || '[]');
 
-    this.shadow = this.attachShadow({mode: 'open'});
+    this.shadow = this.attachShadow({ mode: 'open' });
     this.render();
     this.bindElements();
     this.loadKB();
     this.renderHistory();
+
+    // Vosk: rutas y estado
+    this._voskBundleUrl = 'https://unpkg.com/vosk-browser@0.0.6/dist/bundle.esm.js';
+    this._voskAudioProcessorUrl = 'https://unpkg.com/vosk-browser@0.0.6/dist/vosk-audio-processor.js';
+    this._voskModelUrl = 'https://menutechdeveloper.github.io/vosk/model/';
+    this._vosk = null;
+    this._model = null;
+    this._recognizer = null;
+    this._audioCtx = null;
+    this._workletNode = null;
+    this._mediaStream = null;
+    this._listening = false;
+    this._sampleRate = 16000;
+    this._voskReady = false;
   }
 
-  render(){
+  render() {
     this.shadow.innerHTML = `
-      <style>
-        :host { all: initial; font-family: Inter, system-ui, Arial, sans-serif; }
-        .chat-toggle{
-          position:fixed;
-          right:20px;
-          bottom:20px;
-          width:56px;height:56px;border-radius:50%;
-          background:#fff;color:#fff;border:none;
-          display:flex;align-items:center;justify-content:center;
-          box-shadow:0 6px 18px rgba(10,10,10,.18);cursor:pointer;
-          z-index:999999;font-size:22px;
-        }
-        .chat-window{
-          position:fixed;right:20px;bottom:88px;width:360px;height:640px;max-height:90vh;
-          background:#ffffff;border-radius:12px;box-shadow:0 16px 40px rgba(10,10,10,.2);
-          display:flex;flex-direction:column;overflow:hidden;
-          z-index:999998;border:1px solid rgba(0,0,0,.06);
-        }
-        .chat-header{
-          padding:12px 14px;
-          background: linear-gradient(90deg,#ff7a00,#ff9b3a);
-          color:#fff;display:flex;align-items:center;justify-content:space-between;
-        }
-        .chat-body{padding:12px;overflow:auto;flex:1;background:linear-gradient(#fff,#fbfbfb)}
-        .msg{margin-bottom:10px;display:flex}
-        .msg.user{justify-content:flex-end}
-        .bubble{
-          max-width:78%;padding:10px 12px;border-radius:12px;
-          background:#f1f5ff;color:#111;
-        }
-        .msg.user .bubble{
-          background:#ffd9b3;color:#000;
-        }
+<style>
+:host { all: initial; font-family: Inter, system-ui, Arial, sans-serif; }
+.chat-toggle{
+  position:fixed;
+  right:20px;
+  bottom:20px;
+  width:56px;height:56px;border-radius:50%;
+  background:#fff;color:#fff;border:none;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 6px 18px rgba(10,10,10,.18);cursor:pointer;
+  z-index:999999;font-size:22px;
+}
+.chat-window{
+  position:fixed;right:20px;bottom:88px;width:360px;height:640px;max-height:90vh;
+  background:#ffffff;border-radius:12px;box-shadow:0 16px 40px rgba(10,10,10,.2);
+  display:flex;flex-direction:column;overflow:hidden;
+  z-index:999998;border:1px solid rgba(0,0,0,.06);
+}
+.chat-header{
+  padding:12px 14px;
+  background: linear-gradient(90deg,#ff7a00,#ff9b3a);
+  color:#fff;display:flex;align-items:center;justify-content:space-between;
+}
+.chat-body{padding:12px;overflow:auto;flex:1;background:linear-gradient(#fff,#fbfbfb)}
+.msg{margin-bottom:10px;display:flex}
+.msg.user{justify-content:flex-end}
+.bubble{
+  max-width:78%;padding:10px 12px;border-radius:12px;
+  background:#f1f5ff;color:#111;
+}
+.msg.user .bubble{
+  background:#ffd9b3;color:#000;
+}
 .chat-input{
   display:flex;
   align-items:center;
   gap:10px;
-
-  /* 🔥 Ajustes críticos */
   padding:10px 12px;
   border-top:1px solid #eee;
   background:#fff;
-  height:64px;       /* ← Evita que se corte nada */
+  height:64px; /* evita que se corte nada */
   box-sizing:border-box;
 }
-
 .chat-input input{
   flex:1;
   padding:12px 14px;
   border-radius:10px;
   border:1px solid #d5d5d5;
   font-size:15px;
-
-  /* ← evita que empuje al botón */
   min-width:0;
 }
-
 .chat-input button.iconbtn{
   padding:8px;
   background:transparent;
@@ -87,10 +95,8 @@ class MenutechChatbot extends HTMLElement {
   cursor:pointer;
   font-size:20px;
   color:#ff7a00;
-
-  flex-shrink:0;  /* ← evita que se achique */
+  flex-shrink:0;
 }
-
 .chat-input button.send{
   padding:10px 16px;
   border-radius:10px;
@@ -100,60 +106,44 @@ class MenutechChatbot extends HTMLElement {
   cursor:pointer;
   font-size:15px;
   font-weight:600;
-
-  flex-shrink:0; /* ← evita que se corte */
+  flex-shrink:0;
 }
-
-
-
-        /* Animación borrar */
-        @keyframes bubble-delete {
-          0% { opacity:1; transform:scale(1); }
-          100% { opacity:0; transform:scale(0.7); }
-        }
-        .bubble.deleting {
-          animation: bubble-delete .35s ease forwards;
-        }
-
-        .iconbtn img,
-.iconbtn svg {
-  width:22px;
-  height:22px;
-  display:block;
-  pointer-events:none;
+@keyframes bubble-delete {
+  0% { opacity:1; transform:scale(1); }
+  100% { opacity:0; transform:scale(0.7); }
 }
+.bubble.deleting { animation: bubble-delete .35s ease forwards; }
+.iconbtn img,
+.iconbtn svg { width:22px;height:22px;display:block;pointer-events:none; }
+</style>
 
-      </style>
+<button id="openBtn" class="chat-toggle" title="Abrir chat">
+  <img id="openIcon" src="https://menutechdeveloper.github.io/databasewindows/img/icon.png"
+  style="width:32px;height:32px;border-radius:50%" alt="abrir chat" />
+</button>
 
-      <button id="openBtn" class="chat-toggle" title="Abrir chat">
-        <img id="openIcon" src="https://menutechdeveloper.github.io/databasewindows/img/icon.png"
-        style="width:32px;height:32px;border-radius:50%" alt="abrir chat" />
-      </button>
+<div id="chat" class="chat-window" style="display:none" aria-hidden="true">
+  <div class="chat-header">
+    <div><strong>Asistente</strong><div style="font-size:12px;opacity:.9">Soporte automático</div></div>
+    <button id="closeBtn" style="background:transparent;border:none;color:#fff;font-size:18px;cursor:pointer">
+      <img src="https://menutechdeveloper.github.io/libreria/icons/close.svg" style="width:20px;height:20px;filter:invert(1)">
+    </button>
+  </div>
 
-      <div id="chat" class="chat-window" style="display:none" aria-hidden="true">
-        <div class="chat-header">
-          <div><strong>Asistente</strong><div style="font-size:12px;opacity:.9">Soporte automático</div></div>
-          <button id="closeBtn" style="background:transparent;border:none;color:#fff;font-size:18px;cursor:pointer">
-          <img src="https://menutechdeveloper.github.io/libreria/icons/close.svg" style="width:20px;height:20px;filter:invert(1)">
-          </button>
-        </div>
+  <div id="body" class="chat-body"></div>
 
-        <div id="body" class="chat-body"></div>
-
-        <div class="chat-input">
-          <button id="micBtn" class="iconbtn" title="Hablar"><img id="micIcon" src="https://menutechdeveloper.github.io/libreria/icons/mic.svg"></button>
-          <button id="clearBtn" class="iconbtn" title="Limpiar historial"><img src="https://menutechdeveloper.github.io/libreria/icons/trash.svg"></button>
-          <input id="messageInput" placeholder="Escribe tu pregunta..." />
-          <button id="sendBtn" class="send">Enviar</button>
-        </div>
-      </div>
-    `;
+  <div class="chat-input">
+    <button id="micBtn" class="iconbtn" title="Hablar"><img id="micIcon" src="https://menutechdeveloper.github.io/libreria/icons/mic.svg"></button>
+    <button id="clearBtn" class="iconbtn" title="Limpiar historial"><img src="https://menutechdeveloper.github.io/libreria/icons/trash.svg"></button>
+    <input id="messageInput" placeholder="Escribe tu pregunta..." />
+    <button id="sendBtn" class="send">Enviar</button>
+  </div>
+</div>
+`;
   }
 
-  bindElements(){
+  bindElements() {
     const s = this.shadow;
-
-    // obtener referencias primero
     this.openBtn = s.getElementById('openBtn');
     this.chat = s.getElementById('chat');
     this.closeBtn = s.getElementById('closeBtn');
@@ -163,41 +153,35 @@ class MenutechChatbot extends HTMLElement {
     this.clearBtn = s.getElementById('clearBtn');
     this.micBtn = s.getElementById('micBtn');
 
-    // Toggle abrir/cerrar (botón siempre visible)
     this.openBtn.addEventListener('click', () => {
       const isOpen = this.chat.style.display === 'flex';
       this.chat.style.display = isOpen ? 'none' : 'flex';
       this.chat.setAttribute('aria-hidden', isOpen ? 'true' : 'false');
-      if(!isOpen) this.input.focus();
+      if (!isOpen) this.input.focus();
     });
 
-    // Close button inside
-    this.closeBtn.addEventListener('click', ()=>{
+    this.closeBtn.addEventListener('click', () => {
       this.chat.style.display = 'none';
-      this.chat.setAttribute('aria-hidden','true');
+      this.chat.setAttribute('aria-hidden', 'true');
     });
 
-    // Send flow
-    this.sendBtn.addEventListener('click', ()=>{
+    this.sendBtn.addEventListener('click', () => {
       this.userSend(this.input.value);
-      this.input.value='';
+      this.input.value = '';
       this.input.focus();
     });
 
-    this.input.addEventListener('keydown', e=>{
-      if(e.key === 'Enter'){
+    this.input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
         e.preventDefault();
-        if(this.input.value.trim() !== "") this.sendBtn.click();
+        if (this.input.value.trim() !== "") this.sendBtn.click();
       }
     });
 
-    // Clear history (animado)
     this.clearBtn.addEventListener('click', () => {
       const bubbles = this.shadow.querySelectorAll('.bubble');
-      if(bubbles.length === 0) return;
-      bubbles.forEach((bub, i) => {
-        setTimeout(() => bub.classList.add('deleting'), i * 60);
-      });
+      if (bubbles.length === 0) return;
+      bubbles.forEach((bub, i) => setTimeout(() => bub.classList.add('deleting'), i * 60));
       setTimeout(() => {
         this.history = [];
         localStorage.setItem(this.historyKey, JSON.stringify([]));
@@ -206,54 +190,106 @@ class MenutechChatbot extends HTMLElement {
       }, bubbles.length * 60 + 350);
     });
 
-    // --- Speech to Text: registrar *después* de tener this.micBtn, this.input, this.sendBtn
-    if (this.micBtn) {
-      if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-        const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-        const recognizer = new SpeechRec();
-        recognizer.lang = "es-ES";
-        recognizer.continuous = false;
-        recognizer.interimResults = false;
+    this.initVosk();
+  }
 
-        this.micIcon = this.shadow.getElementById("micIcon");
-        this.micBtn.addEventListener('click', () => {
-          try {
-            recognizer.start();
-            this.micIcon.src = "https://menutechdeveloper.github.io/libreria/icons/mic-listening.svg";
-            this.micIcon.style.filter =
-            "invert(31%) sepia(100%) saturate(7480%) hue-rotate(204deg) brightness(96%) contrast(101%)";
-          } catch (e) {
-            console.warn('No se pudo iniciar reconocimiento:', e);
-          }
-        });
-
-        recognizer.onresult = (e) => {
-          const text = e.results[0][0].transcript;
-          this.input.value = text;
-          // enviar automáticamente
-          if (this.input.value.trim() !== "") this.sendBtn.click();
-        };
-
-        recognizer.onend = () => {
-          // restaurar icono
-          this.micIcon.src = "https://menutechdeveloper.github.io/libreria/icons/mic.svg";
-          this.micIcon.style.filter = "";
-        };
-
-        recognizer.onerror = (ev) => {
-          console.warn('Speech recognition error', ev);
-          this.micIcon.src = "https://menutechdeveloper.github.io/libreria/icons/mic.svg";
-          this.micIcon.style.filter = "";
-        };
-      } else {
-        // no soportado
-        this.micBtn.style.opacity = 0.35;
-        this.micBtn.title = "Reconocimiento de voz no disponible";
+  async initVosk() {
+    try {
+      const mod = await import(this._voskBundleUrl);
+      this._vosk = mod;
+      if (!this._vosk || !this._vosk.Model) {
+        console.warn('Vosk bundle cargado pero no se encontró exportación Model.');
+        return;
       }
+
+      this._model = new this._vosk.Model(this._voskModelUrl);
+      await (this._model.init?.() || Promise.resolve());
+
+      this.micIcon = this.shadow.getElementById("micIcon");
+
+      this.micBtn.addEventListener('click', async () => {
+        if (this._listening) this.stopVosk();
+        else await this.startVosk();
+      });
+
+      this._voskReady = true;
+    } catch (err) {
+      console.error('Error inicializando Vosk:', err);
+      this.micBtn.style.opacity = 0.35;
+      this.micBtn.title = 'Reconocimiento Vosk no disponible';
     }
   }
 
-  showClearedMessage(){
+  async startVosk() {
+    if (!this._voskReady) return;
+    try {
+      this.micIcon.src = "https://menutechdeveloper.github.io/libreria/icons/mic-listening.svg";
+      this._mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      this._audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: this._sampleRate });
+      await this._audioCtx.audioWorklet.addModule(this._voskAudioProcessorUrl).catch(() => console.warn('AudioWorklet no disponible'));
+
+      const src = this._audioCtx.createMediaStreamSource(this._mediaStream);
+      this._recognizer = new this._vosk.Recognizer({ model: this._model, sampleRate: this._sampleRate });
+      await (this._recognizer.init?.() || Promise.resolve());
+
+      if (typeof AudioWorkletNode === 'function') {
+        this._workletNode = new AudioWorkletNode(this._audioCtx, 'VoskAudioProcessor');
+        src.connect(this._workletNode);
+        this._workletNode.connect(this._audioCtx.destination);
+        this._workletNode.port.onmessage = ev => {
+          const accepted = this._recognizer.acceptWaveform(ev.data);
+          if (accepted) {
+            const res = this._recognizer.finalResult?.() || {};
+            const text = res.text || '';
+            if (text.trim()) {
+              this.input.value = text;
+              this.sendBtn.click();
+              this.stopVosk();
+            }
+          }
+        };
+      } else {
+        const processor = this._audioCtx.createScriptProcessor(4096, 1, 1);
+        src.connect(processor);
+        processor.connect(this._audioCtx.destination);
+        processor.onaudioprocess = e => {
+          const channelData = e.inputBuffer.getChannelData(0);
+          this._recognizer.acceptWaveform(channelData);
+          const final = this._recognizer.finalResult?.() || {};
+          if (final.text && final.text.trim()) {
+            this.input.value = final.text;
+            this.sendBtn.click();
+            this.stopVosk();
+          }
+        };
+        this._workletNode = processor;
+      }
+
+      this._listening = true;
+    } catch (err) {
+      console.error('startVosk error', err);
+      this.stopVosk();
+    }
+  }
+
+  stopVosk() {
+    try {
+      if (this._mediaStream) this._mediaStream.getTracks().forEach(t => t.stop());
+      if (this._workletNode) this._workletNode.disconnect();
+      this._audioCtx?.close();
+    } catch (e) {
+      console.warn('stopVosk error', e);
+    } finally {
+      this._audioCtx = null;
+      this._workletNode = null;
+      this._recognizer = null;
+      this._mediaStream = null;
+      this._listening = false;
+      if (this.micIcon) this.micIcon.src = "https://menutechdeveloper.github.io/libreria/icons/mic.svg";
+    }
+  }
+
+  showClearedMessage() {
     const msg = document.createElement('div');
     msg.style.textAlign = "center";
     msg.style.opacity = "0";
@@ -262,56 +298,48 @@ class MenutechChatbot extends HTMLElement {
     msg.style.fontWeight = "600";
     msg.style.transition = "opacity .4s ease";
     msg.textContent = "✔ Historial borrado";
-
     this.bodyEl.appendChild(msg);
     requestAnimationFrame(() => msg.style.opacity = "1");
-
-    setTimeout(() => {
-      msg.style.opacity = "0";
-      setTimeout(() => msg.remove(), 300);
-    }, 1800);
+    setTimeout(() => { msg.style.opacity = "0"; setTimeout(() => msg.remove(), 300); }, 1800);
   }
 
-  async loadKB(){
-    try{
-      const res = await fetch(this.kbUrl, {cache: 'no-cache'});
-      if(!res.ok) throw new Error('KB fetch failed: ' + res.status);
+  async loadKB() {
+    try {
+      const res = await fetch(this.kbUrl, { cache: 'no-cache' });
+      if (!res.ok) throw new Error('KB fetch failed: ' + res.status);
       const data = await res.json();
-      if(!Array.isArray(data)) throw new Error('KB JSON must be an array of {q,a}');
-      this.kb = data.map(e => ({ q: (e.q||'').toString(), a: (e.a||'').toString() }));
-    }catch(err){
+      if (!Array.isArray(data)) throw new Error('KB JSON must be an array of {q,a}');
+      this.kb = data.map(e => ({ q: (e.q || '').toString(), a: (e.a || '').toString() }));
+    } catch (err) {
       console.error('Menutech Chatbot — error loading KB:', err);
       this.kb = [];
     }
   }
 
-  tokenize(text){
-    return (text||'').toLowerCase().replace(/[^\w\sñáéíóúü]/g,' ').split(/\s+/).filter(Boolean);
-  }
-  buildTf(tokens){ const tf = {}; tokens.forEach(t=>tf[t]=(tf[t]||0)+1); return tf; }
-  dot(a,b){ let s=0; for(const k in a) if(b[k]) s += a[k]*b[k]; return s; }
-  norm(a){ let s=0; for(const k in a) s+= a[k]*a[k]; return Math.sqrt(s); }
-  cosineSim(aTokens, bTokens){ const A = this.buildTf(aTokens), B = this.buildTf(bTokens); const d = this.dot(A,B); const n = this.norm(A)*this.norm(B); return n===0?0:d/n; }
+  tokenize(text) { return (text || '').toLowerCase().replace(/[^\w\sñáéíóúü]/g, ' ').split(/\s+/).filter(Boolean); }
+  buildTf(tokens) { const tf = {}; tokens.forEach(t => tf[t] = (tf[t] || 0) + 1); return tf; }
+  dot(a, b) { let s = 0; for (const k in a) if (b[k]) s += a[k] * b[k]; return s; }
+  norm(a) { let s = 0; for (const k in a) s += a[k] * a[k]; return Math.sqrt(s); }
+  cosineSim(aTokens, bTokens) { const A = this.buildTf(aTokens), B = this.buildTf(bTokens); const d = this.dot(A, B); const n = this.norm(A) * this.norm(B); return n === 0 ? 0 : d / n; }
 
-  findBestAnswer(query){
+  findBestAnswer(query) {
     const qTokens = this.tokenize(query);
-    let best = {score:0,index:-1};
-    this.kb.forEach((item,i)=>{
+    let best = { score: 0, index: -1 };
+    this.kb.forEach((item, i) => {
       const s = this.cosineSim(qTokens, this.tokenize(item.q + ' ' + item.a));
-      if(s > best.score){ best.score = s; best.index = i; }
+      if (s > best.score) { best.score = s; best.index = i; }
     });
     return best;
   }
 
-  userSend(text){
-    if(!text || !text.trim()) return;
-    this.history.push({role:'user', text});
+  userSend(text) {
+    if (!text || !text.trim()) return;
+    this.history.push({ role: 'user', text });
     localStorage.setItem(this.historyKey, JSON.stringify(this.history));
     this.renderHistory();
-
     const best = this.findBestAnswer(text);
     const THRESHOLD = 0.18;
-    if(best.score >= THRESHOLD){
+    if (best.score >= THRESHOLD) {
       const kbEntry = this.kb[best.index];
       this.botReply(kbEntry.a);
     } else {
@@ -319,43 +347,49 @@ class MenutechChatbot extends HTMLElement {
     }
   }
 
-  botReply(text){
-    this.history.push({role:'bot', text});
+  botReply(text) {
+    this.history.push({ role: 'bot', text });
     localStorage.setItem(this.historyKey, JSON.stringify(this.history));
     this.renderHistory();
   }
 
-  renderHistory(){
+  renderHistory() {
     this.bodyEl.innerHTML = '';
-    this.history.forEach(m=>{
+    this.history.forEach(m => {
       const div = document.createElement('div');
       div.className = 'msg ' + (m.role === 'user' ? 'user' : 'bot');
       const bubble = document.createElement('div');
       bubble.className = 'bubble';
-      bubble.innerHTML = this.escapeHtml(m.text).replace(/\n/g,'<br>');
+      bubble.innerHTML = this.escapeHtml(m.text).replace(/\n/g, '<br>');
       div.appendChild(bubble);
       this.bodyEl.appendChild(div);
     });
     this.bodyEl.scrollTop = this.bodyEl.scrollHeight;
   }
 
-  escapeHtml(s){
-    return (s||'').replace(/[&<>"']/g, c=>({
-      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
-    })[c]);
+  escapeHtml(s) {
+    return (s || '').replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
   }
 
-  static get observedAttributes(){ return ['kb-url','icon']; }
-  attributeChangedCallback(name, oldV, newV){
-    if(name === 'kb-url' && newV) this.kbUrl = newV;
-    if(name === 'icon' && newV){
+  static get observedAttributes() { return ['kb-url', 'icon']; }
+  attributeChangedCallback(name, oldV, newV) {
+    if (name === 'kb-url' && newV) this.kbUrl = newV;
+    if (name === 'icon' && newV) {
       const img = this.shadow.getElementById('openIcon');
-      if(img) img.src = newV;
+      if (img) img.src = newV;
     }
   }
 }
 
 customElements.define('menutech-chatbot', MenutechChatbot);
+
+
+
+
+
+
 
 
 /******************************
@@ -2937,6 +2971,7 @@ class MenutechIconLoader {
 }
 
 document.addEventListener("DOMContentLoaded", () => new MenutechIconLoader());
+
 
 
 
