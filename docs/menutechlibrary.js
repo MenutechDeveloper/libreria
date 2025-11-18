@@ -22,7 +22,7 @@ class MenutechChatbot extends HTMLElement {
     // Vosk: rutas y estado
     this._voskBundleUrl = 'https://unpkg.com/vosk-browser@0.0.6/dist/bundle.esm.js';
     this._voskAudioProcessorUrl = 'https://unpkg.com/vosk-browser@0.0.6/dist/vosk-audio-processor.js';
-    this._voskModelUrl = 'https://menutechdeveloper.github.io/vosk/model/';
+    this._voskModelUrl = 'https://menutech.xyz/vosk/model/';
     this._vosk = null;
     this._model = null;
     this._recognizer = null;
@@ -2971,6 +2971,7 @@ class MenutechIconLoader {
 }
 
 document.addEventListener("DOMContentLoaded", () => new MenutechIconLoader());
+
 
 
 
