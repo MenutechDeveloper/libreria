@@ -301,6 +301,14 @@ class MenutechChatbot extends HTMLElement {
     requestAnimationFrame(() => msg.style.opacity = "1");
     setTimeout(() => { msg.style.opacity = "0"; setTimeout(() => msg.remove(), 300); }, 1800);
   }
+  normalize(str){
+  return (str || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
 
 async loadKB() {
   try {
@@ -2991,6 +2999,7 @@ class MenutechIconLoader {
 }
 
 document.addEventListener("DOMContentLoaded", () => new MenutechIconLoader());
+
 
 
 
