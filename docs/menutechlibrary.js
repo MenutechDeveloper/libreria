@@ -8,7 +8,7 @@
 class MenutechChatbot extends HTMLElement {
   constructor() {
     super();
-    this.kbUrl = 'https://menutechdeveloper.github.io/databasewindows/kb.json';
+    this.kbUrl = 'https://script.google.com/macros/s/AKfycbwLqdN-xnH0mdvyh37FsipgHWyQpZJc3lCSULPC2umAuFwYBH1j3gW9Vz4e-9Z-Kl5VAw/exec';
     this.historyKey = 'menutech_chat_history_v1';
     this.kb = [];
     this.history = JSON.parse(localStorage.getItem(this.historyKey) || '[]');
@@ -2971,6 +2971,7 @@ class MenutechIconLoader {
 }
 
 document.addEventListener("DOMContentLoaded", () => new MenutechIconLoader());
+
 
 
 
