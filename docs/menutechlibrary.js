@@ -8,16 +8,9 @@ class MenutechChatbot extends HTMLElement {
   constructor() {
     super();
     this.kbUrl = 'https://script.google.com/macros/s/AKfycbyCPz710krQ7-9AzNO9u-AS5yjH7EJ3X8Lo-S73r_JBrpaf8_tJUFQadh5uenV5u-8F/exec';
-
-    // 🔥 ELIMINADO: localStorage
-    // this.historyKey = 'menutech_chat_history_v1';
-    // this.history = JSON.parse(localStorage.getItem(this.historyKey) || '[]');
-
-    this.history = []; // ← solo en RAM, sin guardar
-
-    if (typeof navigator !== "undefined" && navigator.mediaDevices && !navigator.mediaDevices.getUserMedia) {
-      navigator.mediaDevices.getUserMedia = navigator.mediaDevices.webkitGetUserMedia || navigator.mediaDevices.mozGetUserMedia || navigator.webkitGetUserMedia;
-    }
+    this.historyKey = 'menutech_chat_history_v1';
+    this.kb = [];
+    this.history = JSON.parse(localStorage.getItem(this.historyKey) || '[]');
 
     this.shadow = this.attachShadow({ mode: 'open' });
     this.render();
@@ -25,6 +18,7 @@ class MenutechChatbot extends HTMLElement {
     this.loadKB();
     this.renderHistory();
 
+    // Vosk: rutas y estado
     this._voskBundleUrl = 'https://unpkg.com/vosk-browser@0.0.6/dist/bundle.esm.js';
     this._voskAudioProcessorUrl = 'https://unpkg.com/vosk-browser@0.0.6/dist/vosk-audio-processor.js';
     this._voskModelUrl = 'https://menutech.xyz/vosk/model/';
@@ -42,7 +36,6 @@ class MenutechChatbot extends HTMLElement {
   render() {
     this.shadow.innerHTML = `
 <style>
-${/* (se mantiene EXACTO) */''}
 :host { all: initial; font-family: Inter, system-ui, Arial, sans-serif; }
 .chat-toggle{
   position:fixed;
@@ -82,7 +75,7 @@ ${/* (se mantiene EXACTO) */''}
   padding:10px 12px;
   border-top:1px solid #eee;
   background:#fff;
-  height:64px;
+  height:64px; /* evita que se corte nada */
   box-sizing:border-box;
 }
 .chat-input input{
@@ -189,7 +182,8 @@ ${/* (se mantiene EXACTO) */''}
       if (bubbles.length === 0) return;
       bubbles.forEach((bub, i) => setTimeout(() => bub.classList.add('deleting'), i * 60));
       setTimeout(() => {
-        this.history = [];  // ← solo borrar memoria RAM
+        this.history = [];
+        localStorage.setItem(this.historyKey, JSON.stringify([]));
         this.renderHistory();
         this.showClearedMessage();
       }, bubbles.length * 60 + 350);
@@ -203,6 +197,7 @@ ${/* (se mantiene EXACTO) */''}
       const mod = await import(this._voskBundleUrl);
       this._vosk = mod;
       if (!this._vosk || !this._vosk.Model) {
+        console.warn('Vosk bundle cargado pero no se encontró exportación Model.');
         return;
       }
 
@@ -212,16 +207,13 @@ ${/* (se mantiene EXACTO) */''}
       this.micIcon = this.shadow.getElementById("micIcon");
 
       this.micBtn.addEventListener('click', async () => {
-        try {
-          if (this._listening) this.stopVosk();
-          else await this.startVosk();
-        } catch (e) {
-          this.micIcon.src = "https://menutechdeveloper.github.io/libreria/icons/mic.svg";
-        }
+        if (this._listening) this.stopVosk();
+        else await this.startVosk();
       });
 
       this._voskReady = true;
     } catch (err) {
+      console.error('Error inicializando Vosk:', err);
       this.micBtn.style.opacity = 0.35;
       this.micBtn.title = 'Reconocimiento Vosk no disponible';
     }
@@ -231,15 +223,9 @@ ${/* (se mantiene EXACTO) */''}
     if (!this._voskReady) return;
     try {
       this.micIcon.src = "https://menutechdeveloper.github.io/libreria/icons/mic-listening.svg";
-
-      try {
-        this._mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      } catch (e) {
-        this._mediaStream = await navigator.mediaDevices.getUserMedia({ audio: { mandatory: { chromeMediaSource: 'desktop' } } });
-      }
-
+      this._mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
       this._audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: this._sampleRate });
-      await this._audioCtx.audioWorklet.addModule(this._voskAudioProcessorUrl).catch(() => {});
+      await this._audioCtx.audioWorklet.addModule(this._voskAudioProcessorUrl).catch(() => console.warn('AudioWorklet no disponible'));
 
       const src = this._audioCtx.createMediaStreamSource(this._mediaStream);
       this._recognizer = new this._vosk.Recognizer({ model: this._model, sampleRate: this._sampleRate });
@@ -280,6 +266,7 @@ ${/* (se mantiene EXACTO) */''}
 
       this._listening = true;
     } catch (err) {
+      console.error('startVosk error', err);
       this.stopVosk();
     }
   }
@@ -289,13 +276,16 @@ ${/* (se mantiene EXACTO) */''}
       if (this._mediaStream) this._mediaStream.getTracks().forEach(t => t.stop());
       if (this._workletNode) this._workletNode.disconnect();
       this._audioCtx?.close();
-    } catch {}
-    this._audioCtx = null;
-    this._workletNode = null;
-    this._recognizer = null;
-    this._mediaStream = null;
-    this._listening = false;
-    if (this.micIcon) this.micIcon.src = "https://menutechdeveloper.github.io/libreria/icons/mic.svg";
+    } catch (e) {
+      console.warn('stopVosk error', e);
+    } finally {
+      this._audioCtx = null;
+      this._workletNode = null;
+      this._recognizer = null;
+      this._mediaStream = null;
+      this._listening = false;
+      if (this.micIcon) this.micIcon.src = "https://menutechdeveloper.github.io/libreria/icons/mic.svg";
+    }
   }
 
   showClearedMessage() {
@@ -313,29 +303,37 @@ ${/* (se mantiene EXACTO) */''}
   }
 
   async loadKB() {
-    try {
-      const url = this.kbUrl + "?nocache=" + Date.now();
-      const res = await fetch(url, {
-        method: 'GET',
-        cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        }
-      });
+  try {
+    // Fuerza recargar SIEMPRE la KB
+    const url = this.kbUrl + "?v=" + Date.now();
 
-      if (!res.ok) throw new Error('KB fetch failed');
+    const res = await fetch(url, {
+      method: 'GET',
+      cache: 'no-store',     // Forzar que el navegador NO cachee
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
+    });
 
-      const data = await res.json();
-      this.kb = data.map(e => ({
-        q: (e.q || '').toString(),
-        a: (e.a || '').toString()
-      }));
-    } catch (err) {
-      this.kb = [];
-    }
+    if (!res.ok) throw new Error('KB fetch failed: ' + res.status);
+
+    const data = await res.json();
+    if (!Array.isArray(data)) throw new Error('KB JSON must be an array of {q,a}');
+
+    this.kb = data.map(e => ({
+      q: (e.q || '').toString(),
+      a: (e.a || '').toString()
+    }));
+
+    console.log("KB actualizada", this.kb.length + " items");
+
+  } catch (err) {
+    console.error('Menutech Chatbot — error loading KB:', err);
+    this.kb = [];
   }
+}
 
   tokenize(text) { return (text || '').toLowerCase().replace(/[^\w\sñáéíóúü]/g, ' ').split(/\s+/).filter(Boolean); }
   buildTf(tokens) { const tf = {}; tokens.forEach(t => tf[t] = (tf[t] || 0) + 1); return tf; }
@@ -355,11 +353,9 @@ ${/* (se mantiene EXACTO) */''}
 
   userSend(text) {
     if (!text || !text.trim()) return;
-    
     this.history.push({ role: 'user', text });
-
+    localStorage.setItem(this.historyKey, JSON.stringify(this.history));
     this.renderHistory();
-
     const best = this.findBestAnswer(text);
     const THRESHOLD = 0.18;
     if (best.score >= THRESHOLD) {
@@ -372,6 +368,7 @@ ${/* (se mantiene EXACTO) */''}
 
   botReply(text) {
     this.history.push({ role: 'bot', text });
+    localStorage.setItem(this.historyKey, JSON.stringify(this.history));
     this.renderHistory();
   }
 
@@ -406,6 +403,7 @@ ${/* (se mantiene EXACTO) */''}
 }
 
 customElements.define('menutech-chatbot', MenutechChatbot);
+
 
 
 
@@ -2998,6 +2996,7 @@ class MenutechIconLoader {
 }
 
 document.addEventListener("DOMContentLoaded", () => new MenutechIconLoader());
+
 
 
 
