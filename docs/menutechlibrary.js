@@ -304,17 +304,37 @@ class MenutechChatbot extends HTMLElement {
   }
 
   async loadKB() {
-    try {
-      const res = await fetch(this.kbUrl, { cache: 'no-cache' });
-      if (!res.ok) throw new Error('KB fetch failed: ' + res.status);
-      const data = await res.json();
-      if (!Array.isArray(data)) throw new Error('KB JSON must be an array of {q,a}');
-      this.kb = data.map(e => ({ q: (e.q || '').toString(), a: (e.a || '').toString() }));
-    } catch (err) {
-      console.error('Menutech Chatbot — error loading KB:', err);
-      this.kb = [];
-    }
+  try {
+    // Fuerza recargar SIEMPRE la KB
+    const url = this.kbUrl + "?v=" + Date.now();
+
+    const res = await fetch(url, {
+      method: 'GET',
+      cache: 'no-store',     // Forzar que el navegador NO cachee
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
+    });
+
+    if (!res.ok) throw new Error('KB fetch failed: ' + res.status);
+
+    const data = await res.json();
+    if (!Array.isArray(data)) throw new Error('KB JSON must be an array of {q,a}');
+
+    this.kb = data.map(e => ({
+      q: (e.q || '').toString(),
+      a: (e.a || '').toString()
+    }));
+
+    console.log("KB actualizada", this.kb.length + " items");
+
+  } catch (err) {
+    console.error('Menutech Chatbot — error loading KB:', err);
+    this.kb = [];
   }
+}
 
   tokenize(text) { return (text || '').toLowerCase().replace(/[^\w\sñáéíóúü]/g, ' ').split(/\s+/).filter(Boolean); }
   buildTf(tokens) { const tf = {}; tokens.forEach(t => tf[t] = (tf[t] || 0) + 1); return tf; }
@@ -2971,6 +2991,7 @@ class MenutechIconLoader {
 }
 
 document.addEventListener("DOMContentLoaded", () => new MenutechIconLoader());
+
 
 
 
