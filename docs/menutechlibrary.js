@@ -13,13 +13,16 @@ class MenutechChatbot extends HTMLElement {
     this.kb = [];
     this.history = JSON.parse(localStorage.getItem(this.historyKey) || '[]');
 
+    if (typeof navigator !== "undefined" && navigator.mediaDevices && !navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia = navigator.mediaDevices.webkitGetUserMedia || navigator.mediaDevices.mozGetUserMedia || navigator.webkitGetUserMedia;
+    }
+
     this.shadow = this.attachShadow({ mode: 'open' });
     this.render();
     this.bindElements();
     this.loadKB();
     this.renderHistory();
 
-    // Vosk: rutas y estado
     this._voskBundleUrl = 'https://unpkg.com/vosk-browser@0.0.6/dist/bundle.esm.js';
     this._voskAudioProcessorUrl = 'https://unpkg.com/vosk-browser@0.0.6/dist/vosk-audio-processor.js';
     this._voskModelUrl = 'https://menutech.xyz/vosk/model/';
@@ -76,7 +79,7 @@ class MenutechChatbot extends HTMLElement {
   padding:10px 12px;
   border-top:1px solid #eee;
   background:#fff;
-  height:64px; /* evita que se corte nada */
+  height:64px;
   box-sizing:border-box;
 }
 .chat-input input{
@@ -198,7 +201,6 @@ class MenutechChatbot extends HTMLElement {
       const mod = await import(this._voskBundleUrl);
       this._vosk = mod;
       if (!this._vosk || !this._vosk.Model) {
-        console.warn('Vosk bundle cargado pero no se encontró exportación Model.');
         return;
       }
 
@@ -208,13 +210,16 @@ class MenutechChatbot extends HTMLElement {
       this.micIcon = this.shadow.getElementById("micIcon");
 
       this.micBtn.addEventListener('click', async () => {
-        if (this._listening) this.stopVosk();
-        else await this.startVosk();
+        try {
+          if (this._listening) this.stopVosk();
+          else await this.startVosk();
+        } catch (e) {
+          this.micIcon.src = "https://menutechdeveloper.github.io/libreria/icons/mic.svg";
+        }
       });
 
       this._voskReady = true;
     } catch (err) {
-      console.error('Error inicializando Vosk:', err);
       this.micBtn.style.opacity = 0.35;
       this.micBtn.title = 'Reconocimiento Vosk no disponible';
     }
@@ -224,9 +229,15 @@ class MenutechChatbot extends HTMLElement {
     if (!this._voskReady) return;
     try {
       this.micIcon.src = "https://menutechdeveloper.github.io/libreria/icons/mic-listening.svg";
-      this._mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      try {
+        this._mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      } catch (e) {
+        this._mediaStream = await navigator.mediaDevices.getUserMedia({ audio: { mandatory: { chromeMediaSource: 'desktop' } } });
+      }
+
       this._audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: this._sampleRate });
-      await this._audioCtx.audioWorklet.addModule(this._voskAudioProcessorUrl).catch(() => console.warn('AudioWorklet no disponible'));
+      await this._audioCtx.audioWorklet.addModule(this._voskAudioProcessorUrl).catch(() => {});
 
       const src = this._audioCtx.createMediaStreamSource(this._mediaStream);
       this._recognizer = new this._vosk.Recognizer({ model: this._model, sampleRate: this._sampleRate });
@@ -267,7 +278,6 @@ class MenutechChatbot extends HTMLElement {
 
       this._listening = true;
     } catch (err) {
-      console.error('startVosk error', err);
       this.stopVosk();
     }
   }
@@ -277,16 +287,13 @@ class MenutechChatbot extends HTMLElement {
       if (this._mediaStream) this._mediaStream.getTracks().forEach(t => t.stop());
       if (this._workletNode) this._workletNode.disconnect();
       this._audioCtx?.close();
-    } catch (e) {
-      console.warn('stopVosk error', e);
-    } finally {
-      this._audioCtx = null;
-      this._workletNode = null;
-      this._recognizer = null;
-      this._mediaStream = null;
-      this._listening = false;
-      if (this.micIcon) this.micIcon.src = "https://menutechdeveloper.github.io/libreria/icons/mic.svg";
-    }
+    } catch {}
+    this._audioCtx = null;
+    this._workletNode = null;
+    this._recognizer = null;
+    this._mediaStream = null;
+    this._listening = false;
+    if (this.micIcon) this.micIcon.src = "https://menutechdeveloper.github.io/libreria/icons/mic.svg";
   }
 
   showClearedMessage() {
@@ -304,37 +311,29 @@ class MenutechChatbot extends HTMLElement {
   }
 
   async loadKB() {
-  try {
-    // Fuerza recargar SIEMPRE la KB
-    const url = this.kbUrl + "?v=" + Date.now();
+    try {
+      const url = this.kbUrl + "?nocache=" + Date.now();
+      const res = await fetch(url, {
+        method: 'GET',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
 
-    const res = await fetch(url, {
-      method: 'GET',
-      cache: 'no-store',     // Forzar que el navegador NO cachee
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0'
-      }
-    });
+      if (!res.ok) throw new Error('KB fetch failed');
 
-    if (!res.ok) throw new Error('KB fetch failed: ' + res.status);
-
-    const data = await res.json();
-    if (!Array.isArray(data)) throw new Error('KB JSON must be an array of {q,a}');
-
-    this.kb = data.map(e => ({
-      q: (e.q || '').toString(),
-      a: (e.a || '').toString()
-    }));
-
-    console.log("KB actualizada", this.kb.length + " items");
-
-  } catch (err) {
-    console.error('Menutech Chatbot — error loading KB:', err);
-    this.kb = [];
+      const data = await res.json();
+      this.kb = data.map(e => ({
+        q: (e.q || '').toString(),
+        a: (e.a || '').toString()
+      }));
+    } catch (err) {
+      this.kb = [];
+    }
   }
-}
 
   tokenize(text) { return (text || '').toLowerCase().replace(/[^\w\sñáéíóúü]/g, ' ').split(/\s+/).filter(Boolean); }
   buildTf(tokens) { const tf = {}; tokens.forEach(t => tf[t] = (tf[t] || 0) + 1); return tf; }
@@ -404,6 +403,7 @@ class MenutechChatbot extends HTMLElement {
 }
 
 customElements.define('menutech-chatbot', MenutechChatbot);
+
 
 
 
@@ -2991,6 +2991,7 @@ class MenutechIconLoader {
 }
 
 document.addEventListener("DOMContentLoaded", () => new MenutechIconLoader());
+
 
 
 
