@@ -8,9 +8,12 @@ class MenutechChatbot extends HTMLElement {
   constructor() {
     super();
     this.kbUrl = 'https://script.google.com/macros/s/AKfycbyCPz710krQ7-9AzNO9u-AS5yjH7EJ3X8Lo-S73r_JBrpaf8_tJUFQadh5uenV5u-8F/exec';
-    this.historyKey = 'menutech_chat_history_v1';
-    this.kb = [];
-    this.history = JSON.parse(localStorage.getItem(this.historyKey) || '[]');
+
+    // 🔥 ELIMINADO: localStorage
+    // this.historyKey = 'menutech_chat_history_v1';
+    // this.history = JSON.parse(localStorage.getItem(this.historyKey) || '[]');
+
+    this.history = []; // ← solo en RAM, sin guardar
 
     if (typeof navigator !== "undefined" && navigator.mediaDevices && !navigator.mediaDevices.getUserMedia) {
       navigator.mediaDevices.getUserMedia = navigator.mediaDevices.webkitGetUserMedia || navigator.mediaDevices.mozGetUserMedia || navigator.webkitGetUserMedia;
@@ -39,6 +42,7 @@ class MenutechChatbot extends HTMLElement {
   render() {
     this.shadow.innerHTML = `
 <style>
+${/* (se mantiene EXACTO) */''}
 :host { all: initial; font-family: Inter, system-ui, Arial, sans-serif; }
 .chat-toggle{
   position:fixed;
@@ -185,8 +189,7 @@ class MenutechChatbot extends HTMLElement {
       if (bubbles.length === 0) return;
       bubbles.forEach((bub, i) => setTimeout(() => bub.classList.add('deleting'), i * 60));
       setTimeout(() => {
-        this.history = [];
-        localStorage.setItem(this.historyKey, JSON.stringify([]));
+        this.history = [];  // ← solo borrar memoria RAM
         this.renderHistory();
         this.showClearedMessage();
       }, bubbles.length * 60 + 350);
@@ -352,9 +355,11 @@ class MenutechChatbot extends HTMLElement {
 
   userSend(text) {
     if (!text || !text.trim()) return;
+    
     this.history.push({ role: 'user', text });
-    localStorage.setItem(this.historyKey, JSON.stringify(this.history));
+
     this.renderHistory();
+
     const best = this.findBestAnswer(text);
     const THRESHOLD = 0.18;
     if (best.score >= THRESHOLD) {
@@ -367,7 +372,6 @@ class MenutechChatbot extends HTMLElement {
 
   botReply(text) {
     this.history.push({ role: 'bot', text });
-    localStorage.setItem(this.historyKey, JSON.stringify(this.history));
     this.renderHistory();
   }
 
@@ -402,6 +406,7 @@ class MenutechChatbot extends HTMLElement {
 }
 
 customElements.define('menutech-chatbot', MenutechChatbot);
+
 
 
 
@@ -2993,6 +2998,7 @@ class MenutechIconLoader {
 }
 
 document.addEventListener("DOMContentLoaded", () => new MenutechIconLoader());
+
 
 
 
