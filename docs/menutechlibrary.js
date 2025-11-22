@@ -302,38 +302,32 @@ class MenutechChatbot extends HTMLElement {
     setTimeout(() => { msg.style.opacity = "0"; setTimeout(() => msg.remove(), 300); }, 1800);
   }
 
-  async loadKB() {
+async loadKB() {
   try {
-    // Fuerza recargar SIEMPRE la KB
     const url = this.kbUrl + "?v=" + Date.now();
 
     const res = await fetch(url, {
       method: 'GET',
-      cache: 'no-store',     // Forzar que el navegador NO cachee
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0'
-      }
+      cache: 'no-store'
     });
 
-    if (!res.ok) throw new Error('KB fetch failed: ' + res.status);
-
     const data = await res.json();
-    if (!Array.isArray(data)) throw new Error('KB JSON must be an array of {q,a}');
 
-    this.kb = data.map(e => ({
-      q: (e.q || '').toString(),
-      a: (e.a || '').toString()
-    }));
+    this.kb = {};
 
-    console.log("KB actualizada", this.kb.length + " items");
+    data.forEach(row => {
+      const key = this.normalize(row.q);
+      this.kb[key] = row.a;
+    });
+
+    console.log("KB cargada:", this.kb);
 
   } catch (err) {
-    console.error('Menutech Chatbot ¡ª error loading KB:', err);
-    this.kb = [];
+    console.error("Error al cargar KB:", err);
+    this.kb = {};
   }
 }
+
 
   tokenize(text) { return (text || '').toLowerCase().replace(/[^\w\s0Š9¨¢¨¦¨ª¨®¨²¨¹]/g, ' ').split(/\s+/).filter(Boolean); }
   buildTf(tokens) { const tf = {}; tokens.forEach(t => tf[t] = (tf[t] || 0) + 1); return tf; }
@@ -2997,6 +2991,7 @@ class MenutechIconLoader {
 }
 
 document.addEventListener("DOMContentLoaded", () => new MenutechIconLoader());
+
 
 
 
