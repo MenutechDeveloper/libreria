@@ -123,7 +123,7 @@ class MenutechChatbot extends HTMLElement {
 
 <div id="chat" class="chat-window" style="display:none" aria-hidden="true">
   <div class="chat-header">
-    <div><strong>Asistente</strong><div style="font-size:12px;opacity:.9">Soporte automático</div></div>
+    <div><strong>Asistente</strong><div style="font-size:12px;opacity:.9">Soporte autom¨¢tico</div></div>
     <button id="closeBtn" style="background:transparent;border:none;color:#fff;font-size:18px;cursor:pointer">
       <img src="https://menutechdeveloper.github.io/libreria/icons/close.svg" style="width:20px;height:20px;filter:invert(1)">
     </button>
@@ -197,7 +197,7 @@ class MenutechChatbot extends HTMLElement {
       const mod = await import(this._voskBundleUrl);
       this._vosk = mod;
       if (!this._vosk || !this._vosk.Model) {
-        console.warn('Vosk bundle cargado pero no se encontró exportación Model.');
+        console.warn('Vosk bundle cargado pero no se encontr¨® exportaci¨®n Model.');
         return;
       }
 
@@ -296,7 +296,7 @@ class MenutechChatbot extends HTMLElement {
     msg.style.color = "#ff7a00";
     msg.style.fontWeight = "600";
     msg.style.transition = "opacity .4s ease";
-    msg.textContent = "✔ Historial borrado";
+    msg.textContent = "7½8 Historial borrado";
     this.bodyEl.appendChild(msg);
     requestAnimationFrame(() => msg.style.opacity = "1");
     setTimeout(() => { msg.style.opacity = "0"; setTimeout(() => msg.remove(), 300); }, 1800);
@@ -330,12 +330,12 @@ class MenutechChatbot extends HTMLElement {
     console.log("KB actualizada", this.kb.length + " items");
 
   } catch (err) {
-    console.error('Menutech Chatbot — error loading KB:', err);
+    console.error('Menutech Chatbot ¡ª error loading KB:', err);
     this.kb = [];
   }
 }
 
-  tokenize(text) { return (text || '').toLowerCase().replace(/[^\w\sñáéíóúü]/g, ' ').split(/\s+/).filter(Boolean); }
+  tokenize(text) { return (text || '').toLowerCase().replace(/[^\w\s0Š9¨¢¨¦¨ª¨®¨²¨¹]/g, ' ').split(/\s+/).filter(Boolean); }
   buildTf(tokens) { const tf = {}; tokens.forEach(t => tf[t] = (tf[t] || 0) + 1); return tf; }
   dot(a, b) { let s = 0; for (const k in a) if (b[k]) s += a[k] * b[k]; return s; }
   norm(a) { let s = 0; for (const k in a) s += a[k] * a[k]; return Math.sqrt(s); }
@@ -362,7 +362,7 @@ class MenutechChatbot extends HTMLElement {
       const kbEntry = this.kb[best.index];
       this.botReply(kbEntry.a);
     } else {
-      this.botReply("Lo siento, no tengo una respuesta segura para eso. ¿Quieres que agregue esta pregunta a las FAQs?");
+      this.botReply("Lo siento, no tengo una respuesta segura para eso. 0†7Quieres que agregue esta pregunta a las FAQs?");
     }
   }
 
@@ -403,6 +403,7 @@ class MenutechChatbot extends HTMLElement {
 }
 
 customElements.define('menutech-chatbot', MenutechChatbot);
+
 
 
 
@@ -2996,6 +2997,7 @@ class MenutechIconLoader {
 }
 
 document.addEventListener("DOMContentLoaded", () => new MenutechIconLoader());
+
 
 
 
