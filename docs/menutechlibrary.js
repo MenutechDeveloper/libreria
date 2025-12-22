@@ -414,6 +414,182 @@ customElements.define('menutech-chatbot', MenutechChatbot);
 
 
 
+/******************************
+ * MENUTECH NAVWEB
+ ******************************/
+class MenutechNavweb extends HTMLElement {
+  constructor() {
+    super();
+    const shadow = this.attachShadow({ mode: "open" });
+
+    // ===== CSS ===== 
+    const style = document.createElement("style"); 
+    style.textContent = ` 
+      :host { 
+        --widget-size: 55px; 
+        --icon-size: 32px; 
+        --widget-margin: 20px; 
+        --animation-speed: 0.3s; 
+        --animation-function: ease-in-out; 
+        --background-color: #ffffff; 
+        --shadow-color: rgba(0, 0, 0, 0.2); 
+        --icon-spacing: calc(var(--widget-size) + 15px); 
+      } 
+      
+      #floating-widget-container { 
+        position: fixed; 
+        bottom: var(--widget-margin); 
+        left: var(--widget-margin); 
+        width: var(--widget-size); 
+        height: var(--widget-size); 
+        z-index: 1000; 
+      } 
+      
+      .widget-icon { 
+        display: flex; 
+        justify-content: center; 
+        align-items: center; 
+        width: var(--widget-size); 
+        height: var(--widget-size); 
+        background-color: var(--background-color); 
+        border-radius: 50%; 
+        box-shadow: 0 4px 12px var(--shadow-color); 
+        cursor: pointer; 
+         
+        position: absolute; 
+        bottom: 0; 
+        left: 0; 
+      
+        opacity: 0; 
+        transform: translateX(-10px) scale(0.95); /* Animación desde la izquierda */ 
+        transition:  
+            opacity var(--animation-speed) var(--animation-function), 
+            transform var(--animation-speed) var(--animation-function), 
+            z-index 0s linear var(--animation-speed); /* Delay z-index change */ 
+         
+        will-change: transform, opacity; 
+        z-index: 1; 
+      } 
+      
+      .widget-icon img { 
+        width: var(--icon-size); 
+        height: var(--icon-size); 
+        user-select: none; /* Evita que la imagen sea arrastrada */ 
+      } 
+      
+      #floating-widget-container .widget-icon:last-child { 
+        opacity: 1; 
+        transform: translateX(0) scale(1); 
+        z-index: 5; 
+      } 
+      
+      #floating-widget-container.expanded .widget-icon { 
+        opacity: 1; 
+        transform: translateX(0) scale(1); 
+        transition-delay: 0s; 
+        z-index: 10; 
+      } 
+      
+      #floating-widget-container.expanded .widget-icon:nth-last-child(2) { 
+        transform: translateX(calc(1 * var(--icon-spacing))); 
+      } 
+      #floating-widget-container.expanded .widget-icon:nth-last-child(3) { 
+        transform: translateX(calc(2 * var(--icon-spacing))); 
+      } 
+      #floating-widget-container.expanded .widget-icon:nth-last-child(4) { 
+        transform: translateX(calc(3 * var(--icon-spacing))); 
+      } 
+      
+      #floating-widget-container.expanded .widget-icon:hover { 
+        transform: scale(1.1); 
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25); 
+      } 
+      #floating-widget-container.expanded .widget-icon:nth-last-child(2):hover { 
+        transform: translateX(calc(1 * var(--icon-spacing))) scale(1.1); 
+      } 
+      #floating-widget-container.expanded .widget-icon:nth-last-child(3):hover { 
+        transform: translateX(calc(2 * var(--icon-spacing))) scale(1.1); 
+      } 
+      #floating-widget-container.expanded .widget-icon:nth-last-child(4):hover { 
+        transform: translateX(calc(3 * var(--icon-spacing))) scale(1.1); 
+      } 
+    `; 
+    shadow.appendChild(style);
+
+    // ===== HTML ===== 
+    const wrapper = document.createElement("div"); 
+    wrapper.innerHTML = ` 
+      <div id="floating-widget-container"> 
+        <a href="https://menutech.biz/c4f3/cafe" class="widget-icon" data-icon="cafe"> 
+            <img src="https://menutechdeveloper.github.io/libreria/icons/mago.svg" alt="Icono de Mago"> 
+        </a> 
+        <a href="https://tragalero.com/" class="widget-icon" data-icon="tragalero"> 
+            <img src="https://menutechdeveloper.github.io/libreria/icons/close.svg" alt="Icono de Cerrar"> 
+        </a> 
+        <a href="https://wisbe.xyz/" class="widget-icon" data-icon="wisbe"> 
+            <img src="https://menutechdeveloper.github.io/libreria/icons/trash.svg" alt="Icono de Basura"> 
+        </a> 
+        <a href="https://menutech.xyz/" class="widget-icon" data-icon="menutech"> 
+            <img src="https://menutechdeveloper.github.io/libreria/icons/mic.svg" alt="Icono de Micrófono"> 
+        </a> 
+      </div> 
+    `;
+    shadow.appendChild(wrapper);
+  }
+
+  connectedCallback() {
+    this.initializeBehavior();
+  }
+
+  initializeBehavior() {
+    const widgetContainer = this.shadowRoot.querySelector('#floating-widget-container');
+    const icons = Array.from(widgetContainer.querySelectorAll('.widget-icon'));
+    const mainIcon = widgetContainer.querySelector('[data-icon="menutech"]');
+
+    let collapseTimeout;
+    let lastHoveredIcon = mainIcon;
+
+    const swapIcons = (iconToBecomeLast) => {
+        if (iconToBecomeLast && iconToBecomeLast !== icons[icons.length - 1]) {
+            widgetContainer.appendChild(iconToBecomeLast);
+            const a = icons.splice(icons.indexOf(iconToBecomeLast), 1);
+            icons.push(a[0]);
+        }
+    };
+
+    const expandWidget = () => {
+        clearTimeout(collapseTimeout);
+        widgetContainer.classList.add('expanded');
+    };
+
+    const collapseWidget = () => {
+        widgetContainer.classList.remove('expanded');
+        swapIcons(lastHoveredIcon);
+    };
+
+    widgetContainer.addEventListener('mouseenter', expandWidget);
+
+    widgetContainer.addEventListener('mouseleave', () => {
+        collapseTimeout = setTimeout(collapseWidget, 300);
+    });
+
+    icons.forEach(icon => {
+        icon.addEventListener('mouseenter', () => {
+            clearTimeout(collapseTimeout);
+            lastHoveredIcon = icon;
+        });
+
+        icon.addEventListener('click', () => {
+            lastHoveredIcon = icon;
+        });
+    });
+  }
+}
+
+customElements.define('menutech-navweb', MenutechNavweb);
+
+
+
 
 
 
@@ -2998,6 +3174,7 @@ class MenutechIconLoader {
 }
 
 document.addEventListener("DOMContentLoaded", () => new MenutechIconLoader());
+
 
 
 
