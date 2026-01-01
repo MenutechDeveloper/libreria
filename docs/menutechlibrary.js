@@ -1,3 +1,124 @@
+class MenutechButtons extends HTMLElement {
+  constructor() {
+    super();
+    const shadow = this.attachShadow({ mode: "open" });
+
+    // ===== CSS =====
+    const style = document.createElement("style");
+    style.textContent = `
+      .pair {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
+      }
+      .btn {
+        border-radius: 6px;
+        border: 0px none;
+        box-shadow: rgba(0, 0, 0, 0.45) 0px 6px 18px 0px;
+        padding: 12px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+      }
+      /* El color de fondo y texto para este botón se establecerá mediante atributos */
+      .btn-order {
+      }
+      .btn-reserve {
+        background: rgb(47, 72, 84);
+        color: rgb(255, 255, 255);
+      }
+      .icon {
+        display: inline-block;
+        color: rgb(255, 255, 255); /* El color del icono SVG se hereda */
+        width: 32px;
+        height: 32px;
+      }
+      .icon svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+        pointer-events: none;
+        fill: currentColor; /* Asegura que el SVG tome el color del contenedor .icon */
+      }
+    `;
+    shadow.appendChild(style);
+
+    // ===== HTML =====
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = `
+      <div class="pair pair-2 anim-enabled">
+        <span class="glf-button btn btn-order">
+          <i class="icon menutech-mago" id="d2-icon1"><svg viewBox="0 0 198.05 262.11"><title>mago</title><polygon points="17.76 100.72 17.76 79.94 98.74 33.73 181.04 81.07 181.04 100.19 162.14 110.93 35.53 110.93 17.76 100.72"></polygon><circle cx="98.74" cy="33.73" r="33.73"></circle><path d="M97.11,216.26l35.53,20.41s29.29-36.28,63.21-34.77c0,0,40.72-1.14,63.4,34.77l35.91-20.41V330.78l-99,57.07-99-57.45Z" transform="translate(-97.11 -125.74)"></path></svg></i>
+          <span class="btn-text">See MENU & Order Now!</span>
+        </span>
+        <span class="glf-button btn btn-reserve reservation" data-glf-reservation="true">
+          <i class="icon menutech-mago" id="d2-icon2"><svg viewBox="0 0 198.05 262.11"><title>mago</title><polygon points="17.76 100.72 17.76 79.94 98.74 33.73 181.04 81.07 181.04 100.19 162.14 110.93 35.53 110.93 17.76 100.72"></polygon><circle cx="98.74" cy="33.73" r="33.73"></circle><path d="M97.11,216.26l35.53,20.41s29.29-36.28,63.21-34.77c0,0,40.72-1.14,63.4,34.77l35.91-20.41V330.78l-99,57.07-99-57.45Z" transform="translate(-97.11 -125.74)"></path></svg></i>
+          <span class="btn-text">Table Reservation</span>
+        </span>
+      </div>
+    `;
+    shadow.appendChild(wrapper);
+  }
+
+  static get observedAttributes() {
+    return ['color', 'background', 'cuid', 'ruid'];
+  }
+
+  connectedCallback() {
+    this.updateAttributes();
+    this.loadScript();
+  }
+
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (oldValue !== newValue) {
+      this.updateAttributes();
+    }
+  }
+
+  updateAttributes() {
+    const shadow = this.shadowRoot;
+    const orderButton = shadow.querySelector('.btn-order');
+    const allButtons = shadow.querySelectorAll('.glf-button');
+
+    const color = this.getAttribute('color') || 'rgb(27, 27, 27)';
+    const background = this.getAttribute('background') || 'rgb(242, 160, 74)';
+    const cuid = this.getAttribute('cuid') || '52230bb2-0d10-491a-80a6-3c5603e87152';
+    const ruid = this.getAttribute('ruid') || '010d211a-aff0-4aa2-b4d0-739fce78437a';
+
+    orderButton.style.backgroundColor = background;
+    orderButton.style.color = color;
+
+    allButtons.forEach(button => {
+      button.setAttribute('data-glf-cuid', cuid);
+      button.setAttribute('data-glf-ruid', ruid);
+    });
+  }
+
+  loadScript() {
+    // Solo carga el script si no está ya en la página
+    if (!document.querySelector('script[src="https://www.fbgcdn.com/embedder/js/ewm2.js"]')) {
+      const script = document.createElement('script');
+      script.src = 'https://www.fbgcdn.com/embedder/js/ewm2.js';
+      script.defer = true;
+      script.async = true;
+      document.head.appendChild(script);
+    }
+  }
+}
+
+customElements.define('menutech-buttons', MenutechButtons);
+
+
+
+
+
+
+
+
 // menutechui.js
 // Menutech Chatbot Web Component (Shadow DOM)
 // - Loads KB from https://menutechdeveloper.github.io/databasewindows/kb.json
@@ -3174,6 +3295,7 @@ class MenutechIconLoader {
 }
 
 document.addEventListener("DOMContentLoaded", () => new MenutechIconLoader());
+
 
 
 
